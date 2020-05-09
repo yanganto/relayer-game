@@ -1,0 +1,40 @@
+# The title for this scenario
+title = "Basic Scenario for Relayer"
+
+# The initail block different
+# Dd: the block difference between last block number relayed on Darwinia, 
+# De: the block difference between last related block number of target chain (for example Ethereum)
+Dd = 100
+De = 1000
+
+# Waiting Block may related to 
+# D: block difference between last block number relayed on Darwinia, 
+# E: block difference between last related block number of target chain (for example Ethereum)
+# 
+# Md: the max value about D portion
+# Me: the max value about E portion
+#
+# and also there are maximun value for each portion
+# waiting block = int(min(Wd * D, Md) + min(We * E, Me)) + C
+Wd = 0.0
+We = 0.0
+C  = 1
+Md = 100
+Me = 100
+
+# The reward 
+# B is the fee prebet
+# T is the 
+B = 1
+T = 10
+
+# We suppose that there is always a good guy, which is provied by Darwinia Bot
+# Other client may be response as T(Honest), F(Lie), N(No response)
+# The choice maynot be the same size
+[[relayers]]
+name = "evil"
+choice = "FFFFFF" 
+
+[[relayers]]
+name = "Honest"
+choice = "TTTTTTT" 
