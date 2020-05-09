@@ -1,5 +1,6 @@
 use clap::App;
 
+mod error;
 mod scenario;
 
 fn main() {
