@@ -4,6 +4,8 @@
 //!
 //! Some examples are listed in `/scenario `
 //!
+//! surfix d: block difference between last block number relayed on Darwinia,
+//! surfix e: block difference between last related block number of Ethereum
 use std::str::FromStr;
 
 use serde_derive::Deserialize;
