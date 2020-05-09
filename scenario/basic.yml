@@ -1,16 +1,19 @@
 # The title for this scenario
 title = "Basic Scenario for Relayer"
 
-# The initail block different
-# Dd: the block difference between last block number relayed on Darwinia, 
-# De: the block difference between last related block number of target chain (for example Ethereum)
-Dd = 100
-De = 1000
+# the wait function for the relayed header be accepted
+wait_function = "linear"
 
-# Waiting Block may related to 
-# D: block difference between last block number relayed on Darwinia, 
+# The initail block different
+# D: block difference between last block number relayed on Darwinia,
 # E: block difference between last related block number of target chain (for example Ethereum)
-# 
+# Dd: the block difference between last block number relayed on Darwinia, 
+# Ei: the block difference between last related block number of target chain (for example Ethereum)
+Di = 100
+Ei = 1000
+
+[linear]
+# Waiting Block may related to 
 # Md: the max value about D portion
 # Me: the max value about E portion
 #
