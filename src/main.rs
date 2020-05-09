@@ -6,6 +6,7 @@
 //!
 use clap::App;
 
+mod chain;
 mod error;
 mod scenario;
 mod wait;

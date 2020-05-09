@@ -5,12 +5,12 @@ title = "Basic Scenario for Relayer"
 wait_function = "linear"
 
 # The initail block different
-# D: block difference between last block number relayed on Darwinia,
-# E: block difference between last related block number of target chain (for example Ethereum)
+# surfix d: block difference between last block number relayed on Darwinia,
+# surfix e: block difference between last related block number of Ethereum
 # Dd: the block difference between last block number relayed on Darwinia, 
-# Ei: the block difference between last related block number of target chain (for example Ethereum)
-Di = 100
-Ei = 1000
+# Ee: the block difference between last related block number of Ethereum
+Dd = 100
+De = 1000
 
 [linear]
 # Waiting Block may related to 
