@@ -6,6 +6,7 @@
 //!
 //! surfix d: block difference between last block number relayed on Darwinia,
 //! surfix e: block difference between last related block number of Ethereum
+use std::iter::IntoIterator;
 use std::str::FromStr;
 
 use serde_derive::Deserialize;
@@ -43,13 +44,59 @@ pub struct ScenarioConfig {
     pub relayers: Vec<RelayerConfig>,
 }
 
+pub struct ScenarioConfigIntoIterator {
+    config: ScenarioConfig,
+    submit_round: usize,
+}
+
+impl IntoIterator for ScenarioConfig {
+    type Item = Vec<(String, bool)>;
+    type IntoIter = ScenarioConfigIntoIterator;
+
+    fn into_iter(self) -> Self::IntoIter {
+        ScenarioConfigIntoIterator {
+            config: self,
+            submit_round: 0,
+        }
+    }
+}
+
+impl Iterator for ScenarioConfigIntoIterator {
+    type Item = Vec<(String, bool)>;
+    /// Return the the relayer is liing in each round
+    fn next(&mut self) -> Option<Vec<(String, bool)>> {
+        if self.submit_round >= self.config.relayers[0].choice.len() {
+            return None;
+        }
+        let current_index = self.submit_round;
+        self.submit_round += 1;
+        Some(
+            self.config
+                .relayers
+                .iter()
+                .map(|r| {
+                    if current_index >= r.choice.len() {
+                        Err("this replay has no response")
+                    } else {
+                        Ok((
+                            r.name.clone().unwrap(),
+                            r.choice.chars().nth(current_index).unwrap() == 'L',
+                        ))
+                    }
+                })
+                .filter_map(Result::ok)
+                .collect(),
+        )
+    }
+}
+
 /// RelayerConfig
 /// Set up a `name` and the `choice` about the relayer
 #[derive(Debug, Deserialize)]
 pub struct RelayerConfig {
     /// Optional field help you to know the relayer in
     pub name: Option<String>,
-    /// The client can choice to be honest(H), lie(L), No response(N), if the choice is not lone as
+    /// The client can choice to be Honest(H), Lie(L), No response(N), if the choice is not lone as
     /// other replayer, it will be automaticaly no response
     pub choice: String,
 }
@@ -72,13 +119,15 @@ impl FromStr for ScenarioConfig {
         };
 
         let mut max_chose = 0;
-        for r in c.relayers.iter_mut() {
+        for (i, r) in c.relayers.iter_mut().enumerate() {
             if let Some(n) = &r.name {
                 if n.to_uppercase() == "DARWINIA".to_string() {
                     return Err(Error::ParameterError(
                         "Darwinia relayer alway honest, you do not need modify it",
                     ));
                 }
+            } else {
+                r.name = Some(format!(" {}", i));
             };
             // TODO: check name should not use number
             r.choice.make_ascii_uppercase();
@@ -89,10 +138,12 @@ impl FromStr for ScenarioConfig {
                 }
             }
         }
-        c.relayers.push(RelayerConfig {
+        let mut relayers = vec![RelayerConfig {
             name: Some("Darwinia".to_string()),
-            choice: "H".repeat(max_chose),
-        });
+            choice: "H".repeat(max_chose + 1),
+        }];
+        relayers.append(&mut c.relayers);
+        c.relayers = relayers;
         Ok(c)
     }
 }
@@ -115,18 +166,18 @@ mod tests {
 			T = 10
 
 			[[relayers]]
-			name = "evil"
-			choice = "LLLLLL"
+			name = "Evil"
+			choice = "LL"
 
 			[[relayers]]
 			name = "Honest"
-			choice = "HHHHHHH"
+			choice = "H"
 		"#;
     #[test]
     fn test_parse_toml() {
         let c: ScenarioConfig = toml::from_str(TOML_CONFIG).unwrap();
         assert_eq!(c.relayers.len(), 2);
-        assert_eq!(c.relayers[1].choice, "HHHHHHH");
+        assert_eq!(c.relayers[1].choice, "H");
     }
     #[test]
     fn test_from_toml_str() {
@@ -134,9 +185,34 @@ mod tests {
         assert!(c.is_ok());
         let c = c.unwrap();
         assert_eq!(c.relayers.len(), 3);
-        assert_eq!(c.relayers[1].choice, "HHHHHHH");
-        assert_eq!(c.relayers[2].name, Some("Darwinia".to_string()));
-        assert_eq!(c.relayers[2].choice, "HHHHHHH");
+
+        // Darwinia relayer should be added automatically
+        assert_eq!(c.relayers[0].name, Some("Darwinia".to_string()));
+        assert_eq!(c.relayers[0].choice, "HHH");
+        assert_eq!(c.relayers[1].choice, "LL");
+        assert_eq!(c.relayers[2].choice, "H");
+    }
+    #[test]
+    fn test_iterate_from_scenario() {
+        let c = <ScenarioConfig>::from_str(TOML_CONFIG).unwrap();
+        let mut i = c.into_iter();
+        assert_eq!(
+            i.next(),
+            Some(vec![
+                ("Darwinia".to_string(), false),
+                ("Evil".to_string(), true),
+                ("Honest".to_string(), false)
+            ])
+        );
+        assert_eq!(
+            i.next(),
+            Some(vec![
+                ("Darwinia".to_string(), false),
+                ("Evil".to_string(), true),
+            ])
+        );
+        assert_eq!(i.next(), Some(vec![("Darwinia".to_string(), false),]));
+        assert_eq!(i.next(), None);
     }
     #[test]
     fn test_from_error_toml_str() {
@@ -181,6 +257,6 @@ mod tests {
 			"#,
         )
         .unwrap();
-        assert_eq!(c.relayers[0].choice, "HHHHHHH");
+        assert_eq!(c.relayers[1].choice, "HHHHHHH");
     }
 }
