@@ -15,7 +15,7 @@ pub struct ChainsStatus {
     /// (darwinia_block_height_for_last_relay, ethereum_block_height_for_last_relay)
     last_relayed_block: (usize, usize),
     relayers: HashMap<String, RelayerStatus>,
-    submit_target: usize,
+    pub submit_target_ethereum_block: usize,
     block_speed_factor: f32,
     submit_fee_pool: f32,
 }
@@ -35,7 +35,7 @@ impl From<ScenarioConfig> for ChainsStatus {
                 }
                 map
             }),
-            submit_target: c.De.unwrap_or(100) / 2, // TODO: make submit target as a function
+            submit_target_ethereum_block: c.De.unwrap_or(100) / 2, // TODO: make submit target as a function
             block_speed_factor: c.F.unwrap_or(2.0),
             ..Default::default()
         }
@@ -70,10 +70,20 @@ impl ChainsStatus {
         r.submit(fee, lie);
         self.submit_fee_pool += fee;
     }
-    pub fn submit(&mut self, relayers: Vec<(String, bool)>, fee: f32) {
+    pub fn submit(
+        &mut self,
+        relayers: Vec<(String, bool)>,
+        fee: f32,
+        wait_blocks: usize,
+        next_target_ethereum_block: usize,
+    ) {
         for (relayer, lie) in relayers {
             self.submit_by(relayer, fee, lie)
         }
+        self.last_relayed_block = (self.darwinia_block_hight, self.ethereum_block_hight);
+        self.ethereum_block_hight += (wait_blocks as f32 / self.block_speed_factor) as usize;
+        self.darwinia_block_hight += wait_blocks;
+        self.submit_target_ethereum_block = next_target_ethereum_block;
     }
 
     pub fn should_balance(&self) {
@@ -127,9 +137,9 @@ impl fmt::Display for RelayerStatus {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let balance = self.reward - self.pay;
         if let Some(n) = &self.name {
-            write!(f, "  Relayer {}: {}", n, balance)
+            write!(f, "  {}: {}", n, balance)
         } else {
-            write!(f, "  Relayer ID {}: {}", self.id, balance)
+            write!(f, "  ID {}: {}", self.id, balance)
         }
     }
 }
@@ -195,9 +205,11 @@ mod tests {
         c.submit(
             vec![("Evil".to_string(), true), ("Darwinia".to_string(), false)],
             10.0,
+            50,
+            500,
         );
         c.should_balance();
-        c.submit(vec![("Darwinia".to_string(), false)], 10.0);
+        c.submit(vec![("Darwinia".to_string(), false)], 10.0, 50, 250);
         c.should_balance();
         assert_eq!(c.submit_fee_pool, 30.0);
         c.reward_honest_relayers();

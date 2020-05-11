@@ -9,6 +9,7 @@ use std::io::prelude::*;
 use std::str::FromStr;
 
 use clap::App;
+use colored::Colorize;
 
 mod chain;
 mod error;
@@ -24,8 +25,8 @@ fn simulate_from_scenario(file_name: &str, debug: bool) -> Result<(), error::Err
     let mut chains_status: chain::ChainsStatus = config.into();
     while let Some(relayer_sumbitions) = iterator.next() {
         if debug {
-            print!("Sumitions {}", chains_status.fmt_status());
-            print!(" Submitions ");
+            print!("{}", format!("{}", chains_status.fmt_status()).cyan());
+            print!("Submitions ");
             for (r, lie) in relayer_sumbitions.iter() {
                 print!("{}", r);
                 if *lie {
@@ -35,13 +36,22 @@ fn simulate_from_scenario(file_name: &str, debug: bool) -> Result<(), error::Err
             }
             print!("\n");
         }
-        chains_status.submit(relayer_sumbitions, 10.0);
+        chains_status.submit(relayer_sumbitions, 10.0, 50, 0);
         if debug {
+            println!(
+                " Next Etherem Target Block: {}",
+                chains_status.submit_target_ethereum_block
+            );
+            print!(" Relayer Status:");
             println!("{}", chains_status.fmt_relayers_status());
         }
     }
     chains_status.reward_honest_relayers();
-    println!("Final {}", chains_status);
+    if debug {
+        println!("{}", format!("Final {}", chains_status).cyan());
+    } else {
+        println!("{}", format!("Final {}", chains_status).white());
+    }
     Ok(())
 }
 
