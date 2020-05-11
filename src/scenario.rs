@@ -13,6 +13,7 @@ use serde_derive::Deserialize;
 use toml;
 
 use crate::error::Error;
+use crate::fee::Equation as FeeEq;
 use crate::target::{half::HalfConfig, Equation as TargetEq};
 use crate::wait::{linear::LinearConfig, ConfigValidate, Equation as WaitEq};
 
@@ -30,7 +31,7 @@ pub struct ScenarioConfig {
 
     /// F: The block producing factor for darwinia / ethereum
     /// For example, 2.0 means that darwinia produce 2 blocks and ethereum produce 1 block.
-    pub F: Option<f32>,
+    pub F: Option<f64>,
 
     /// Once a relayer submit a header and wait the time in blocks after the calculated value from wait
     /// function, Darwinia network will deem this header is valided and become a last relayed header.
@@ -39,6 +40,9 @@ pub struct ScenarioConfig {
     /// Once there is disput on any header, the relayer should submit the next ethere block target as
     /// calculated.
     pub target_function: String,
+
+    /// The submit fee of function
+    pub fee_function: String,
 
     /// parameters in linear wating
     pub wait_linear: Option<LinearConfig>,
@@ -94,6 +98,15 @@ impl ScenarioConfig {
             "half" => return Ok(HalfConfig {}),
             _ => {
                 return Err(Error::ParameterError("Target function absent"));
+            }
+        }
+    }
+    pub fn get_fee_equation(&self) -> Result<impl FeeEq, Error> {
+        match self.fee_function.as_str().parse::<f64>() {
+            Ok(n) => Ok(n),
+            Err(e) => {
+                // TODO: map this to fee function name, if we have
+                return Err(e.into());
             }
         }
     }
@@ -166,7 +179,7 @@ impl FromStr for ScenarioConfig {
             } else {
                 r.name = Some(format!(" {}", i));
             };
-            // TODO: check name should not use number
+            // TODO: check name should be use number
             r.choice.make_ascii_uppercase();
             max_chose = std::cmp::max(max_chose, r.choice.len());
             for c in r.choice.chars() {
@@ -191,6 +204,7 @@ mod tests {
     static TOML_CONFIG: &'static str = r#"
 			wait_function = "linear"
 			target_function = "half"
+			fee_function = "10.0"
 
 			Dd = 100
 			De = 1000
@@ -230,6 +244,10 @@ mod tests {
         assert_eq!(c.relayers[0].choice, "HHH");
         assert_eq!(c.relayers[1].choice, "LL");
         assert_eq!(c.relayers[2].choice, "H");
+
+        let fee_function = c.get_fee_equation();
+        assert!(fee_function.is_ok());
+        assert_eq!(fee_function.unwrap().calculate(1000, 100), 10.0);
     }
     #[test]
     fn test_iterate_from_scenario() {
@@ -259,6 +277,7 @@ mod tests {
             r#"
 			wait_function = "linear"
 			target_function = "half"
+			fee_function = "10.0"
 
 			[wait_linear]
 			Wd = -10
@@ -282,6 +301,7 @@ mod tests {
             r#"
 			wait_function = "linear"
 			target_function = "half"
+			fee_function = "10.0"
 
 			[wait_linear]
 			Wd = 0.0

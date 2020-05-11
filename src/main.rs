@@ -17,6 +17,7 @@ use crate::wait::Equation as WaitEq;
 
 mod chain;
 mod error;
+mod fee;
 mod scenario;
 mod target;
 mod wait;

@@ -14,6 +14,12 @@ pub enum Error {
     UnknownError(&'static str),
 }
 
+impl From<std::num::ParseFloatError> for Error {
+    fn from(_: std::num::ParseFloatError) -> Self {
+        Error::ParameterError("Parameter cannot parse as number")
+    }
+}
+
 impl From<std::io::Error> for Error {
     fn from(err: std::io::Error) -> Self {
         Error::CliError(format!("{}", err))

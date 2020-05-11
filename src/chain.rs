@@ -16,8 +16,8 @@ pub struct ChainsStatus {
     pub last_relayed_block: (usize, usize),
     pub relayers: HashMap<String, RelayerStatus>,
     pub submit_target_ethereum_block: usize,
-    pub block_speed_factor: f32,
-    pub submit_fee_pool: f32,
+    pub block_speed_factor: f64,
+    pub submit_fee_pool: f64,
 }
 
 impl From<ScenarioConfig> for ChainsStatus {
@@ -65,7 +65,7 @@ impl ChainsStatus {
         }
         output
     }
-    fn submit_by(&mut self, relayer: String, fee: f32, lie: bool) {
+    fn submit_by(&mut self, relayer: String, fee: f64, lie: bool) {
         let r = self.relayers.get_mut(&relayer).unwrap();
         r.submit(fee, lie);
         self.submit_fee_pool += fee;
@@ -73,7 +73,7 @@ impl ChainsStatus {
     pub fn submit(
         &mut self,
         relayers: Vec<(String, bool)>,
-        fee: f32,
+        fee: f64,
         wait_blocks: usize,
         next_target_ethereum_block: usize,
     ) {
@@ -81,7 +81,7 @@ impl ChainsStatus {
             self.submit_by(relayer, fee, lie)
         }
         self.last_relayed_block = (self.darwinia_block_hight, self.ethereum_block_hight);
-        self.ethereum_block_hight += (wait_blocks as f32 / self.block_speed_factor) as usize;
+        self.ethereum_block_hight += (wait_blocks as f64 / self.block_speed_factor) as usize;
         self.darwinia_block_hight += wait_blocks;
         self.submit_target_ethereum_block = next_target_ethereum_block;
     }
@@ -105,9 +105,9 @@ impl ChainsStatus {
             sum += r.get_honest_submit_times();
             sum
         });
-        let share_pre_submit = self.submit_fee_pool / total_honest_submit_times as f32;
+        let share_pre_submit = self.submit_fee_pool / total_honest_submit_times as f64;
         for r in self.relayers.values_mut() {
-            r.reward += r.get_honest_submit_times() as f32 * share_pre_submit;
+            r.reward += r.get_honest_submit_times() as f64 * share_pre_submit;
         }
         self.submit_fee_pool = 0.0;
     }
@@ -117,8 +117,8 @@ impl ChainsStatus {
 pub struct RelayerStatus {
     pub id: usize,
     pub name: Option<String>,
-    pub pay: f32,
-    pub reward: f32,
+    pub pay: f64,
+    pub reward: f64,
     pub submit_times: usize,
     pub lie: bool,
 }
@@ -145,7 +145,7 @@ impl fmt::Display for RelayerStatus {
 }
 
 impl RelayerStatus {
-    fn submit(&mut self, fee: f32, lie: bool) {
+    fn submit(&mut self, fee: f64, lie: bool) {
         self.pay += fee;
         self.lie |= lie;
         self.submit_times += 1;
@@ -166,6 +166,8 @@ mod tests {
     use std::str::FromStr;
     static TOML_CONFIG: &'static str = r#"
 			wait_function = "linear"
+			target_function = "half"
+			fee_function = "10.0"
 			Dd = 100
 			De = 1000
 
