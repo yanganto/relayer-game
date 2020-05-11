@@ -161,8 +161,8 @@ mod tests {
 
 			[[relayers]]
 			name = "evil"
-			choice = "FFFFFF" 
-		"#;
+			choice = "LLLLLL"
+			"#;
     #[test]
     fn test_chain_status_from_scenario_config() {
         let mut c: ChainsStatus = <ScenarioConfig>::from_str(TOML_CONFIG).unwrap().into();

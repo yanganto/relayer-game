@@ -49,7 +49,7 @@ pub struct ScenarioConfig {
 pub struct RelayerConfig {
     /// Optional field help you to know the relayer in
     pub name: Option<String>,
-    /// The client can choice to be honest(T), lie(F), No response(N), if the choice is not lone as
+    /// The client can choice to be honest(H), lie(L), No response(N), if the choice is not lone as
     /// other replayer, it will be automaticaly no response
     pub choice: String,
 }
@@ -84,14 +84,14 @@ impl FromStr for ScenarioConfig {
             r.choice.make_ascii_uppercase();
             max_chose = std::cmp::max(max_chose, r.choice.len());
             for c in r.choice.chars() {
-                if c != 'T' && c != 'F' && c != 'N' {
-                    return Err(Error::ParameterError("relayer chose must be 'T', 'F', 'N'"));
+                if c != 'H' && c != 'L' && c != 'N' {
+                    return Err(Error::ParameterError("relayer chose must be 'H', 'L', 'N'"));
                 }
             }
         }
         c.relayers.push(RelayerConfig {
             name: Some("Darwinia".to_string()),
-            choice: "T".repeat(max_chose),
+            choice: "H".repeat(max_chose),
         });
         Ok(c)
     }
@@ -116,17 +116,17 @@ mod tests {
 
 			[[relayers]]
 			name = "evil"
-			choice = "FFFFFF" 
+			choice = "LLLLLL"
 
 			[[relayers]]
 			name = "Honest"
-			choice = "TTTTTTT" 
+			choice = "HHHHHHH"
 		"#;
     #[test]
     fn test_parse_toml() {
         let c: ScenarioConfig = toml::from_str(TOML_CONFIG).unwrap();
         assert_eq!(c.relayers.len(), 2);
-        assert_eq!(c.relayers[1].choice, "TTTTTTT");
+        assert_eq!(c.relayers[1].choice, "HHHHHHH");
     }
     #[test]
     fn test_from_toml_str() {
@@ -134,9 +134,9 @@ mod tests {
         assert!(c.is_ok());
         let c = c.unwrap();
         assert_eq!(c.relayers.len(), 3);
-        assert_eq!(c.relayers[1].choice, "TTTTTTT");
+        assert_eq!(c.relayers[1].choice, "HHHHHHH");
         assert_eq!(c.relayers[2].name, Some("Darwinia".to_string()));
-        assert_eq!(c.relayers[2].choice, "TTTTTTT");
+        assert_eq!(c.relayers[2].choice, "HHHHHHH");
     }
     #[test]
     fn test_from_error_toml_str() {
@@ -155,7 +155,7 @@ mod tests {
 
 			[[relayers]]
 			name = "Honest"
-			choice = "TTTTTTT" 
+			choice = "HHHHHHH"
 		"#,
         );
         assert!(format!("{:?}", c).contains("Wd should not be negative"));
@@ -177,10 +177,10 @@ mod tests {
 
 			[[relayers]]
 			name = "Honest"
-			choice = "ttttttt" 
-		"#,
+			choice = "hhhhhhh"
+			"#,
         )
         .unwrap();
-        assert_eq!(c.relayers[0].choice, "TTTTTTT");
+        assert_eq!(c.relayers[0].choice, "HHHHHHH");
     }
 }

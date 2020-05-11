@@ -41,12 +41,12 @@ B = 1
 T = 10
 
 # We suppose that there is always a good guy, which is provied by Darwinia Bot
-# Other client may be response as T(Honest), F(Lie), N(No response)
+# Other client may be response as H(Honest), L(Lie), N(No response)
 # The choice maynot be the same size
 [[relayers]]
 name = "evil"
-choice = "FFFFFF" 
+choice = "LLLLLL"
 
 [[relayers]]
 name = "Honest"
-choice = "TTTTTTT" 
+choice = "HHHHHHH"
