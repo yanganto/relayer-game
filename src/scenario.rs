@@ -13,7 +13,8 @@ use serde_derive::Deserialize;
 use toml;
 
 use crate::error::Error;
-use crate::wait::{linear::LinearConfig, ConfigValidate, Equation};
+use crate::target::{half::HalfConfig, Equation as TargetEq};
+use crate::wait::{linear::LinearConfig, ConfigValidate, Equation as WaitEq};
 
 /// # Scenario Config
 /// In this config, the `wait_function`, the initial status, and the `relayers` are defined.
@@ -34,6 +35,10 @@ pub struct ScenarioConfig {
     /// Once a relayer submit a header and wait the time in blocks after the calculated value from wait
     /// function, Darwinia network will deem this header is valided and become a last relayed header.
     pub wait_function: String,
+
+    /// Once there is disput on any header, the relayer should submit the next ethere block target as
+    /// calculated.
+    pub target_function: String,
 
     /// parameters in linear wating
     pub wait_linear: Option<LinearConfig>,
@@ -69,11 +74,28 @@ impl ScenarioConfig {
             submit_round: 0,
         }
     }
-    pub fn get_wait_equation(&self) -> Result<impl Equation, Error> {
-        if let Some(e) = self.wait_linear {
-            return Ok(e);
+    pub fn get_wait_equation(&self) -> Result<impl WaitEq, Error> {
+        match self.wait_function.to_uppercase().as_str() {
+            "LINEAR" => {
+                if let Some(e) = self.wait_linear {
+                    return Ok(e);
+                }
+            }
+            _ => {
+                return Err(Error::ParameterError(
+                    "lack prameters for specified wait function",
+                ))
+            }
         }
-        Err(Error::ParameterError("Wait function absent"))
+        return Err(Error::ParameterError("Wait function absent"));
+    }
+    pub fn get_target_equation(&self) -> Result<impl TargetEq, Error> {
+        match self.target_function.as_str() {
+            "half" => return Ok(HalfConfig {}),
+            _ => {
+                return Err(Error::ParameterError("Target function absent"));
+            }
+        }
     }
 }
 
@@ -168,6 +190,8 @@ mod tests {
     use super::*;
     static TOML_CONFIG: &'static str = r#"
 			wait_function = "linear"
+			target_function = "half"
+
 			Dd = 100
 			De = 1000
 
@@ -234,6 +258,7 @@ mod tests {
         let c = <ScenarioConfig>::from_str(
             r#"
 			wait_function = "linear"
+			target_function = "half"
 
 			[wait_linear]
 			Wd = -10
@@ -256,6 +281,7 @@ mod tests {
         let c = <ScenarioConfig>::from_str(
             r#"
 			wait_function = "linear"
+			target_function = "half"
 
 			[wait_linear]
 			Wd = 0.0

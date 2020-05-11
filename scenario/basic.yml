@@ -11,7 +11,9 @@ wait_function = "linear"
 
 # make target block as a function
 # The next relay target block
+# currently we use a very simplify equation for this
 # target_function = (submited_ethereum_block_height - relayed_ethereum_block_height) / 2
+target_function = "half"
 
 # The initail block different
 # surfix d: block difference between last block number relayed on Darwinia,
@@ -21,7 +23,7 @@ wait_function = "linear"
 Dd = 100
 De = 1000
 
-[linear]
+[wait_linear]
 # Waiting Block may related to 
 # Md: the max value about D portion
 # Me: the max value about E portion
