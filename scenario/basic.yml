@@ -4,6 +4,15 @@ title = "Basic Scenario for Relayer"
 # the wait function for the relayed header be accepted
 wait_function = "linear"
 
+# Make submit fee a a function
+# The fee for each submit
+# TODO: make this equation
+# fee_function = 10.0 (currently use fix value 10)
+
+# make target block as a function
+# The next relay target block
+# target_function = (submited_ethereum_block_height - relayed_ethereum_block_height) / 2
+
 # The initail block different
 # surfix d: block difference between last block number relayed on Darwinia,
 # surfix e: block difference between last related block number of Ethereum
