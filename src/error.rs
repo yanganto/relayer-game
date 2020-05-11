@@ -8,8 +8,16 @@ pub enum Error {
     TOMLParseError(toml::de::Error),
     #[fail(display = "Unexpected parameter: {}", 0)]
     ParameterError(&'static str),
+    #[fail(display = "Command line args or options are not correct: {}", 0)]
+    CliError(String),
     #[fail(display = "Unexpected: {}", 0)]
     UnknownError(&'static str),
+}
+
+impl From<std::io::Error> for Error {
+    fn from(err: std::io::Error) -> Self {
+        Error::CliError(format!("{}", err))
+    }
 }
 
 impl From<toml::de::Error> for Error {

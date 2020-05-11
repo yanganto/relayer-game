@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 ///! Simulation chain
+use std::collections::HashMap;
 use std::fmt;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
@@ -7,7 +7,7 @@ use crate::scenario::{RelayerConfig, ScenarioConfig};
 
 static TOTAL_RELAYER: AtomicUsize = AtomicUsize::new(0);
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct ChainsStatus {
     darwinia_block_hight: usize,
     ethereum_block_hight: usize,
@@ -44,28 +44,39 @@ impl From<ScenarioConfig> for ChainsStatus {
 
 impl fmt::Display for ChainsStatus {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let mut output = format!(
+        write!(f, "{}{}", self.fmt_status(), self.fmt_relayers_status())
+    }
+}
+
+impl ChainsStatus {
+    pub fn fmt_status(&self) -> String {
+        format!(
             "ChainsStatus: Darwinia #{}, Ethereum #{}, Last relay Eth(#{}) at #{}\n",
             self.darwinia_block_hight,
             self.ethereum_block_hight,
             self.last_relayed_block.1,
             self.last_relayed_block.0
-        );
+        )
+    }
+    pub fn fmt_relayers_status(&self) -> String {
+        let mut output = String::new();
         for r in self.relayers.iter() {
             output.push_str(&format!("{}", r.1));
         }
-        write!(f, "{}", output)
+        output
     }
-}
-
-impl ChainsStatus {
-    fn submit(&mut self, relayer: String, fee: f32, lie: bool) {
+    fn submit_by(&mut self, relayer: String, fee: f32, lie: bool) {
         let r = self.relayers.get_mut(&relayer).unwrap();
         r.submit(fee, lie);
         self.submit_fee_pool += fee;
     }
+    pub fn submit(&mut self, relayers: Vec<(String, bool)>, fee: f32) {
+        for (relayer, lie) in relayers {
+            self.submit_by(relayer, fee, lie)
+        }
+    }
 
-    fn should_balance(&self) {
+    pub fn should_balance(&self) {
         let mut p = self.submit_fee_pool;
         for (_key, r) in self.relayers.iter() {
             p -= r.pay;
@@ -79,7 +90,7 @@ impl ChainsStatus {
         }
     }
 
-    fn reward_honest_relayers(&mut self) {
+    pub fn reward_honest_relayers(&mut self) {
         let total_honest_submit_times = self.relayers.iter().fold(0, |mut sum, (_k, r)| {
             sum += r.get_honest_submit_times();
             sum
@@ -87,14 +98,12 @@ impl ChainsStatus {
         let share_pre_submit = self.submit_fee_pool / total_honest_submit_times as f32;
         for r in self.relayers.values_mut() {
             r.reward += r.get_honest_submit_times() as f32 * share_pre_submit;
-            r.lie = false;
-            r.submit_times = 0;
         }
         self.submit_fee_pool = 0.0;
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct RelayerStatus {
     pub id: usize,
     pub name: Option<String>,
@@ -128,7 +137,7 @@ impl fmt::Display for RelayerStatus {
 impl RelayerStatus {
     fn submit(&mut self, fee: f32, lie: bool) {
         self.pay += fee;
-        self.lie &= lie;
+        self.lie |= lie;
         self.submit_times += 1;
     }
 
@@ -160,18 +169,40 @@ mod tests {
 			T = 10
 
 			[[relayers]]
-			name = "evil"
-			choice = "LLLLLL"
+			name = "Evil"
+			choice = "L"
 			"#;
+    #[test]
+    fn test_chain_status_from_scenario_config_with_submit_by_replysers() {
+        let mut c: ChainsStatus = <ScenarioConfig>::from_str(TOML_CONFIG).unwrap().into();
+        assert_eq!(c.relayers["Darwinia"].lie, false);
+        c.submit_by("Evil".to_string(), 10.0, true); // `true` is to lie
+        c.should_balance();
+        c.submit_by("Darwinia".to_string(), 10.0, false);
+        c.should_balance();
+        c.submit_by("Darwinia".to_string(), 10.0, false);
+        c.should_balance();
+        assert_eq!(c.submit_fee_pool, 30.0);
+        c.reward_honest_relayers();
+        c.should_balance();
+        assert_eq!(c.relayers["Evil"].reward, 0.0);
+        assert_eq!(c.relayers["Darwinia"].reward, 30.0);
+    }
     #[test]
     fn test_chain_status_from_scenario_config() {
         let mut c: ChainsStatus = <ScenarioConfig>::from_str(TOML_CONFIG).unwrap().into();
         assert_eq!(c.relayers["Darwinia"].lie, false);
-        c.submit("evil".to_string(), 10.0, true); // `true` is to lie
+        c.submit(
+            vec![("Evil".to_string(), true), ("Darwinia".to_string(), false)],
+            10.0,
+        );
         c.should_balance();
-        c.submit("Darwinia".to_string(), 10.0, false);
+        c.submit(vec![("Darwinia".to_string(), false)], 10.0);
         c.should_balance();
+        assert_eq!(c.submit_fee_pool, 30.0);
         c.reward_honest_relayers();
         c.should_balance();
+        assert_eq!(c.relayers["Evil"].reward, 0.0);
+        assert_eq!(c.relayers["Darwinia"].reward, 30.0);
     }
 }

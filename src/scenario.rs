@@ -45,7 +45,7 @@ pub struct ScenarioConfig {
 }
 
 pub struct ScenarioConfigIntoIterator {
-    config: ScenarioConfig,
+    relayers: Vec<RelayerConfig>,
     submit_round: usize,
 }
 
@@ -55,7 +55,17 @@ impl IntoIterator for ScenarioConfig {
 
     fn into_iter(self) -> Self::IntoIter {
         ScenarioConfigIntoIterator {
-            config: self,
+            relayers: self.relayers,
+            submit_round: 0,
+        }
+    }
+}
+
+impl ScenarioConfig {
+    /// a method to get iterator with less clone, and save memory
+    pub fn get_iter(&self) -> ScenarioConfigIntoIterator {
+        ScenarioConfigIntoIterator {
+            relayers: self.relayers.clone(),
             submit_round: 0,
         }
     }
@@ -65,14 +75,13 @@ impl Iterator for ScenarioConfigIntoIterator {
     type Item = Vec<(String, bool)>;
     /// Return the the relayer is liing in each round
     fn next(&mut self) -> Option<Vec<(String, bool)>> {
-        if self.submit_round >= self.config.relayers[0].choice.len() {
+        if self.submit_round >= self.relayers[0].choice.len() {
             return None;
         }
         let current_index = self.submit_round;
         self.submit_round += 1;
         Some(
-            self.config
-                .relayers
+            self.relayers
                 .iter()
                 .map(|r| {
                     if current_index >= r.choice.len() {
@@ -92,7 +101,7 @@ impl Iterator for ScenarioConfigIntoIterator {
 
 /// RelayerConfig
 /// Set up a `name` and the `choice` about the relayer
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct RelayerConfig {
     /// Optional field help you to know the relayer in
     pub name: Option<String>,
