@@ -4,12 +4,15 @@
 //! module, and simulate the result, let people know more about the time delay in blocks and
 //! the reward distribution.
 //!
+
 use std::fs::File;
 use std::io::prelude::*;
 use std::str::FromStr;
 
 use clap::App;
 use colored::Colorize;
+
+use crate::wait::Equation;
 
 mod chain;
 mod error;
@@ -22,6 +25,7 @@ fn simulate_from_scenario(file_name: &str, debug: bool) -> Result<(), error::Err
     file.read_to_string(&mut contents)?;
     let config = <scenario::ScenarioConfig>::from_str(&contents)?;
     let mut iterator = config.get_iter();
+    let wait_eq = config.get_wait_equation()?;
     let mut chains_status: chain::ChainsStatus = config.into();
     while let Some(relayer_sumbitions) = iterator.next() {
         if debug {
@@ -36,7 +40,15 @@ fn simulate_from_scenario(file_name: &str, debug: bool) -> Result<(), error::Err
             }
             print!("\n");
         }
-        chains_status.submit(relayer_sumbitions, 10.0, 50, 0);
+        chains_status.submit(
+            relayer_sumbitions,
+            10.0,
+            wait_eq.calculate(
+                chains_status.darwinia_block_hight - chains_status.last_relayed_block.0,
+                chains_status.submit_target_ethereum_block - chains_status.last_relayed_block.1,
+            ),
+            0,
+        );
         if debug {
             println!(
                 " Next Etherem Target Block: {}",

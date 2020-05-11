@@ -9,15 +9,15 @@ static TOTAL_RELAYER: AtomicUsize = AtomicUsize::new(0);
 
 #[derive(Default, Debug)]
 pub struct ChainsStatus {
-    darwinia_block_hight: usize,
-    ethereum_block_hight: usize,
+    pub darwinia_block_hight: usize,
+    pub ethereum_block_hight: usize,
     /// Last relayed block info
     /// (darwinia_block_height_for_last_relay, ethereum_block_height_for_last_relay)
-    last_relayed_block: (usize, usize),
-    relayers: HashMap<String, RelayerStatus>,
+    pub last_relayed_block: (usize, usize),
+    pub relayers: HashMap<String, RelayerStatus>,
     pub submit_target_ethereum_block: usize,
-    block_speed_factor: f32,
-    submit_fee_pool: f32,
+    pub block_speed_factor: f32,
+    pub submit_fee_pool: f32,
 }
 
 impl From<ScenarioConfig> for ChainsStatus {

@@ -13,7 +13,7 @@ use serde_derive::Deserialize;
 use toml;
 
 use crate::error::Error;
-use crate::wait::{linear::LinearConfig, ConfigValidate};
+use crate::wait::{linear::LinearConfig, ConfigValidate, Equation};
 
 /// # Scenario Config
 /// In this config, the `wait_function`, the initial status, and the `relayers` are defined.
@@ -68,6 +68,12 @@ impl ScenarioConfig {
             relayers: self.relayers.clone(),
             submit_round: 0,
         }
+    }
+    pub fn get_wait_equation(&self) -> Result<impl Equation, Error> {
+        if let Some(e) = self.wait_linear {
+            return Ok(e);
+        }
+        Err(Error::ParameterError("Wait function absent"))
     }
 }
 

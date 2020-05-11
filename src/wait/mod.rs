@@ -6,6 +6,10 @@ use crate::error::Error;
 
 pub mod linear;
 
+pub trait Equation {
+    fn calculate(&self, darwinia_distance: usize, ethereum_distance: usize) -> usize;
+}
+
 pub trait ConfigValidate {
     fn validate(&self) -> Result<(), Error>;
 }

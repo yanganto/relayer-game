@@ -1,6 +1,8 @@
 //! Linear Equation is the simplest wait function
+use std::cmp::min;
+
 use crate::error::Error;
-use crate::wait::ConfigValidate;
+use crate::wait::{ConfigValidate, Equation};
 use serde_derive::Deserialize;
 
 /// # Linear waiting function
@@ -11,7 +13,7 @@ use serde_derive::Deserialize;
 /// e: the parameters affect by the parameters on target network(for example Ethereum)
 ///
 #[allow(non_snake_case)]
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Copy, Clone)]
 pub struct LinearConfig {
     /// Md: the max value about D portion
     Wd: f64,
@@ -34,5 +36,14 @@ impl ConfigValidate for LinearConfig {
             return Err(Error::ParameterError("We should not be negative"));
         }
         Ok(())
+    }
+}
+
+impl Equation for LinearConfig {
+    /// waiting block = int(min(Wd * D, Md) + min(We * E, Me)) + C
+    fn calculate(&self, darwinia_distance: usize, ethereum_distance: usize) -> usize {
+        min((self.Wd * darwinia_distance as f64) as usize, self.Md)
+            + min((self.Wd * ethereum_distance as f64) as usize, self.Md)
+            + self.C
     }
 }
