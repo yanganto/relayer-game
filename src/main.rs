@@ -26,6 +26,9 @@ fn simulate_from_scenario(file_name: &str, debug: bool) -> Result<(), error::Err
     let mut contents = String::new();
     file.read_to_string(&mut contents)?;
     let config = <scenario::ScenarioConfig>::from_str(&contents)?;
+    if let Some(t) = &config.title {
+        println!("{}", t.white());
+    }
     let mut iterator = config.get_iter();
     let wait_eq = config.get_wait_equation()?;
     let target_eq = config.get_target_equation()?;
@@ -35,13 +38,15 @@ fn simulate_from_scenario(file_name: &str, debug: bool) -> Result<(), error::Err
         if debug {
             print!("{}", format!("{}", chains_status.fmt_status()).cyan());
             print!(
-                "Submitions(Fee: {}) ",
+                "\tSubmitions(Fee: {}): ",
                 fee_eq.calculate(iterator.submit_round)
             );
             for (r, lie) in relayer_sumbitions.iter() {
                 print!("{}", r);
                 if *lie {
                     print!("(lie)");
+                } else {
+                    print!("(honest)");
                 }
                 print!(" ");
             }
@@ -71,19 +76,19 @@ fn simulate_from_scenario(file_name: &str, debug: bool) -> Result<(), error::Err
 
         if debug {
             println!(
-                " Next Etherem Target Block: {}",
+                "\tNext Etherem Target Block: {}",
                 chains_status.submit_target_ethereum_block
             );
-            print!(" Relayer Status:");
+            print!("\tRelayer Status: ");
             println!("{}", chains_status.fmt_relayers_status());
+            println!(
+                "\tSubmit Fee Pool Status: {}",
+                chains_status.submit_fee_pool
+            );
         }
     }
     chains_status.reward_honest_relayers();
-    if debug {
-        println!("{}", format!("Final {}", chains_status).cyan());
-    } else {
-        println!("{}", format!("Final {}", chains_status).white());
-    }
+    println!("Final {}", chains_status);
     Ok(())
 }
 

@@ -137,9 +137,9 @@ impl fmt::Display for RelayerStatus {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let balance = self.reward - self.pay;
         if let Some(n) = &self.name {
-            write!(f, "  {}: {}", n, balance)
+            write!(f, "{}: {} ", n, balance)
         } else {
-            write!(f, "  ID {}: {}", self.id, balance)
+            write!(f, "ID {}: {} ", self.id, balance)
         }
     }
 }
