@@ -27,7 +27,7 @@ impl ConfigValidate for LinearConfig {
 }
 
 impl Equation for LinearConfig {
-    /// waiting block = int(min(Wd * D, Md) + min(We * E, Me)) + C
+    /// fee = min(W * E, M) + C
     fn calculate(&self, submit_round: usize) -> f64 {
         let weight_part = self.W * submit_round as f64;
         if weight_part > self.M {

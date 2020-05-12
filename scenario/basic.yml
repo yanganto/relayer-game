@@ -24,6 +24,10 @@ fee_function = "10.0"
 Dd = 100
 De = 1000
 
+# The block producing factor for darwinia / ethereum
+# For example, 2.0 means that darwinia produce 2 blocks and ethereum produce 1 block.
+F = 2.0
+
 [wait_linear]
 # Waiting Block may related to 
 # Md: the max value about D portion

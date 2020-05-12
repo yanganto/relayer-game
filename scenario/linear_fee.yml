@@ -9,7 +9,8 @@ De = 1000
 
 [fee_linear]
 # Submit fee pre block may related to blocknumber of a serial submitions
-# submit fee = int(min(Wb * B, Mb)) + C
+# The fee is increasing that can help the submition to be finialized
+# submit fee = min(Wb * B, Mb) + C
 W = 1.5
 C  = 10.0
 M = 100.0

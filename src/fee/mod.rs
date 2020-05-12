@@ -1,3 +1,6 @@
+//! Fee module collect the fee functions
+//! The fee function will increase the fee to improve speed of the finality.
+//!
 use crate::error::Error;
 
 pub mod linear;
