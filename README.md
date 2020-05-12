@@ -10,7 +10,7 @@ this tool can easily to change three important equations and load from different
 In this tool we assume the target chain is Ethereum, however you can simulate different chain by chaning parameters.
 All the behavior of relayers, and the parameters are described a in a yaml file. 
 You can easily load the scenario file to simulate the result. 
-There are some example scenario files listed in [sceneraio](./sceneraio).
+There are some example scenario files listed in [sceneraio](./scenario).
 
 ## General parameters
 - `title ` (optional)
@@ -88,7 +88,7 @@ Also, you can put `-v` option to see all status in each round of submitions
 # Develop and Document
 This project has document, you can use this command to show the document on browser.
 `cargo doc --no-deps --open`
-If you want to add more equation for differe function, you can take a look the trait in `./src/fee/mod.rs`, `./src/wait/mod.rs`, `./src/target/mod.rs`.
+If you want to add more equation for differe function, you can take a look the trait in [fee](./src/fee/mod.rs), [wait](./src/wait/mod.rs), [target](./src/target/mod.rs).
 The `Equation` trait and `ConfigValidate` will guild you to add you customized funcations. 
 
 
