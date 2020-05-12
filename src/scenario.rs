@@ -13,9 +13,11 @@ use serde_derive::Deserialize;
 use toml;
 
 use crate::error::Error;
-use crate::fee::Equation as FeeEq;
+use crate::fee::{linear::LinearConfig as FeeLinear, ConfigValidate as FeeVali, Equation as FeeEq};
 use crate::target::{half::HalfConfig, Equation as TargetEq};
-use crate::wait::{linear::LinearConfig, ConfigValidate, Equation as WaitEq};
+use crate::wait::{
+    linear::LinearConfig as WaitLinear, ConfigValidate as WaitVali, Equation as WaitEq,
+};
 
 /// # Scenario Config
 /// In this config, the `wait_function`, the initial status, and the `relayers` are defined.
@@ -45,7 +47,10 @@ pub struct ScenarioConfig {
     pub fee_function: String,
 
     /// parameters in linear wating
-    pub wait_linear: Option<LinearConfig>,
+    pub wait_linear: Option<WaitLinear>,
+
+    /// parameters in linear wating
+    pub fee_linear: Option<FeeLinear>,
 
     /// The relayers participate in these game
     /// We suppose that there is always a honest relayer provied by Darwinia,
@@ -78,37 +83,49 @@ impl ScenarioConfig {
             submit_round: 0,
         }
     }
-    pub fn get_wait_equation(&self) -> Result<impl WaitEq, Error> {
+    pub fn get_wait_equation(&self) -> Result<Box<dyn WaitEq>, Error> {
+        if let Ok(i) = self.wait_function.as_str().parse::<usize>() {
+            return Ok(Box::new(i));
+        }
         match self.wait_function.to_uppercase().as_str() {
             "LINEAR" => {
-                if let Some(e) = self.wait_linear {
-                    return Ok(e);
+                if let Some(w) = self.wait_linear {
+                    return Ok(Box::new(w));
                 }
             }
             _ => {
-                return Err(Error::ParameterError(
-                    "lack prameters for specified wait function",
-                ))
+                return Err(Error::ParameterError("Wait function not support"));
             }
         }
-        return Err(Error::ParameterError("Wait function absent"));
+        return Err(Error::ParameterError(
+            "lack prameters for specified wait function",
+        ));
     }
     pub fn get_target_equation(&self) -> Result<impl TargetEq, Error> {
-        match self.target_function.as_str() {
-            "half" => return Ok(HalfConfig {}),
+        match self.target_function.to_uppercase().as_str() {
+            "HALF" => return Ok(HalfConfig {}),
             _ => {
                 return Err(Error::ParameterError("Target function absent"));
             }
         }
     }
-    pub fn get_fee_equation(&self) -> Result<impl FeeEq, Error> {
-        match self.fee_function.as_str().parse::<f64>() {
-            Ok(n) => Ok(n),
-            Err(e) => {
-                // TODO: map this to fee function name, if we have
-                return Err(e.into());
+    pub fn get_fee_equation(&self) -> Result<Box<dyn FeeEq>, Error> {
+        if let Ok(i) = self.fee_function.as_str().parse::<f64>() {
+            return Ok(Box::new(i));
+        }
+        match self.fee_function.to_uppercase().as_str() {
+            "LINEAR" => {
+                if let Some(f) = self.fee_linear {
+                    return Ok(Box::new(f));
+                }
+            }
+            _ => {
+                return Err(Error::ParameterError("Fee function not support"));
             }
         }
+        return Err(Error::ParameterError(
+            "lack prameters for specified fee function",
+        ));
     }
 }
 
@@ -157,16 +174,12 @@ impl FromStr for ScenarioConfig {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut c: ScenarioConfig = toml::from_str(s)?;
         c.wait_function.make_ascii_uppercase();
-        match c.wait_function.as_str() {
-            "LINEAR" => {
-                if let Some(l) = &c.wait_linear {
-                    l.validate()?
-                }
-            }
-            _ => {
-                return Err(Error::ParameterError("waiting function not support"));
-            }
-        };
+        if let Some(w) = c.wait_linear {
+            w.validate()?;
+        }
+        if let Some(f) = c.fee_linear {
+            f.validate()?;
+        }
 
         let mut max_chose = 0;
         for (i, r) in c.relayers.iter_mut().enumerate() {

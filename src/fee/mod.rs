@@ -1,5 +1,7 @@
 use crate::error::Error;
 
+pub mod linear;
+
 pub trait Equation {
     fn calculate(&self, submit_times: usize) -> f64;
 }

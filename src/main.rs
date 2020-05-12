@@ -12,9 +12,7 @@ use std::str::FromStr;
 use clap::App;
 use colored::Colorize;
 
-use crate::fee::Equation as FeeEq;
 use crate::target::Equation as TargetEq;
-use crate::wait::Equation as WaitEq;
 
 mod chain;
 mod error;
@@ -36,7 +34,10 @@ fn simulate_from_scenario(file_name: &str, debug: bool) -> Result<(), error::Err
     while let Some(relayer_sumbitions) = iterator.next() {
         if debug {
             print!("{}", format!("{}", chains_status.fmt_status()).cyan());
-            print!("Submitions ");
+            print!(
+                "Submitions(Fee: {}) ",
+                fee_eq.calculate(iterator.submit_round)
+            );
             for (r, lie) in relayer_sumbitions.iter() {
                 print!("{}", r);
                 if *lie {
@@ -64,6 +65,10 @@ fn simulate_from_scenario(file_name: &str, debug: bool) -> Result<(), error::Err
                 chains_status.last_relayed_block.1,
             ),
         );
+
+        // TODO: make this as an option
+        chains_status.should_balance();
+
         if debug {
             println!(
                 " Next Etherem Target Block: {}",

@@ -13,3 +13,9 @@ pub trait Equation {
 pub trait ConfigValidate {
     fn validate(&self) -> Result<(), Error>;
 }
+
+impl Equation for usize {
+    fn calculate(&self, _darwinia_distance: usize, _ethereum_distance: usize) -> usize {
+        *self
+    }
+}

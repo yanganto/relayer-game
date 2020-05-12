@@ -1,0 +1,23 @@
+title = "Linear fee for Relayer"
+
+wait_function = "10"
+target_function = "half"
+fee_function = "linear"
+
+Dd = 100
+De = 1000
+
+[fee_linear]
+# Submit fee pre block may related to blocknumber of a serial submitions
+# submit fee = int(min(Wb * B, Mb)) + C
+W = 1.5
+C  = 10.0
+M = 100.0
+
+# We suppose that there is always a good guy, which is provied by Darwinia Bot
+# Other client may be response as H(Honest), L(Lie), N(No response)
+# The choice maynot be the same size
+[[relayers]]
+name = "Evil"
+choice = "LLLLLL"
+
