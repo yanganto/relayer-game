@@ -9,7 +9,7 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::str::FromStr;
 
-use clap::App;
+use clap::{App, Arg};
 use colored::Colorize;
 
 use crate::target::Equation as TargetEq;
@@ -21,14 +21,21 @@ mod scenario;
 mod target;
 mod wait;
 
-fn simulate_from_scenario(file_name: &str, debug: bool) -> Result<(), error::Error> {
+fn simulate_from_scenario(
+    file_name: &str,
+    patches: Vec<&str>,
+    debug: bool,
+) -> Result<(), error::Error> {
     let mut file = File::open(file_name)?;
     let mut contents = String::new();
     file.read_to_string(&mut contents)?;
-    let config = <scenario::ScenarioConfig>::from_str(&contents)?;
+    let mut config = <scenario::ScenarioConfig>::from_str(&contents)?;
+    config.apply_patch(patches)?;
+
     if let Some(t) = &config.title {
         println!("{}", t.white());
     }
+
     let mut iterator = config.get_iter();
     let wait_eq = config.get_wait_equation()?;
     let target_eq = config.get_target_equation()?;
@@ -97,9 +104,16 @@ fn main() {
         .about("Relayer Gaming Simulation Tool")
         .arg("<scenario> 'scenario yaml file'")
         .arg("-v, --verbose 'show the detail of each submit'")
+        .arg(
+            Arg::with_name("patch")
+                .multiple(true)
+                .short('p')
+                .takes_value(true),
+        )
         .get_matches();
     match simulate_from_scenario(
         matches.value_of("scenario").unwrap(),
+        matches.values_of("patch").unwrap().collect(),
         matches.is_present("verbose"),
     ) {
         Err(e) => println!("{}", e),

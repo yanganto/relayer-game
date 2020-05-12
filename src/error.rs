@@ -10,6 +10,8 @@ pub enum Error {
     ParameterError(&'static str),
     #[fail(display = "Command line args or options are not correct: {}", 0)]
     CliError(String),
+    #[fail(display = "Patch Parameter `{}` is not valid", 0)]
+    PatchParameterError(String),
     #[fail(display = "Unexpected: {}", 0)]
     UnknownError(&'static str),
 }

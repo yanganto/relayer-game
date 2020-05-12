@@ -127,6 +127,23 @@ impl ScenarioConfig {
             "lack prameters for specified fee function",
         ));
     }
+    pub fn apply_patch(&mut self, patches: Vec<&str>) -> Result<(), Error> {
+        let split_with_equation = patches.iter().map(|patch| {
+            let mut i = patch.split('=').into_iter();
+            return (i.clone().nth(0), i.nth(1));
+        });
+        for key_values in split_with_equation {
+            if let (Some(k), Some(v)) = key_values {
+                // TODO: patch parameters here
+                println!("k: {:?}, v: {:?}", k, v)
+            } else {
+                return Err(Error::PatchParameterError(
+                    key_values.0.unwrap_or_default().to_string(),
+                ));
+            }
+        }
+        Ok(())
+    }
 }
 
 impl Iterator for ScenarioConfigIntoIterator {
