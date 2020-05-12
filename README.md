@@ -85,6 +85,10 @@ Also, you can put `-v` option to see all status in each round of submitions
 ./target/release/relayer-game -v scenario/basic.yml
 ```
 
-
+# Develop and Document
+This project has document, you can use this command to show the document on browser.
+`cargo doc --no-deps --open`
+If you want to add more equation for differe function, you can take a look the trait in `./src/fee/mod.rs`, `./src/wait/mod.rs`, `./src/target/mod.rs`.
+The `Equation` trait and `ConfigValidate` will guild you to add you customized funcations. 
 
 
