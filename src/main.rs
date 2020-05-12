@@ -12,6 +12,7 @@ use std::str::FromStr;
 use clap::App;
 use colored::Colorize;
 
+use crate::fee::Equation as FeeEq;
 use crate::target::Equation as TargetEq;
 use crate::wait::Equation as WaitEq;
 
@@ -30,6 +31,7 @@ fn simulate_from_scenario(file_name: &str, debug: bool) -> Result<(), error::Err
     let mut iterator = config.get_iter();
     let wait_eq = config.get_wait_equation()?;
     let target_eq = config.get_target_equation()?;
+    let fee_eq = config.get_fee_equation()?;
     let mut chains_status: chain::ChainsStatus = config.into();
     while let Some(relayer_sumbitions) = iterator.next() {
         if debug {
@@ -52,7 +54,7 @@ fn simulate_from_scenario(file_name: &str, debug: bool) -> Result<(), error::Err
             };
         chains_status.submit(
             relayer_sumbitions,
-            10.0,
+            fee_eq.calculate(iterator.submit_round),
             wait_eq.calculate(
                 chains_status.darwinia_block_hight - chains_status.last_relayed_block.0,
                 ethereum_distance,

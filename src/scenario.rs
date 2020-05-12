@@ -55,7 +55,7 @@ pub struct ScenarioConfig {
 
 pub struct ScenarioConfigIntoIterator {
     relayers: Vec<RelayerConfig>,
-    submit_round: usize,
+    pub submit_round: usize,
 }
 
 impl IntoIterator for ScenarioConfig {
@@ -247,7 +247,7 @@ mod tests {
 
         let fee_function = c.get_fee_equation();
         assert!(fee_function.is_ok());
-        assert_eq!(fee_function.unwrap().calculate(1000, 100), 10.0);
+        assert_eq!(fee_function.unwrap().calculate(0), 10.0);
     }
     #[test]
     fn test_iterate_from_scenario() {
