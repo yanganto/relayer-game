@@ -52,7 +52,11 @@ The following parameters are used for relayers
     - if name is not provided, the relayer will be name with serial numbers
   - `choice`
     - relayer may be response as `H`(Honest), `L`(Lie), `N`(No response)
-    - if the lengeht of chose are shorter than other relayers, it will be deem to no response.
+    - if the lengeht of chose are shorter than other relayers, it will be deem to no response.  
+
+We assume there always is a good guy to relay the correct headers, and the guy will name `Darwinia`, 
+and this relayer will be automatic add into the scenario when load from config file, 
+so please avoid to use this name for the relayer.
 
 ## Parameters of Equation
 The three function can use different equations, base on the function seting, following parameters of function should be filled.
@@ -67,7 +71,7 @@ The three function can use different equations, base on the function seting, fol
 
 - `[fee_linear]`
   - the linear eqiation for fee function
-  - `fee = min(W * E, M)) + C`
+  - `fee = min(W * E, M) + C`
   - W is the weight for that protion
   - M is the maxium value for that protion
 
