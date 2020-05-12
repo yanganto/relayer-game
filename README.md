@@ -17,7 +17,7 @@ There are some example scenario files listed in [scenario](./scenario).
   - The title for this scenario will print on the console
 - `F` (optional)
   - The block producing factor for Darwinia / Ethereum
-  - For example: 2.0, that means that Darwinia produce 2 blocks and RDhereum produce 1 block.
+  - For example: 2.0, that means that Darwinia produce 2 blocks and Ethereum produce 1 block.
 
 ## Specify functions type
 - `wait_function`

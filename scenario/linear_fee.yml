@@ -8,9 +8,9 @@ Dd = 100
 De = 1000
 
 [fee_linear]
-# Submit fee pre block may related to blocknumber of a serial submitions
+# Each submission fee may be related to the rounds of consecutive submissions.
 # The fee is increasing that can help the submition to be finialized
-# submit fee = min(Wb * B, Mb) + C
+# submit fee = min(W * submit_round, M) + C
 W = 1.5
 C  = 10.0
 M = 100.0
