@@ -113,7 +113,7 @@ fn main() {
         .get_matches();
     match simulate_from_scenario(
         matches.value_of("scenario").unwrap(),
-        matches.values_of("patch").unwrap().collect(),
+        matches.values_of("patch").unwrap_or_default().collect(),
         matches.is_present("verbose"),
     ) {
         Err(e) => println!("{}", e),

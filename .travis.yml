@@ -2,16 +2,17 @@ language: rust
 rust:
   - stable
   - nightly
-matrix:
-  allow_failures:
-    - rust: nightly
-  fast_finish: true
+
 cache: cargo
 
 jobs:
   include:
     - stage: "Test"
       script: cargo test --verbose --all
+
+    - stage: "Cli Test"
+      script: /bin/sh ./tests.sh
+
     - stage: "Build"
-      script: cargo build --verbose --all
+      script: cargo build --release --verbose --all
 
