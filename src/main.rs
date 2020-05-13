@@ -15,10 +15,10 @@ use colored::Colorize;
 
 use crate::target::Equation as TargetEq;
 
+mod bond;
 mod chain;
 mod challenge;
 mod error;
-mod fee;
 mod scenario;
 mod target;
 
@@ -40,14 +40,14 @@ fn simulate_from_scenario(
     let mut iterator = config.get_iter();
     let challenge_eq = config.get_challenge_equation()?;
     let target_eq = config.get_target_equation()?;
-    let fee_eq = config.get_fee_equation()?;
+    let bond_eq = config.get_bond_equation()?;
     let mut chains_status: chain::ChainsStatus = config.into();
     while let Some(relayer_sumbitions) = iterator.next() {
         if debug {
             print!("{}", format!("{}", chains_status.fmt_status()).cyan());
             print!(
-                "\tSubmitions(Fee: {}): ",
-                fee_eq.calculate(iterator.submit_round)
+                "\tSubmitions(Bond: {}): ",
+                bond_eq.calculate(iterator.submit_round)
             );
             for (r, lie) in relayer_sumbitions.iter() {
                 print!("{}", r);
@@ -68,7 +68,7 @@ fn simulate_from_scenario(
             };
         chains_status.submit(
             relayer_sumbitions,
-            fee_eq.calculate(iterator.submit_round),
+            bond_eq.calculate(iterator.submit_round),
             challenge_eq.calculate(
                 chains_status.darwinia_block_hight - chains_status.last_relayed_block.0,
                 ethereum_distance,
@@ -90,8 +90,8 @@ fn simulate_from_scenario(
             print!("\tRelayer Status: ");
             println!("{}", chains_status.fmt_relayers_status());
             println!(
-                "\tSubmit Fee Pool Status: {}",
-                chains_status.submit_fee_pool
+                "\tSubmit Bond Pool Status: {}",
+                chains_status.submit_bond_pool
             );
         }
     }

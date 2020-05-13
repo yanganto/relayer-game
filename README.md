@@ -20,22 +20,22 @@ There are some example scenario files listed in [scenario](./scenario).
   - For example: 2.0, that means that Darwinia produce 2 blocks and Ethereum produce 1 block.
 
 ## Specify functions type
-- `wait_function`
-  - Once a relayer submit a header and wait the time in blocks after the calculated value from wait function, 
+- `challenge_function`
+  - Once a relayer submit a header and challenge the time in blocks after the calculated value from challenge function, 
     Darwinia network will deem this header is valided and become a best header.  
   - Current support: integer number, linear   
   - For example: '10', that means a submit block will be deem to relayed and finalized after 10 Darwinia blocks.
-  - For example: `wait_linear`, that means a submit block will wait according the linear function, and the parameters of function need to provide.
+  - For example: `challenge_linear`, that means a submit block will wait according the linear function, and the parameters of function need to provide.
 
 - `target_function `
   - Once there is dispute on any header, the relayer should submit the next Ethereum block target as calculated.  
   - Current support: half
   - For example: 'half', that means the next target will be `(submited_ethereum_block_height - relayed_ethereum_block_height) / 2`
 
-- `fee_function`
-  - The fee function will increase the fee to improve speed of the finality, and the cost of keeping lie will be enormous.  
+- `bond_function`
+  - The bond function will increase the bond to improve speed of the finality, and the cost of keeping lie will be enormous.  
   - Current support: float number, linear   
-  - For example: '10.0', that means the fee of each submit is always 10.0.
+  - For example: '10.0', that means the bond of each submit is always 10.0.
 
 ## Initialize status of Darwinia and Ethereum
 suffix `d`: block difference between last block number relayed on Darwinia, suffix `e`: block difference between last related block number of Ethereum
@@ -60,18 +60,18 @@ so please avoid to use this name for the relayer.
 
 ## Parameters of Equation
 The three function can use different equations, base on the function setting, following parameters of function should be filled.
-- `[wait_linear]`
-  - the linear equation for wait function
-  - `waiting block = int(min(Wd * D, Md) + min(We * E, Me)) + C`
+- `[challenge_linear]`
+  - the linear equation for challenge function
+  - `challengeing block = int(min(Wd * D, Md) + min(We * E, Me)) + C`
   - suffix `d`: block difference between last block number relayed on Darwinia, suffix `e`: block difference between last related block number of Ethereum
   - D is the distance in Darwinia chain
   - E is the distance in Ethereum chain
   - W is the weight for that portion
   - M is the maximum value for that portion
 
-- `[fee_linear]`
-  - the linear equation for fee function
-  - `fee = min(W * E, M) + C`
+- `[bond_linear]`
+  - the linear equation for bond function
+  - `bond = min(W * E, M) + C`
   - W is the weight 
   - M is the maximum value for the variable part
 
@@ -90,12 +90,12 @@ Also, you can put `-v` option to see all status in each round of submit.
 ```
 Besides, you can patch some equation parameters with option `p`, for examples.
 ```
-./target/release/relayer-game -p wait_linear.C=9 wait_linear.Wd=10.0 -- scenario/basic.yml
+./target/release/relayer-game -p challenge_linear.C=9 challenge_linear.Wd=10.0 -- scenario/basic.yml
 ```
-Currently, all parameters in `wait_linear` and `fee_linear`, and also the values of `wait_function` and `fee_function` can be patched.
+Currently, all parameters in `challenge_linear` and `bond_linear`, and also the values of `challenge_function` and `bond_function` can be patched.
 
 # Develop and Document
 This project has document, you can use this command to show the document on browser.
 `cargo doc --no-deps --open`
-If you want to add more equation for different function, you can take a look the trait in [fee](./src/fee/mod.rs), [wait](./src/wait/mod.rs), [target](./src/target/mod.rs).
+If you want to add more equation for different function, you can take a look the trait in [bond](./src/bond/mod.rs), [challenge](./src/challenge/mod.rs), [target](./src/target/mod.rs).
 The `Equation` trait and `ConfigValidate` will guild you to add you customized equation. 

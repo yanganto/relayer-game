@@ -3,12 +3,12 @@
 //! function, Darwinia network will deem this header is valided and become a best header.
 //! There is only linear module at first.
 //!
-//! The `Equation` and `ConfigValidate` trait help you to customized your own fee equations.
+//! The `Equation` and `ConfigValidate` trait help you to customized your own challenge equations.
 use crate::error::Error;
 
 pub mod linear;
 
-/// This trait help the main function calculate the fee from the equation
+/// This trait help the main function calculate the bond from the equation
 pub trait Equation {
     fn calculate(&self, darwinia_distance: usize, ethereum_distance: usize) -> usize;
 }

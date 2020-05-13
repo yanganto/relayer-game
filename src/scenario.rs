@@ -12,12 +12,14 @@ use std::str::FromStr;
 use serde_derive::Deserialize;
 use toml;
 
+use crate::bond::{
+    linear::LinearConfig as BondLinear, ConfigValidate as BondVali, Equation as BondEq,
+};
 use crate::challenge::{
     linear::LinearConfig as ChallengeLinear, ConfigValidate as ChallengeVali,
     Equation as ChallengeEq,
 };
 use crate::error::Error;
-use crate::fee::{linear::LinearConfig as FeeLinear, ConfigValidate as FeeVali, Equation as FeeEq};
 use crate::target::{half::HalfConfig, Equation as TargetEq};
 
 /// # Scenario Config
@@ -44,14 +46,14 @@ pub struct ScenarioConfig {
     /// calculated.
     pub target_function: String,
 
-    /// The submit fee of function
-    pub fee_function: String,
+    /// The submit bond of function
+    pub bond_function: String,
 
     /// parameters in linear wating
     pub challenge_linear: Option<ChallengeLinear>,
 
     /// parameters in linear wating
-    pub fee_linear: Option<FeeLinear>,
+    pub bond_linear: Option<BondLinear>,
 
     /// The relayers participate in these game
     /// We suppose that there is always a honest relayer provied by Darwinia,
@@ -110,22 +112,22 @@ impl ScenarioConfig {
             }
         }
     }
-    pub fn get_fee_equation(&self) -> Result<Box<dyn FeeEq>, Error> {
-        if let Ok(i) = self.fee_function.as_str().parse::<f64>() {
+    pub fn get_bond_equation(&self) -> Result<Box<dyn BondEq>, Error> {
+        if let Ok(i) = self.bond_function.as_str().parse::<f64>() {
             return Ok(Box::new(i));
         }
-        match self.fee_function.to_uppercase().as_str() {
+        match self.bond_function.to_uppercase().as_str() {
             "LINEAR" => {
-                if let Some(f) = self.fee_linear {
+                if let Some(f) = self.bond_linear {
                     return Ok(Box::new(f));
                 }
             }
             _ => {
-                return Err(Error::ParameterError("Fee function not support"));
+                return Err(Error::ParameterError("Bond function not support"));
             }
         }
         return Err(Error::ParameterError(
-            "lack prameters for specified fee function",
+            "lack prameters for specified bond function",
         ));
     }
     pub fn apply_patch(&mut self, patches: Vec<&str>) -> Result<(), Error> {
@@ -146,20 +148,20 @@ impl ScenarioConfig {
                     w.apply_patch(p, v)?;
                     w.validate()?;
                     self.challenge_linear = Some(w);
-                } else if k.starts_with("fee_linear") {
+                } else if k.starts_with("bond_linear") {
                     let p = para.ok_or_else(|| {
-                        Error::PatchParameterError("fee linear parameter absent".to_string())
+                        Error::PatchParameterError("bond linear parameter absent".to_string())
                     })?;
-                    let mut f = self.fee_linear.ok_or_else(|| {
-                        Error::PatchParameterError("fee linear absent".to_string())
+                    let mut f = self.bond_linear.ok_or_else(|| {
+                        Error::PatchParameterError("bond linear absent".to_string())
                     })?;
                     f.apply_patch(p, v)?;
                     f.validate()?;
-                    self.fee_linear = Some(f);
+                    self.bond_linear = Some(f);
                 } else if k.starts_with("challenge_function") {
                     self.challenge_function = v.to_string();
-                } else if k.starts_with("fee_function") {
-                    self.fee_function = v.to_string();
+                } else if k.starts_with("bond_function") {
+                    self.bond_function = v.to_string();
                 }
             } else {
                 return Err(Error::PatchParameterError(
@@ -219,7 +221,7 @@ impl FromStr for ScenarioConfig {
         if let Some(w) = c.challenge_linear {
             w.validate()?;
         }
-        if let Some(f) = c.fee_linear {
+        if let Some(f) = c.bond_linear {
             f.validate()?;
         }
 
@@ -259,7 +261,7 @@ mod tests {
     static TOML_CONFIG: &'static str = r#"
 			challenge_function = "linear"
 			target_function = "half"
-			fee_function = "10.0"
+			bond_function = "10.0"
 
 			Dd = 100
 			De = 1000
@@ -300,9 +302,9 @@ mod tests {
         assert_eq!(c.relayers[1].choice, "LL");
         assert_eq!(c.relayers[2].choice, "H");
 
-        let fee_function = c.get_fee_equation();
-        assert!(fee_function.is_ok());
-        assert_eq!(fee_function.unwrap().calculate(0), 10.0);
+        let bond_function = c.get_bond_equation();
+        assert!(bond_function.is_ok());
+        assert_eq!(bond_function.unwrap().calculate(0), 10.0);
     }
     #[test]
     fn test_iterate_from_scenario() {
@@ -332,7 +334,7 @@ mod tests {
             r#"
 			challenge_function = "linear"
 			target_function = "half"
-			fee_function = "10.0"
+			bond_function = "10.0"
 
 			[challenge_linear]
 			Wd = -10
@@ -356,7 +358,7 @@ mod tests {
             r#"
 			challenge_function = "linear"
 			target_function = "half"
-			fee_function = "10.0"
+			bond_function = "10.0"
 
 			[challenge_linear]
 			Wd = 0.0
@@ -383,9 +385,9 @@ mod tests {
         assert!(challenge_function.is_ok());
         assert_eq!(challenge_function.unwrap().calculate(10, 10), 9487);
 
-        c.apply_patch(vec!["fee_function=1.2222"]).unwrap();
-        let fee_function = c.get_fee_equation();
-        assert!(fee_function.is_ok());
-        assert_eq!(fee_function.unwrap().calculate(0), 1.2222);
+        c.apply_patch(vec!["bond_function=1.2222"]).unwrap();
+        let bond_function = c.get_bond_equation();
+        assert!(bond_function.is_ok());
+        assert_eq!(bond_function.unwrap().calculate(0), 1.2222);
     }
 }

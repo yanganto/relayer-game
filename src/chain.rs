@@ -17,7 +17,7 @@ pub struct ChainsStatus {
     pub relayers: HashMap<String, RelayerStatus>,
     pub submit_target_ethereum_block: usize,
     pub block_speed_factor: f64,
-    pub submit_fee_pool: f64,
+    pub submit_bond_pool: f64,
 }
 
 impl From<ScenarioConfig> for ChainsStatus {
@@ -65,20 +65,20 @@ impl ChainsStatus {
         }
         output
     }
-    fn submit_by(&mut self, relayer: String, fee: f64, lie: bool) {
+    fn submit_by(&mut self, relayer: String, bond: f64, lie: bool) {
         let r = self.relayers.get_mut(&relayer).unwrap();
-        r.submit(fee, lie);
-        self.submit_fee_pool += fee;
+        r.submit(bond, lie);
+        self.submit_bond_pool += bond;
     }
     pub fn submit(
         &mut self,
         relayers: Vec<(String, bool)>,
-        fee: f64,
+        bond: f64,
         wait_blocks: usize,
         next_target_ethereum_block: usize,
     ) {
         for (relayer, lie) in relayers {
-            self.submit_by(relayer, fee, lie)
+            self.submit_by(relayer, bond, lie)
         }
         self.last_relayed_block = (self.darwinia_block_hight, self.ethereum_block_hight);
         self.ethereum_block_hight += (wait_blocks as f64 / self.block_speed_factor) as usize;
@@ -87,7 +87,7 @@ impl ChainsStatus {
     }
 
     pub fn should_balance(&self) {
-        let mut p = self.submit_fee_pool;
+        let mut p = self.submit_bond_pool;
         for (_key, r) in self.relayers.iter() {
             p -= r.pay;
             p += r.reward;
@@ -105,11 +105,11 @@ impl ChainsStatus {
             sum += r.get_honest_submit_times();
             sum
         });
-        let share_pre_submit = self.submit_fee_pool / total_honest_submit_times as f64;
+        let share_pre_submit = self.submit_bond_pool / total_honest_submit_times as f64;
         for r in self.relayers.values_mut() {
             r.reward += r.get_honest_submit_times() as f64 * share_pre_submit;
         }
-        self.submit_fee_pool = 0.0;
+        self.submit_bond_pool = 0.0;
     }
 }
 
@@ -145,8 +145,8 @@ impl fmt::Display for RelayerStatus {
 }
 
 impl RelayerStatus {
-    fn submit(&mut self, fee: f64, lie: bool) {
-        self.pay += fee;
+    fn submit(&mut self, bond: f64, lie: bool) {
+        self.pay += bond;
         self.lie |= lie;
         self.submit_times += 1;
     }
@@ -167,7 +167,7 @@ mod tests {
     static TOML_CONFIG: &'static str = r#"
 			challenge_function = "linear"
 			target_function = "half"
-			fee_function = "10.0"
+			bond_function = "10.0"
 			Dd = 100
 			De = 1000
 
@@ -194,7 +194,7 @@ mod tests {
         c.should_balance();
         c.submit_by("Darwinia".to_string(), 10.0, false);
         c.should_balance();
-        assert_eq!(c.submit_fee_pool, 30.0);
+        assert_eq!(c.submit_bond_pool, 30.0);
         c.reward_honest_relayers();
         c.should_balance();
         assert_eq!(c.relayers["Evil"].reward, 0.0);
@@ -213,7 +213,7 @@ mod tests {
         c.should_balance();
         c.submit(vec![("Darwinia".to_string(), false)], 10.0, 50, 250);
         c.should_balance();
-        assert_eq!(c.submit_fee_pool, 30.0);
+        assert_eq!(c.submit_bond_pool, 30.0);
         c.reward_honest_relayers();
         c.should_balance();
         assert_eq!(c.relayers["Evil"].reward, 0.0);

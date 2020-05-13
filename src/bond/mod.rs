@@ -1,12 +1,12 @@
-//! Fee module collect the fee functions
-//! The fee function will increase the fee to improve speed of the finality.
+//! Bond module collect the bond equations
+//! The bond function will increase the bond to improve speed of the finality.
 //!
-//! The `Equation` and `ConfigValidate` trait help you to customized your own fee equations.
+//! The `Equation` and `ConfigValidate` trait help you to customized your own bond equations.
 use crate::error::Error;
 
 pub mod linear;
 
-/// This trait help the main function calculate the fee from the equation
+/// This trait help the main function calculate the bond values for each round from the equation
 pub trait Equation {
     fn calculate(&self, submit_times: usize) -> f64;
 }

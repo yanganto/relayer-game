@@ -1,11 +1,11 @@
-//! Linear Equation for the fee function
+//! Linear Equation for the bond function
+use crate::bond::{ConfigValidate, Equation};
 use crate::error::Error;
-use crate::fee::{ConfigValidate, Equation};
 use serde_derive::Deserialize;
 
-/// # Linear fee function
+/// # Linear bond equation
 /// Here is the linear equation  
-/// fee of submit = min(W * B, M)) + C
+/// bond value of submit = min(W * B, M)) + C
 #[allow(non_snake_case)]
 #[derive(Default, Debug, Deserialize, Copy, Clone)]
 pub struct LinearConfig {
@@ -13,7 +13,7 @@ pub struct LinearConfig {
     W: f64,
     /// The contance
     C: f64,
-    /// The upper limitation for submit fee
+    /// The upper limitation for submit bond
     M: f64,
 }
 
@@ -40,7 +40,7 @@ impl ConfigValidate for LinearConfig {
 }
 
 impl Equation for LinearConfig {
-    /// fee = min(W * E, M) + C
+    /// bond = min(W * E, M) + C
     fn calculate(&self, submit_round: usize) -> f64 {
         let weight_part = self.W * submit_round as f64;
         if weight_part > self.M {

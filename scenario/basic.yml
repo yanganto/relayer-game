@@ -1,9 +1,9 @@
 # The title for this scenario
 title = "Basic Scenario for Relayer"
 
-# the wait function for the relayed header be accepted
-# fee_function can be a equation name or int number string for a constant wait
-wait_function = "linear"
+# the chalenge function for the relayed header be accepted
+# challenge can be a equation name or int number string for a constant block
+challenge_function = "linear"
 
 # make target block as a function
 # The next relay target block
@@ -11,10 +11,10 @@ wait_function = "linear"
 # target_function = (submited_ethereum_block_height - relayed_ethereum_block_height) / 2
 target_function = "half"
 
-# Make submit fee a a function
-# The fee for each submit
-# fee_function can be a equation name or float number string for a constant fee
-fee_function = "10.0"
+# Make submit with bond calculated by a function
+# The bond for each submit
+# bond_function can be a equation name or float number string for a constant bond value
+bond_function = "10.0"
 
 # The initail block different
 # surfix d: block difference between last block number relayed on Darwinia,
@@ -28,7 +28,7 @@ De = 1000
 # For example, 2.0 means that darwinia produce 2 blocks and ethereum produce 1 block.
 F = 2.0
 
-[wait_linear]
+[challenge_linear]
 # Waiting Block may related to 
 # Md: the max value about D portion
 # Me: the max value about E portion

@@ -1,16 +1,16 @@
-title = "Linear fee for Relayer"
+title = "Linear bond value for Relayer"
 
-wait_function = "10"
+challenge_function = "10"
 target_function = "half"
-fee_function = "linear"
+bond_function = "linear"
 
 Dd = 100
 De = 1000
 
-[fee_linear]
-# Each submission fee may be related to the rounds of consecutive submissions.
-# The fee is increasing that can help the submition to be finialized
-# submit fee = min(W * submit_round, M) + C
+[bond_linear]
+# Each submission bond may be related to the rounds of consecutive submissions.
+# The bond is increasing that can help the submition to be finialized
+# submit bond = min(W * submit_round, M) + C
 W = 1.5
 C  = 10.0
 M = 100.0
