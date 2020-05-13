@@ -127,6 +127,47 @@ impl ScenarioConfig {
             "lack prameters for specified fee function",
         ));
     }
+    pub fn apply_patch(&mut self, patches: Vec<&str>) -> Result<(), Error> {
+        let split_with_equation = patches.iter().map(|patch| {
+            let mut i = patch.split('=').into_iter();
+            return (i.clone().nth(0), i.nth(1));
+        });
+        for key_values in split_with_equation {
+            if let (Some(k), Some(v)) = key_values {
+                let para = k.split('.').nth(1);
+                if k.starts_with("wait_linear") {
+                    let p = para.ok_or_else(|| {
+                        Error::PatchParameterError("wait linear parameter absent".to_string())
+                    })?;
+                    let mut w = self.wait_linear.ok_or_else(|| {
+                        Error::PatchParameterError("wait linear absent".to_string())
+                    })?;
+                    w.apply_patch(p, v)?;
+                    w.validate()?;
+                    self.wait_linear = Some(w);
+                } else if k.starts_with("fee_linear") {
+                    let p = para.ok_or_else(|| {
+                        Error::PatchParameterError("fee linear parameter absent".to_string())
+                    })?;
+                    let mut f = self.fee_linear.ok_or_else(|| {
+                        Error::PatchParameterError("fee linear absent".to_string())
+                    })?;
+                    f.apply_patch(p, v)?;
+                    f.validate()?;
+                    self.fee_linear = Some(f);
+                } else if k.starts_with("wait_function") {
+                    self.wait_function = v.to_string();
+                } else if k.starts_with("fee_function") {
+                    self.fee_function = v.to_string();
+                }
+            } else {
+                return Err(Error::PatchParameterError(
+                    key_values.0.unwrap_or_default().to_string(),
+                ));
+            }
+        }
+        Ok(())
+    }
 }
 
 impl Iterator for ScenarioConfigIntoIterator {
@@ -332,5 +373,18 @@ mod tests {
         )
         .unwrap();
         assert_eq!(c.relayers[1].choice, "HHHHHHH");
+    }
+    #[test]
+    fn test_apply_patch() {
+        let mut c = <ScenarioConfig>::from_str(TOML_CONFIG).unwrap();
+        c.apply_patch(vec!["wait_function=9487"]).unwrap();
+        let wait_function = c.get_wait_equation();
+        assert!(wait_function.is_ok());
+        assert_eq!(wait_function.unwrap().calculate(10, 10), 9487);
+
+        c.apply_patch(vec!["fee_function=1.2222"]).unwrap();
+        let fee_function = c.get_fee_equation();
+        assert!(fee_function.is_ok());
+        assert_eq!(fee_function.unwrap().calculate(0), 1.2222);
     }
 }

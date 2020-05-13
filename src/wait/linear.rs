@@ -13,7 +13,7 @@ use serde_derive::Deserialize;
 /// e: the parameters affect by the parameters on target network(for example Ethereum)
 ///
 #[allow(non_snake_case)]
-#[derive(Debug, Deserialize, Copy, Clone)]
+#[derive(Default, Debug, Deserialize, Copy, Clone)]
 pub struct LinearConfig {
     /// Md: the max value about D portion
     Wd: f64,
@@ -37,6 +37,21 @@ impl ConfigValidate for LinearConfig {
         }
         Ok(())
     }
+    fn apply_patch(&mut self, k: &str, v: &str) -> Result<(), Error> {
+        match k {
+            "Wd" => self.Wd = v.parse::<f64>()?,
+            "We" => self.We = v.parse::<f64>()?,
+            "Md" => self.Md = v.parse::<usize>()?,
+            "Me" => self.Me = v.parse::<usize>()?,
+            "C" => self.C = v.parse::<usize>()?,
+            _ => {
+                return Err(Error::PatchParameterError(
+                    "parameter not correct".to_string(),
+                ))
+            }
+        }
+        Ok(())
+    }
 }
 
 impl Equation for LinearConfig {
@@ -45,5 +60,24 @@ impl Equation for LinearConfig {
         min((self.Wd * darwinia_distance as f64) as usize, self.Md)
             + min((self.Wd * ethereum_distance as f64) as usize, self.Md)
             + self.C
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test_apply_patch() {
+        let mut c = LinearConfig::default();
+        c.apply_patch("C", "9").unwrap();
+        c.apply_patch("Wd", "1.234").unwrap();
+        c.apply_patch("We", "4.56").unwrap();
+        c.apply_patch("Md", "8").unwrap();
+        c.apply_patch("Me", "7").unwrap();
+        assert_eq!(c.C, 9);
+        assert_eq!(c.Wd, 1.234);
+        assert_eq!(c.We, 4.56);
+        assert_eq!(c.Md, 8);
+        assert_eq!(c.Me, 7);
     }
 }

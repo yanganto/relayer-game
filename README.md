@@ -80,7 +80,7 @@ This executable is written in Rust, it can be easily to build and run with cargo
 ```
 cargo build --release
 ```
-then the binary will be placed in ./target/release, you can run this command with scenario file as  following command.  
+then the binary will be placed in ./target/release, you can run this command with scenario file as following command.  
 ```
 ./target/release/relayer-game scenario/basic.yml
 ```
@@ -88,6 +88,11 @@ Also, you can put `-v` option to see all status in each round of submit.
 ```
 ./target/release/relayer-game -v scenario/basic.yml
 ```
+Besides, you can patch some equation parameters with option `p`, for examples.
+```
+./target/release/relayer-game -p wait_linear.C=9 wait_linear.Wd=10.0 -- scenario/basic.yml
+```
+Currently, all parameters in `wait_linear` and `fee_linear`, and also the values of `wait_function` and `fee_function` can be patched.
 
 # Develop and Document
 This project has document, you can use this command to show the document on browser.

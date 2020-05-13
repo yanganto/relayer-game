@@ -7,7 +7,7 @@ use serde_derive::Deserialize;
 /// Here is the linear equation  
 /// fee of submit = min(W * B, M)) + C
 #[allow(non_snake_case)]
-#[derive(Debug, Deserialize, Copy, Clone)]
+#[derive(Default, Debug, Deserialize, Copy, Clone)]
 pub struct LinearConfig {
     /// W: the weights of submit times
     W: f64,
@@ -24,6 +24,19 @@ impl ConfigValidate for LinearConfig {
         }
         Ok(())
     }
+    fn apply_patch(&mut self, k: &str, v: &str) -> Result<(), Error> {
+        match k {
+            "C" => self.C = v.parse::<f64>()?,
+            "W" => self.W = v.parse::<f64>()?,
+            "M" => self.M = v.parse::<f64>()?,
+            _ => {
+                return Err(Error::PatchParameterError(
+                    "parameter not correct".to_string(),
+                ))
+            }
+        }
+        Ok(())
+    }
 }
 
 impl Equation for LinearConfig {
@@ -35,5 +48,20 @@ impl Equation for LinearConfig {
         } else {
             return weight_part + self.C;
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test_apply_patch() {
+        let mut c = LinearConfig::default();
+        c.apply_patch("C", "9.9").unwrap();
+        c.apply_patch("W", "1.234").unwrap();
+        c.apply_patch("M", "8.8").unwrap();
+        assert_eq!(c.C, 9.9);
+        assert_eq!(c.W, 1.234);
+        assert_eq!(c.M, 8.8);
     }
 }

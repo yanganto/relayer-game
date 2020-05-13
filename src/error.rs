@@ -10,12 +10,20 @@ pub enum Error {
     ParameterError(&'static str),
     #[fail(display = "Command line args or options are not correct: {}", 0)]
     CliError(String),
+    #[fail(display = "Patch Parameter `{}` is not valid", 0)]
+    PatchParameterError(String),
     #[fail(display = "Unexpected: {}", 0)]
     UnknownError(&'static str),
 }
 
 impl From<std::num::ParseFloatError> for Error {
     fn from(_: std::num::ParseFloatError) -> Self {
+        Error::ParameterError("Parameter cannot parse as number")
+    }
+}
+
+impl From<std::num::ParseIntError> for Error {
+    fn from(_: std::num::ParseIntError) -> Self {
         Error::ParameterError("Parameter cannot parse as number")
     }
 }
