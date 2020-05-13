@@ -88,11 +88,11 @@ Also, you can put `-v` option to see all status in each round of submit.
 ```
 ./target/release/relayer-game -v scenario/basic.yml
 ```
-Besides, you can patch some equation parameter wirh option `p`, for examples.
-Currently, all parameters in `wait_linear` and `fee_linear` can be patched.
+Besides, you can patch some equation parameters with option `p`, for examples.
 ```
 ./target/release/relayer-game -p wait_linear.C=9 wait_linear.Wd=10.0 -- scenario/basic.yml
 ```
+Currently, all parameters in `wait_linear` and `fee_linear` can be patched.
 
 # Develop and Document
 This project has document, you can use this command to show the document on browser.
