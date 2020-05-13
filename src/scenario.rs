@@ -134,23 +134,31 @@ impl ScenarioConfig {
         });
         for key_values in split_with_equation {
             if let (Some(k), Some(v)) = key_values {
-                let para = k.split('.').nth(1).ok_or_else(|| {
-                    Error::PatchParameterError("no parameter specify".to_string())
-                })?;
+                let para = k.split('.').nth(1);
                 if k.starts_with("wait_linear") {
+                    let p = para.ok_or_else(|| {
+                        Error::PatchParameterError("wait linear parameter absent".to_string())
+                    })?;
                     let mut w = self.wait_linear.ok_or_else(|| {
                         Error::PatchParameterError("wait linear absent".to_string())
                     })?;
-                    w.apply_patch(para, v)?;
+                    w.apply_patch(p, v)?;
                     w.validate()?;
                     self.wait_linear = Some(w);
                 } else if k.starts_with("fee_linear") {
+                    let p = para.ok_or_else(|| {
+                        Error::PatchParameterError("fee linear parameter absent".to_string())
+                    })?;
                     let mut f = self.fee_linear.ok_or_else(|| {
                         Error::PatchParameterError("fee linear absent".to_string())
                     })?;
-                    f.apply_patch(para, v)?;
+                    f.apply_patch(p, v)?;
                     f.validate()?;
                     self.fee_linear = Some(f);
+                } else if k.starts_with("wait_function") {
+                    self.wait_function = v.to_string();
+                } else if k.starts_with("fee_function") {
+                    self.fee_function = v.to_string();
                 }
             } else {
                 return Err(Error::PatchParameterError(

@@ -92,7 +92,7 @@ Besides, you can patch some equation parameters with option `p`, for examples.
 ```
 ./target/release/relayer-game -p wait_linear.C=9 wait_linear.Wd=10.0 -- scenario/basic.yml
 ```
-Currently, all parameters in `wait_linear` and `fee_linear` can be patched.
+Currently, all parameters in `wait_linear` and `fee_linear`, and also the values of `wait_function` and `fee_function` can be patched.
 
 # Develop and Document
 This project has document, you can use this command to show the document on browser.
