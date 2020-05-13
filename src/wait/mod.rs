@@ -13,9 +13,12 @@ pub trait Equation {
     fn calculate(&self, darwinia_distance: usize, ethereum_distance: usize) -> usize;
 }
 
-/// This trait help the main function validating the parameters when loading yaml
+/// This trait help the main function
+/// - validating the parameters when loading yaml
+/// - apply patch when user pass it as option `p` from command line
 pub trait ConfigValidate {
     fn validate(&self) -> Result<(), Error>;
+    fn apply_patch(&mut self, k: &str, v: &str) -> Result<(), Error>;
 }
 
 impl Equation for usize {

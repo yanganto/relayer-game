@@ -89,8 +89,9 @@ Also, you can put `-v` option to see all status in each round of submit.
 ./target/release/relayer-game -v scenario/basic.yml
 ```
 Besides, you can patch some equation parameter wirh option `p`, for examples.
+Currently, all parameters in `wait_linear` and `fee_linear` can be patched.
 ```
-./target/release/relayer-game -p wait_linear.C=100 wait_linear.Wd=10.0 -- scenario/basic.yml
+./target/release/relayer-game -p wait_linear.C=9 wait_linear.Wd=10.0 -- scenario/basic.yml
 ```
 
 # Develop and Document

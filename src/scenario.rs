@@ -134,8 +134,24 @@ impl ScenarioConfig {
         });
         for key_values in split_with_equation {
             if let (Some(k), Some(v)) = key_values {
-                // TODO: patch parameters here
-                println!("k: {:?}, v: {:?}", k, v)
+                let para = k.split('.').nth(1).ok_or_else(|| {
+                    Error::PatchParameterError("no parameter specify".to_string())
+                })?;
+                if k.starts_with("wait_linear") {
+                    let mut w = self.wait_linear.ok_or_else(|| {
+                        Error::PatchParameterError("wait linear absent".to_string())
+                    })?;
+                    w.apply_patch(para, v)?;
+                    w.validate()?;
+                    self.wait_linear = Some(w);
+                } else if k.starts_with("fee_linear") {
+                    let mut f = self.fee_linear.ok_or_else(|| {
+                        Error::PatchParameterError("fee linear absent".to_string())
+                    })?;
+                    f.apply_patch(para, v)?;
+                    f.validate()?;
+                    self.fee_linear = Some(f);
+                }
             } else {
                 return Err(Error::PatchParameterError(
                     key_values.0.unwrap_or_default().to_string(),

@@ -22,6 +22,12 @@ impl From<std::num::ParseFloatError> for Error {
     }
 }
 
+impl From<std::num::ParseIntError> for Error {
+    fn from(_: std::num::ParseIntError) -> Self {
+        Error::ParameterError("Parameter cannot parse as number")
+    }
+}
+
 impl From<std::io::Error> for Error {
     fn from(err: std::io::Error) -> Self {
         Error::CliError(format!("{}", err))
