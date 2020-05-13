@@ -1,8 +1,8 @@
 //! Linear Equation is the simplest wait function
 use std::cmp::min;
 
+use crate::challenge::{ConfigValidate, Equation};
 use crate::error::Error;
-use crate::wait::{ConfigValidate, Equation};
 use serde_derive::Deserialize;
 
 /// # Linear waiting function

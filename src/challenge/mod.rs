@@ -1,5 +1,5 @@
-//! Wait module collect the wait functions
-//! Once a relayer submit a header and wait the time in blocks after the calculated value from wait
+//! Challenge module collect the challenge time equations
+//! Once a relayer submit a header and wait a challenge time in blocks after the calculated value from challenge
 //! function, Darwinia network will deem this header is valided and become a best header.
 //! There is only linear module at first.
 //!

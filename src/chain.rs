@@ -165,13 +165,13 @@ mod tests {
     use super::*;
     use std::str::FromStr;
     static TOML_CONFIG: &'static str = r#"
-			wait_function = "linear"
+			challenge_function = "linear"
 			target_function = "half"
 			fee_function = "10.0"
 			Dd = 100
 			De = 1000
 
-			[wait_linear]
+			[challenge_linear]
 			Wd = 0.0
 			We = 0.0
 			C  = 1

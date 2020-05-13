@@ -1,7 +1,8 @@
 //! Relayer Game Simulation Tool
 //!
-//! This tool load the different `scenario` with different `wait_fucntion`, listed in the `wait`
-//! module, and simulate the result, let people know more about the time delay in blocks and
+//! This tool load the different `scenario` with different `challenge_equation`, listed in the
+//! `challenge` module, with different `bond_equation`, listed in the `bond` module,
+//! and simulate the result, let people know more about the time delay in blocks and
 //! the reward distribution.
 //!
 
@@ -15,11 +16,11 @@ use colored::Colorize;
 use crate::target::Equation as TargetEq;
 
 mod chain;
+mod challenge;
 mod error;
 mod fee;
 mod scenario;
 mod target;
-mod wait;
 
 fn simulate_from_scenario(
     file_name: &str,
@@ -37,7 +38,7 @@ fn simulate_from_scenario(
     }
 
     let mut iterator = config.get_iter();
-    let wait_eq = config.get_wait_equation()?;
+    let challenge_eq = config.get_challenge_equation()?;
     let target_eq = config.get_target_equation()?;
     let fee_eq = config.get_fee_equation()?;
     let mut chains_status: chain::ChainsStatus = config.into();
@@ -68,7 +69,7 @@ fn simulate_from_scenario(
         chains_status.submit(
             relayer_sumbitions,
             fee_eq.calculate(iterator.submit_round),
-            wait_eq.calculate(
+            challenge_eq.calculate(
                 chains_status.darwinia_block_hight - chains_status.last_relayed_block.0,
                 ethereum_distance,
             ),

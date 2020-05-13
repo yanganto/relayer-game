@@ -12,15 +12,16 @@ use std::str::FromStr;
 use serde_derive::Deserialize;
 use toml;
 
+use crate::challenge::{
+    linear::LinearConfig as ChallengeLinear, ConfigValidate as ChallengeVali,
+    Equation as ChallengeEq,
+};
 use crate::error::Error;
 use crate::fee::{linear::LinearConfig as FeeLinear, ConfigValidate as FeeVali, Equation as FeeEq};
 use crate::target::{half::HalfConfig, Equation as TargetEq};
-use crate::wait::{
-    linear::LinearConfig as WaitLinear, ConfigValidate as WaitVali, Equation as WaitEq,
-};
 
 /// # Scenario Config
-/// In this config, the `wait_function`, the initial status, and the `relayers` are defined.
+/// In this config, the `challenge_function`, the initial status, and the `relayers` are defined.
 /// The initaial status contains the block difference in the target chain and Darwinia chain.
 #[allow(non_snake_case)]
 #[derive(Debug, Deserialize)]
@@ -35,9 +36,9 @@ pub struct ScenarioConfig {
     /// For example, 2.0 means that darwinia produce 2 blocks and ethereum produce 1 block.
     pub F: Option<f64>,
 
-    /// Once a relayer submit a header and wait the time in blocks after the calculated value from wait
+    /// Once a relayer submit a header and wait the challenge time in blocks after the calculated value equation from challenge
     /// function, Darwinia network will deem this header is valided and become a last relayed header.
-    pub wait_function: String,
+    pub challenge_function: String,
 
     /// Once there is disput on any header, the relayer should submit the next ethere block target as
     /// calculated.
@@ -47,7 +48,7 @@ pub struct ScenarioConfig {
     pub fee_function: String,
 
     /// parameters in linear wating
-    pub wait_linear: Option<WaitLinear>,
+    pub challenge_linear: Option<ChallengeLinear>,
 
     /// parameters in linear wating
     pub fee_linear: Option<FeeLinear>,
@@ -83,22 +84,22 @@ impl ScenarioConfig {
             submit_round: 0,
         }
     }
-    pub fn get_wait_equation(&self) -> Result<Box<dyn WaitEq>, Error> {
-        if let Ok(i) = self.wait_function.as_str().parse::<usize>() {
+    pub fn get_challenge_equation(&self) -> Result<Box<dyn ChallengeEq>, Error> {
+        if let Ok(i) = self.challenge_function.as_str().parse::<usize>() {
             return Ok(Box::new(i));
         }
-        match self.wait_function.to_uppercase().as_str() {
+        match self.challenge_function.to_uppercase().as_str() {
             "LINEAR" => {
-                if let Some(w) = self.wait_linear {
+                if let Some(w) = self.challenge_linear {
                     return Ok(Box::new(w));
                 }
             }
             _ => {
-                return Err(Error::ParameterError("Wait function not support"));
+                return Err(Error::ParameterError("Challenge function not support"));
             }
         }
         return Err(Error::ParameterError(
-            "lack prameters for specified wait function",
+            "lack prameters for specified challenge function",
         ));
     }
     pub fn get_target_equation(&self) -> Result<impl TargetEq, Error> {
@@ -135,16 +136,16 @@ impl ScenarioConfig {
         for key_values in split_with_equation {
             if let (Some(k), Some(v)) = key_values {
                 let para = k.split('.').nth(1);
-                if k.starts_with("wait_linear") {
+                if k.starts_with("challenge_linear") {
                     let p = para.ok_or_else(|| {
-                        Error::PatchParameterError("wait linear parameter absent".to_string())
+                        Error::PatchParameterError("challenge linear parameter absent".to_string())
                     })?;
-                    let mut w = self.wait_linear.ok_or_else(|| {
-                        Error::PatchParameterError("wait linear absent".to_string())
+                    let mut w = self.challenge_linear.ok_or_else(|| {
+                        Error::PatchParameterError("challenge linear absent".to_string())
                     })?;
                     w.apply_patch(p, v)?;
                     w.validate()?;
-                    self.wait_linear = Some(w);
+                    self.challenge_linear = Some(w);
                 } else if k.starts_with("fee_linear") {
                     let p = para.ok_or_else(|| {
                         Error::PatchParameterError("fee linear parameter absent".to_string())
@@ -155,8 +156,8 @@ impl ScenarioConfig {
                     f.apply_patch(p, v)?;
                     f.validate()?;
                     self.fee_linear = Some(f);
-                } else if k.starts_with("wait_function") {
-                    self.wait_function = v.to_string();
+                } else if k.starts_with("challenge_function") {
+                    self.challenge_function = v.to_string();
                 } else if k.starts_with("fee_function") {
                     self.fee_function = v.to_string();
                 }
@@ -214,8 +215,8 @@ impl FromStr for ScenarioConfig {
     /// Pase from the scenario toml file as listed in `/scenario `
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut c: ScenarioConfig = toml::from_str(s)?;
-        c.wait_function.make_ascii_uppercase();
-        if let Some(w) = c.wait_linear {
+        c.challenge_function.make_ascii_uppercase();
+        if let Some(w) = c.challenge_linear {
             w.validate()?;
         }
         if let Some(f) = c.fee_linear {
@@ -256,14 +257,14 @@ impl FromStr for ScenarioConfig {
 mod tests {
     use super::*;
     static TOML_CONFIG: &'static str = r#"
-			wait_function = "linear"
+			challenge_function = "linear"
 			target_function = "half"
 			fee_function = "10.0"
 
 			Dd = 100
 			De = 1000
 
-			[wait_linear]
+			[challenge_linear]
 			Wd = 0.0
 			We = 0.0
 			C  = 1
@@ -329,11 +330,11 @@ mod tests {
     fn test_from_error_toml_str() {
         let c = <ScenarioConfig>::from_str(
             r#"
-			wait_function = "linear"
+			challenge_function = "linear"
 			target_function = "half"
 			fee_function = "10.0"
 
-			[wait_linear]
+			[challenge_linear]
 			Wd = -10
 			We = 0.0
 			C  = 1
@@ -353,11 +354,11 @@ mod tests {
     fn test_auto_upper_case() {
         let c = <ScenarioConfig>::from_str(
             r#"
-			wait_function = "linear"
+			challenge_function = "linear"
 			target_function = "half"
 			fee_function = "10.0"
 
-			[wait_linear]
+			[challenge_linear]
 			Wd = 0.0
 			We = 0.0
 			C  = 1
@@ -377,10 +378,10 @@ mod tests {
     #[test]
     fn test_apply_patch() {
         let mut c = <ScenarioConfig>::from_str(TOML_CONFIG).unwrap();
-        c.apply_patch(vec!["wait_function=9487"]).unwrap();
-        let wait_function = c.get_wait_equation();
-        assert!(wait_function.is_ok());
-        assert_eq!(wait_function.unwrap().calculate(10, 10), 9487);
+        c.apply_patch(vec!["challenge_function=9487"]).unwrap();
+        let challenge_function = c.get_challenge_equation();
+        assert!(challenge_function.is_ok());
+        assert_eq!(challenge_function.unwrap().calculate(10, 10), 9487);
 
         c.apply_patch(vec!["fee_function=1.2222"]).unwrap();
         let fee_function = c.get_fee_equation();
