@@ -374,4 +374,17 @@ mod tests {
         .unwrap();
         assert_eq!(c.relayers[1].choice, "HHHHHHH");
     }
+    #[test]
+    fn test_apply_patch() {
+        let mut c = <ScenarioConfig>::from_str(TOML_CONFIG).unwrap();
+        c.apply_patch(vec!["wait_function=9487"]).unwrap();
+        let wait_function = c.get_wait_equation();
+        assert!(wait_function.is_ok());
+        assert_eq!(wait_function.unwrap().calculate(10, 10), 9487);
+
+        c.apply_patch(vec!["fee_function=1.2222"]).unwrap();
+        let fee_function = c.get_fee_equation();
+        assert!(fee_function.is_ok());
+        assert_eq!(fee_function.unwrap().calculate(0), 1.2222);
+    }
 }
