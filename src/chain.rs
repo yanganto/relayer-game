@@ -4,6 +4,7 @@ use std::fmt;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use crate::scenario::{RelayerConfig, ScenarioConfig};
+use crate::target::Equation;
 
 static TOTAL_RELAYER: AtomicUsize = AtomicUsize::new(0);
 
@@ -13,9 +14,9 @@ pub struct ChainsStatus {
     pub ethereum_block_hight: usize,
     /// Last relayed block info
     /// (darwinia_block_height_for_last_relay, ethereum_block_height_for_last_relay)
-    pub last_relayed_block: (usize, usize),
     pub relayers: HashMap<String, RelayerStatus>,
     pub submit_target_ethereum_block: usize,
+    pub submissions: Vec<(usize, usize)>,
     pub block_speed_factor: f64,
     pub submit_bond_pool: f64,
 }
@@ -25,17 +26,23 @@ impl From<ScenarioConfig> for ChainsStatus {
         ChainsStatus {
             darwinia_block_hight: c.Dd.unwrap_or(0),
             ethereum_block_hight: c.De.unwrap_or(100),
-            last_relayed_block: (0, 0),
-            relayers: c.relayers.into_iter().fold(HashMap::new(), |mut map, r| {
-                let s: RelayerStatus = r.into();
-                if let Some(n) = &s.name {
-                    map.insert(n.to_string(), s);
-                } else {
-                    map.insert(format!(" {}", s.id), s);
-                }
-                map
-            }),
-            submit_target_ethereum_block: c.De.unwrap_or(100) / 2, // TODO: make submit target as a function
+            relayers: c
+                .relayers
+                .clone()
+                .into_iter()
+                .fold(HashMap::new(), |mut map, r| {
+                    let s: RelayerStatus = r.into();
+                    if let Some(n) = &s.name {
+                        map.insert(n.to_string(), s);
+                    } else {
+                        map.insert(format!(" {}", s.id), s);
+                    }
+                    map
+                }),
+            submit_target_ethereum_block: c
+                .get_target_equation()
+                .unwrap()
+                .calculate(0, c.De.unwrap_or(100)),
             block_speed_factor: c.F.unwrap_or(2.0),
             ..Default::default()
         }
@@ -50,12 +57,19 @@ impl fmt::Display for ChainsStatus {
 
 impl ChainsStatus {
     pub fn fmt_status(&self) -> String {
+        let submission_times = self.submissions.len();
+        let last_relayed_block = if submission_times > 0 {
+            self.submissions[submission_times - 1]
+        } else {
+            (0, 0)
+        };
         format!(
-            "ChainsStatus: Darwinia #{}, Ethereum #{}, Last relay Eth(#{}) at #{}\n",
+            "ChainsStatus: Darwinia #{}, Ethereum #{}, Submit at Eth(#{}) Last relay Eth(#{}) at #{}\n",
             self.darwinia_block_hight,
             self.ethereum_block_hight,
-            self.last_relayed_block.1,
-            self.last_relayed_block.0
+			self.submit_target_ethereum_block,
+            last_relayed_block.1,
+            last_relayed_block.0
         )
     }
     pub fn fmt_relayers_status(&self) -> String {
@@ -80,7 +94,8 @@ impl ChainsStatus {
         for (relayer, lie) in relayers {
             self.submit_by(relayer, bond, lie)
         }
-        self.last_relayed_block = (self.darwinia_block_hight, self.ethereum_block_hight);
+        self.submissions
+            .push((self.darwinia_block_hight, self.submit_target_ethereum_block));
         self.ethereum_block_hight += (wait_blocks as f64 / self.block_speed_factor) as usize;
         self.darwinia_block_hight += wait_blocks;
         self.submit_target_ethereum_block = next_target_ethereum_block;

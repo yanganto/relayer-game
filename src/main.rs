@@ -60,23 +60,20 @@ fn simulate_from_scenario(
             }
             print!("\n");
         }
-        let ethereum_distance =
-            if chains_status.last_relayed_block.1 > chains_status.submit_target_ethereum_block {
-                chains_status.last_relayed_block.1 - chains_status.submit_target_ethereum_block
-            } else {
-                chains_status.submit_target_ethereum_block - chains_status.last_relayed_block.1
-            };
+        let submission_times = chains_status.submissions.len();
+        let last_relayed_block = if submission_times > 0 {
+            chains_status.submissions[submission_times - 1]
+        } else {
+            (0, 0)
+        };
         chains_status.submit(
             relayer_sumbitions,
             bond_eq.calculate(iterator.submit_round),
             challenge_eq.calculate(
-                chains_status.darwinia_block_hight - chains_status.last_relayed_block.0,
-                ethereum_distance,
+                chains_status.darwinia_block_hight - last_relayed_block.0,
+                chains_status.submit_target_ethereum_block - 0,
             ),
-            target_eq.calculate(
-                chains_status.submit_target_ethereum_block,
-                chains_status.last_relayed_block.1,
-            ),
+            target_eq.calculate(0, chains_status.submit_target_ethereum_block),
         );
 
         // TODO: make this as an option
