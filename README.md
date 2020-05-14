@@ -37,6 +37,13 @@ There are some example scenario files listed in [scenario](./scenario).
   - Current support: float number, linear   
   - For example: '10.0', that means the bond of each submit is always 10.0.
 
+- `reward_function`
+  - The reward from relayers including the treasury and the bonds from the lie relayers (attackers)
+  - It may be reasonable when that the bond part of reward should be the same as bond functions
+    - For example, both the first round submit and the second round submit are to help to beat the attackers in the first round.
+  - And also it may be that the treasure part is not for the submit rounds after the first submit
+    - the treasure part is from the fee of redeem action, but it will be a debet without limitation in simulation
+
 ## Initialize status of Darwinia and Ethereum
 suffix `d`: block difference between last block number relayed on Darwinia, suffix `e`: block difference between last related block number of Ethereum
 - `Dd`(optional)

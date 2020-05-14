@@ -47,15 +47,16 @@ fn simulate_from_scenario(
     let darwinia_start_block = chains_status.darwinia_block_hight;
     let mut challenge_times = Vec::<f64>::new();
     let mut bonds = Vec::<f64>::new();
+    let mut rewards = Vec::<chain::Reward>::new();
 
-    while let Some(relayer_sumbitions) = iterator.next() {
+    while let Some(relayer_subitions) = iterator.next() {
         if debug {
             print!("{}", format!("{}", chains_status.fmt_status()).cyan());
             print!(
                 "\tSubmitions(Bond: {}): ",
                 bond_eq.calculate(iterator.submit_round)
             );
-            for (r, lie) in relayer_sumbitions.iter() {
+            for (r, lie) in relayer_subitions.iter() {
                 print!("{}", r);
                 if *lie {
                     print!("(lie)");
@@ -89,7 +90,7 @@ fn simulate_from_scenario(
         bonds.push(bond);
 
         chains_status.submit(
-            relayer_sumbitions,
+            relayer_subitions,
             bond,
             challenge_time,
             target_eq.calculate(0, chains_status.submit_target_ethereum_block),
@@ -104,8 +105,7 @@ fn simulate_from_scenario(
                 chains_status.submit_target_ethereum_block
             );
             println!("\tChallenge Time: {} blocks", challenge_time);
-            print!("\tRelayer Status: ");
-            println!("{}", chains_status.fmt_relayers_status());
+            println!("\tRelayer Status: {}", chains_status.fmt_relayers_status());
             println!(
                 "\tSubmit Bond Pool Status: {}",
                 chains_status.submit_bond_pool
@@ -113,7 +113,19 @@ fn simulate_from_scenario(
         }
     }
     let max_bond_value = chains_status.submit_bond_pool;
-    chains_status.reward_honest_relayers();
+    chains_status.reward(rewards);
+
+    // pub fn reward_honest_relayers(&mut self) {
+    //     let total_honest_submit_times = self.relayers.iter().fold(0, |mut sum, (_k, r)| {
+    //         sum += r.get_honest_submit_times();
+    //         sum
+    //     });
+    //     let share_pre_submit = self.submit_bond_pool / total_honest_submit_times as f64;
+    //     for r in self.relayers.values_mut() {
+    //         r.reward += r.get_honest_submit_times() as f64 * share_pre_submit;
+    //     }
+    //     self.submit_bond_pool = 0.0;
+    // }
 
     #[cfg(feature = "plot")]
     plot::draw("Challenge Times", iterator.submit_round, challenge_times)

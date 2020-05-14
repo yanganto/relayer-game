@@ -8,17 +8,27 @@ use crate::target::Equation;
 
 static TOTAL_RELAYER: AtomicUsize = AtomicUsize::new(0);
 
+pub enum RewardFrom {
+    Treasure,
+    Bond,
+}
+
+pub struct Reward<'a> {
+    from: RewardFrom,
+    to: &'a str,
+    value: f64,
+}
+
 #[derive(Default, Debug)]
 pub struct ChainsStatus {
     pub darwinia_block_hight: usize,
     pub ethereum_block_hight: usize,
-    /// Last relayed block info
-    /// (darwinia_block_height_for_last_relay, ethereum_block_height_for_last_relay)
     pub relayers: HashMap<String, RelayerStatus>,
     pub submit_target_ethereum_block: usize,
     pub submitions: Vec<(usize, usize)>,
     pub block_speed_factor: f64,
     pub submit_bond_pool: f64,
+    pub treasure_debet: f64,
 }
 
 impl From<ScenarioConfig> for ChainsStatus {
@@ -102,7 +112,7 @@ impl ChainsStatus {
     }
 
     pub fn should_balance(&self) {
-        let mut p = self.submit_bond_pool;
+        let mut p = self.submit_bond_pool - self.treasure_debet;
         for (_key, r) in self.relayers.iter() {
             p -= r.pay;
             p += r.reward;
@@ -111,20 +121,23 @@ impl ChainsStatus {
         // TODO: check the small number is correct and acceptable
         if p != 0.0 || p > 0.00000001 {
             println!("p: {}", p);
+            println!("Chain Status: {:?}", self);
             panic!("System unbalance");
         }
     }
-
-    pub fn reward_honest_relayers(&mut self) {
-        let total_honest_submit_times = self.relayers.iter().fold(0, |mut sum, (_k, r)| {
-            sum += r.get_honest_submit_times();
-            sum
-        });
-        let share_pre_submit = self.submit_bond_pool / total_honest_submit_times as f64;
-        for r in self.relayers.values_mut() {
-            r.reward += r.get_honest_submit_times() as f64 * share_pre_submit;
+    pub fn reward(&mut self, rewards: Vec<Reward>) {
+        for reward in rewards.into_iter() {
+            let r = self.relayers.get_mut(reward.to).unwrap();
+            r.reward += reward.value;
+            match reward.from {
+                RewardFrom::Treasure => {
+                    self.treasure_debet += reward.value;
+                }
+                RewardFrom::Bond => {
+                    self.submit_bond_pool -= reward.value;
+                }
+            }
         }
-        self.submit_bond_pool = 0.0;
     }
 }
 
@@ -210,7 +223,11 @@ mod tests {
         c.submit_by("Darwinia".to_string(), 10.0, false);
         c.should_balance();
         assert_eq!(c.submit_bond_pool, 30.0);
-        c.reward_honest_relayers();
+        c.reward(vec![Reward {
+            from: RewardFrom::Bond,
+            to: "Darwinia",
+            value: 30.0,
+        }]);
         c.should_balance();
         assert_eq!(c.relayers["Evil"].reward, 0.0);
         assert_eq!(c.relayers["Darwinia"].reward, 30.0);
@@ -229,7 +246,11 @@ mod tests {
         c.submit(vec![("Darwinia".to_string(), false)], 10.0, 50, 250);
         c.should_balance();
         assert_eq!(c.submit_bond_pool, 30.0);
-        c.reward_honest_relayers();
+        c.reward(vec![Reward {
+            from: RewardFrom::Bond,
+            to: "Darwinia",
+            value: 30.0,
+        }]);
         c.should_balance();
         assert_eq!(c.relayers["Evil"].reward, 0.0);
         assert_eq!(c.relayers["Darwinia"].reward, 30.0);
