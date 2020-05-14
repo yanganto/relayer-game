@@ -66,9 +66,9 @@ fn simulate_from_scenario(
             }
             print!("\n");
         }
-        let submission_times = chains_status.submissions.len();
-        let last_relayed_block = if submission_times > 0 {
-            chains_status.submissions[submission_times - 1]
+        let submition_times = chains_status.submitions.len();
+        let last_relayed_block = if submition_times > 0 {
+            chains_status.submitions[submition_times - 1]
         } else {
             (0, 0)
         };

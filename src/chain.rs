@@ -16,7 +16,7 @@ pub struct ChainsStatus {
     /// (darwinia_block_height_for_last_relay, ethereum_block_height_for_last_relay)
     pub relayers: HashMap<String, RelayerStatus>,
     pub submit_target_ethereum_block: usize,
-    pub submissions: Vec<(usize, usize)>,
+    pub submitions: Vec<(usize, usize)>,
     pub block_speed_factor: f64,
     pub submit_bond_pool: f64,
 }
@@ -57,9 +57,9 @@ impl fmt::Display for ChainsStatus {
 
 impl ChainsStatus {
     pub fn fmt_status(&self) -> String {
-        let submission_times = self.submissions.len();
-        let last_relayed_block = if submission_times > 0 {
-            self.submissions[submission_times - 1]
+        let submition_times = self.submitions.len();
+        let last_relayed_block = if submition_times > 0 {
+            self.submitions[submition_times - 1]
         } else {
             (0, 0)
         };
@@ -94,7 +94,7 @@ impl ChainsStatus {
         for (relayer, lie) in relayers {
             self.submit_by(relayer, bond, lie)
         }
-        self.submissions
+        self.submitions
             .push((self.darwinia_block_hight, self.submit_target_ethereum_block));
         self.ethereum_block_hight += (wait_blocks as f64 / self.block_speed_factor) as usize;
         self.darwinia_block_hight += wait_blocks;

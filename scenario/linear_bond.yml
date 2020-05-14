@@ -8,7 +8,7 @@ Dd = 100
 De = 1000
 
 [bond_linear]
-# Each submission bond may be related to the rounds of consecutive submissions.
+# Each submition bond may be related to the rounds of consecutive submitions.
 # The bond is increasing that can help the submition to be finialized
 # submit bond = min(W * submit_round, M) + C
 W = 1.5
