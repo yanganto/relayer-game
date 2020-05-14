@@ -12,6 +12,7 @@ pub enum Error {
     CliError(String),
     #[fail(display = "Patch Parameter `{}` is not valid", 0)]
     PatchParameterError(String),
+    #[cfg(feature = "plot")]
     #[fail(display = "Plotting Error: {}", 0)]
     PlotError(String),
     #[fail(display = "Unexpected: {}", 0)]

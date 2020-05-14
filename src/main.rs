@@ -19,6 +19,7 @@ mod bond;
 mod chain;
 mod challenge;
 mod error;
+#[cfg(feature = "plot")]
 mod plot;
 mod scenario;
 mod target;
@@ -114,9 +115,11 @@ fn simulate_from_scenario(
     let max_bond_value = chains_status.submit_bond_pool;
     chains_status.reward_honest_relayers();
 
+    #[cfg(feature = "plot")]
     plot::draw("Challenge Times", iterator.submit_round, challenge_times)
         .map_err(|e| error::Error::PlotError(format!("{:?}", e)))?;
 
+    #[cfg(feature = "plot")]
     plot::draw("Bonds", iterator.submit_round, bonds)
         .map_err(|e| error::Error::PlotError(format!("{:?}", e)))?;
 

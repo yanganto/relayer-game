@@ -94,7 +94,12 @@ Besides, you can patch some equation parameters with option `p`, for examples.
 ```
 Currently, all parameters in `challenge_linear` and `bond_linear`, and also the values of `challenge_function` and `bond_function` can be patched.  
 The challenge times(in blocks), and the bonds for each round will show as plot help you to modify the equation.  
-[![snapshot](https://raw.githubusercontent.com/yanganto/relayer-game/master/demo.png)]
+![snapshot](https://raw.githubusercontent.com/yanganto/relayer-game/master/demo.png)
+
+If you want to use this tool without plot with a smaller binary, please use `--no-default-features` option when building.
+```
+cargo build --release --no-default-features
+```
 
 # Develop and Document
 This project has document, you can use this command to show the document on browser.
