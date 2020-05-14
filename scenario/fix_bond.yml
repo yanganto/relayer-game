@@ -14,7 +14,7 @@ target_function = "half"
 # Make submit with bond calculated by a function
 # The bond for each submit
 # bond_function can be a equation name or float number string for a constant bond value
-bond_function = "linear"
+bond_function = "10.0"
 
 # The initail block different
 # surfix d: block difference between last block number relayed on Darwinia,
@@ -40,14 +40,6 @@ We = 2.0
 C  = 1
 Md = 500
 Me = 500
-
-[bond_linear]
-# Each submission bond may be related to the rounds of consecutive submissions.
-# The bond is increasing that can help the submition to be finialized
-# submit bond = min(W * submit_round, M) + C
-W = 1.5
-C  = 10.0
-M = 100.0
 
 # We suppose that there is always a good guy, which is provied by Darwinia Bot
 # Other client may be response as H(Honest), L(Lie), N(No response)

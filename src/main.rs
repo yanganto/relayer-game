@@ -19,6 +19,7 @@ mod bond;
 mod chain;
 mod challenge;
 mod error;
+mod plot;
 mod scenario;
 mod target;
 
@@ -42,6 +43,10 @@ fn simulate_from_scenario(
     let target_eq = config.get_target_equation()?;
     let bond_eq = config.get_bond_equation()?;
     let mut chains_status: chain::ChainsStatus = config.into();
+    let darwinia_start_block = chains_status.darwinia_block_hight;
+    let mut challenge_times = Vec::<f64>::new();
+    let mut bonds = Vec::<f64>::new();
+
     while let Some(relayer_sumbitions) = iterator.next() {
         if debug {
             print!("{}", format!("{}", chains_status.fmt_status()).cyan());
@@ -77,9 +82,14 @@ fn simulate_from_scenario(
                 chains_status.submit_target_ethereum_block - last_relayed_block.1,
             )
         };
+        challenge_times.push(challenge_time as f64);
+
+        let bond = bond_eq.calculate(iterator.submit_round);
+        bonds.push(bond);
+
         chains_status.submit(
             relayer_sumbitions,
-            bond_eq.calculate(iterator.submit_round),
+            bond,
             challenge_time,
             target_eq.calculate(0, chains_status.submit_target_ethereum_block),
         );
@@ -101,8 +111,22 @@ fn simulate_from_scenario(
             );
         }
     }
+    let max_bond_value = chains_status.submit_bond_pool;
     chains_status.reward_honest_relayers();
+
+    plot::draw("Challenge Times", iterator.submit_round, challenge_times)
+        .map_err(|e| error::Error::PlotError(format!("{:?}", e)))?;
+
+    plot::draw("Bonds", iterator.submit_round, bonds)
+        .map_err(|e| error::Error::PlotError(format!("{:?}", e)))?;
+
     println!("Final {}", chains_status);
+    println!(
+        "Duration: {} blocks,  Max Bond Value: {}",
+        chains_status.darwinia_block_hight - darwinia_start_block,
+        max_bond_value
+    );
+
     Ok(())
 }
 
