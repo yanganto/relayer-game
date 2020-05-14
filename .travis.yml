@@ -16,3 +16,5 @@ jobs:
     - stage: "Build"
       script: cargo build --release --verbose --all
 
+    - stage: "Build without Features"
+      script: cargo build --release --verbose --all --no-default-features
