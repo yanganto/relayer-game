@@ -21,6 +21,7 @@ mod challenge;
 mod error;
 #[cfg(feature = "plot")]
 mod plot;
+mod reward;
 mod scenario;
 mod target;
 
@@ -42,31 +43,21 @@ fn simulate_from_scenario(
     let mut iterator = config.get_iter();
     let challenge_eq = config.get_challenge_equation()?;
     let target_eq = config.get_target_equation()?;
+    let reward_eq = config.get_reward_equation()?;
     let bond_eq = config.get_bond_equation()?;
     let mut chains_status: chain::ChainsStatus = config.into();
     let darwinia_start_block = chains_status.darwinia_block_hight;
+
+    // record variable pre submition
     let mut challenge_times = Vec::<f64>::new();
     let mut bonds = Vec::<f64>::new();
-    let mut rewards = Vec::<chain::Reward>::new();
+
+    let mut reward_actions = Vec::<chain::Reward>::new();
+    let mut reward_from_previous_round = 0f64;
 
     while let Some(relayer_subitions) = iterator.next() {
-        if debug {
-            print!("{}", format!("{}", chains_status.fmt_status()).cyan());
-            print!(
-                "\tSubmitions(Bond: {}): ",
-                bond_eq.calculate(iterator.submit_round)
-            );
-            for (r, lie) in relayer_subitions.iter() {
-                print!("{}", r);
-                if *lie {
-                    print!("(lie)");
-                } else {
-                    print!("(honest)");
-                }
-                print!(" ");
-            }
-            print!("\n");
-        }
+        let bond = bond_eq.calculate(iterator.submit_round);
+        bonds.push(bond);
         let submition_times = chains_status.submitions.len();
         let last_relayed_block = if submition_times > 0 {
             chains_status.submitions[submition_times - 1]
@@ -86,8 +77,34 @@ fn simulate_from_scenario(
         };
         challenge_times.push(challenge_time as f64);
 
-        let bond = bond_eq.calculate(iterator.submit_round);
-        bonds.push(bond);
+        let total_lie_relayer = relayer_subitions.iter().filter(|r| r.1).count();
+        let mut r = reward_eq.calculate(
+            reward_from_previous_round,
+            total_lie_relayer as f64 * bond,
+            bond,
+            relayer_subitions
+                .iter()
+                .filter(|r| !r.1)
+                .map(|r| r.0.clone())
+                .collect(),
+        );
+        reward_from_previous_round = r.0;
+        reward_actions.append(&mut r.1);
+
+        if debug {
+            print!("{}", format!("{}", chains_status.fmt_status()).cyan());
+            print!("\tSubmitions(Bond: {}): ", bond);
+            for (r, lie) in relayer_subitions.iter() {
+                print!("{}", r);
+                if *lie {
+                    print!("(lie)");
+                } else {
+                    print!("(honest)");
+                }
+                print!(" ");
+            }
+            print!("\n");
+        }
 
         chains_status.submit(
             relayer_subitions,
@@ -111,21 +128,13 @@ fn simulate_from_scenario(
                 chains_status.submit_bond_pool
             );
         }
+
+        if 0 == total_lie_relayer {
+            break;
+        }
     }
     let max_bond_value = chains_status.submit_bond_pool;
-    chains_status.reward(rewards);
-
-    // pub fn reward_honest_relayers(&mut self) {
-    //     let total_honest_submit_times = self.relayers.iter().fold(0, |mut sum, (_k, r)| {
-    //         sum += r.get_honest_submit_times();
-    //         sum
-    //     });
-    //     let share_pre_submit = self.submit_bond_pool / total_honest_submit_times as f64;
-    //     for r in self.relayers.values_mut() {
-    //         r.reward += r.get_honest_submit_times() as f64 * share_pre_submit;
-    //     }
-    //     self.submit_bond_pool = 0.0;
-    // }
+    chains_status.reward(reward_actions);
 
     #[cfg(feature = "plot")]
     plot::draw("Challenge Times", iterator.submit_round, challenge_times)

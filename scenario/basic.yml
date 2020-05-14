@@ -16,6 +16,9 @@ target_function = "half"
 # bond_function can be a equation name or float number string for a constant bond value
 bond_function = "linear"
 
+# reward for each honest relayer will be calculateed by a function
+reward_function = "split"
+
 # The initail block different
 # surfix d: block difference between last block number relayed on Darwinia,
 # surfix e: block difference between last related block number of Ethereum
@@ -48,6 +51,11 @@ Me = 500
 W = 1.5
 C  = 10.0
 M = 100.0
+
+[reward_split]
+# The slash of round will be take `P` portion as reward to the honest relayer this round
+# and leave (1 - P) portion as reward to the honest relayer next round
+P = 0.5
 
 # We suppose that there is always a good guy, which is provied by Darwinia Bot
 # Other client may be response as H(Honest), L(Lie), N(No response)

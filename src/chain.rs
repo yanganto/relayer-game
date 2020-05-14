@@ -8,15 +8,17 @@ use crate::target::Equation;
 
 static TOTAL_RELAYER: AtomicUsize = AtomicUsize::new(0);
 
+#[derive(Debug)]
 pub enum RewardFrom {
     Treasure,
-    Bond,
+    Slash,
 }
 
-pub struct Reward<'a> {
-    from: RewardFrom,
-    to: &'a str,
-    value: f64,
+#[derive(Debug)]
+pub struct Reward {
+    pub from: RewardFrom,
+    pub to: String,
+    pub value: f64,
 }
 
 #[derive(Default, Debug)]
@@ -127,13 +129,13 @@ impl ChainsStatus {
     }
     pub fn reward(&mut self, rewards: Vec<Reward>) {
         for reward in rewards.into_iter() {
-            let r = self.relayers.get_mut(reward.to).unwrap();
+            let r = self.relayers.get_mut(&reward.to).unwrap();
             r.reward += reward.value;
             match reward.from {
                 RewardFrom::Treasure => {
                     self.treasure_debet += reward.value;
                 }
-                RewardFrom::Bond => {
+                RewardFrom::Slash => {
                     self.submit_bond_pool -= reward.value;
                 }
             }
@@ -165,9 +167,15 @@ impl fmt::Display for RelayerStatus {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let balance = self.reward - self.pay;
         if let Some(n) = &self.name {
-            write!(f, "{}: {} ", n, balance)
+            write!(f, "{}({}): {} ", n, self.get_honest_submit_times(), balance)
         } else {
-            write!(f, "ID {}: {} ", self.id, balance)
+            write!(
+                f,
+                "ID {}({}): {} ",
+                self.id,
+                self.get_honest_submit_times(),
+                balance
+            )
         }
     }
 }
@@ -224,8 +232,8 @@ mod tests {
         c.should_balance();
         assert_eq!(c.submit_bond_pool, 30.0);
         c.reward(vec![Reward {
-            from: RewardFrom::Bond,
-            to: "Darwinia",
+            from: RewardFrom::Slash,
+            to: "Darwinia".to_string(),
             value: 30.0,
         }]);
         c.should_balance();
@@ -247,8 +255,8 @@ mod tests {
         c.should_balance();
         assert_eq!(c.submit_bond_pool, 30.0);
         c.reward(vec![Reward {
-            from: RewardFrom::Bond,
-            to: "Darwinia",
+            from: RewardFrom::Slash,
+            to: "Darwinia".to_string(),
             value: 30.0,
         }]);
         c.should_balance();
