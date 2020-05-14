@@ -35,11 +35,11 @@ F = 2.0
 #
 # and also there are maximun value for each portion
 # waiting block = int(min(Wd * D, Md) + min(We * E, Me)) + C
-Wd = 0.0
-We = 0.0
+Wd = 1.5
+We = 2.0
 C  = 1
-Md = 100
-Me = 100
+Md = 500
+Me = 500
 
 # We suppose that there is always a good guy, which is provied by Darwinia Bot
 # Other client may be response as H(Honest), L(Lie), N(No response)

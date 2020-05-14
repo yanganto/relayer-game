@@ -66,13 +66,21 @@ fn simulate_from_scenario(
         } else {
             (0, 0)
         };
+        let challenge_time = if last_relayed_block.1 > chains_status.submit_target_ethereum_block {
+            challenge_eq.calculate(
+                chains_status.darwinia_block_hight - last_relayed_block.0,
+                last_relayed_block.1 - chains_status.submit_target_ethereum_block,
+            )
+        } else {
+            challenge_eq.calculate(
+                chains_status.darwinia_block_hight - last_relayed_block.0,
+                chains_status.submit_target_ethereum_block - last_relayed_block.1,
+            )
+        };
         chains_status.submit(
             relayer_sumbitions,
             bond_eq.calculate(iterator.submit_round),
-            challenge_eq.calculate(
-                chains_status.darwinia_block_hight - last_relayed_block.0,
-                chains_status.submit_target_ethereum_block - 0,
-            ),
+            challenge_time,
             target_eq.calculate(0, chains_status.submit_target_ethereum_block),
         );
 
@@ -84,6 +92,7 @@ fn simulate_from_scenario(
                 "\tNext Etherem Target Block: {}",
                 chains_status.submit_target_ethereum_block
             );
+            println!("\tChallenge Time: {} blocks", challenge_time);
             print!("\tRelayer Status: ");
             println!("{}", chains_status.fmt_relayers_status());
             println!(
