@@ -5,7 +5,7 @@ use serde_derive::Deserialize;
 
 /// # Treasure Last reward equation
 /// slash value of each submit round will pay for the honest relayer in the same round
-/// and the honest relayers in the last round will be payed from treasure
+/// and the honest relayers in the last round will be payed from treasury
 #[allow(non_snake_case)]
 #[derive(Default, Debug, Deserialize, Copy, Clone)]
 pub struct TreasureLastConfig {

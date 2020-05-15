@@ -30,7 +30,7 @@ pub struct ChainsStatus {
     pub submitions: Vec<(usize, usize)>,
     pub block_speed_factor: f64,
     pub submit_bond_pool: f64,
-    pub treasure_debet: f64,
+    pub treasury_debet: f64,
 }
 
 impl From<ScenarioConfig> for ChainsStatus {
@@ -114,7 +114,7 @@ impl ChainsStatus {
     }
 
     pub fn should_balance(&self) {
-        let mut p = self.submit_bond_pool - self.treasure_debet;
+        let mut p = self.submit_bond_pool - self.treasury_debet;
         for (_key, r) in self.relayers.iter() {
             p -= r.pay;
             p += r.reward;
@@ -133,7 +133,7 @@ impl ChainsStatus {
             r.reward += reward.value;
             match reward.from {
                 RewardFrom::Treasure => {
-                    self.treasure_debet += reward.value;
+                    self.treasury_debet += reward.value;
                 }
                 RewardFrom::Slash => {
                     self.submit_bond_pool -= reward.value;

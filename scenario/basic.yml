@@ -57,9 +57,9 @@ M = 100.0
 # and leave (1 - P) portion as reward to the honest relayer next round
 P = 0.5
 
-[reward_treasure_last]
+[reward_treasury_last]
 # The slash of round will be take as reward to the honest relayer in that round
-# And the treasure will pay all the honest relayer in the last round
+# And the treasury will pay all the honest relayer in the last round
 C = 100.0
 
 # We suppose that there is always a good guy, which is provied by Darwinia Bot

@@ -21,7 +21,7 @@ use crate::challenge::{
 };
 use crate::error::Error;
 use crate::reward::{
-    split::SplitConfig, treasure_last::TreasureLastConfig, ConfigValidate as RewardVali,
+    split::SplitConfig, treasury_last::TreasureLastConfig, ConfigValidate as RewardVali,
     Equation as RewardEq,
 };
 use crate::target::{half::HalfConfig, Equation as TargetEq};
@@ -65,8 +65,8 @@ pub struct ScenarioConfig {
     /// parameters in split reward
     pub reward_split: Option<SplitConfig>,
 
-    /// parameters in treasure reward the last submit round
-    pub reward_treasure_last: Option<TreasureLastConfig>,
+    /// parameters in treasury reward the last submit round
+    pub reward_treasury_last: Option<TreasureLastConfig>,
 
     /// The relayers participate in these game
     /// We suppose that there is always a honest relayer provied by Darwinia,
@@ -150,8 +150,8 @@ impl ScenarioConfig {
                     return Ok(Box::new(f));
                 }
             }
-            "TREASURE_LAST" => {
-                if let Some(f) = self.reward_treasure_last {
+            "TREASURY_LAST" => {
+                if let Some(f) = self.reward_treasury_last {
                     return Ok(Box::new(f));
                 }
             }
@@ -207,18 +207,18 @@ impl ScenarioConfig {
                     f.apply_patch(p, v)?;
                     f.validate()?;
                     self.reward_split = Some(f);
-                } else if k.starts_with("reward_treasure_last") {
+                } else if k.starts_with("reward_treasury_last") {
                     let p = para.ok_or_else(|| {
                         Error::PatchParameterError(
-                            "parameter of reward treasure last model is absent".to_string(),
+                            "parameter of reward treasury last model is absent".to_string(),
                         )
                     })?;
-                    let mut f = self.reward_treasure_last.ok_or_else(|| {
-                        Error::PatchParameterError("reward treasure last config absent".to_string())
+                    let mut f = self.reward_treasury_last.ok_or_else(|| {
+                        Error::PatchParameterError("reward treasury last config absent".to_string())
                     })?;
                     f.apply_patch(p, v)?;
                     f.validate()?;
-                    self.reward_treasure_last = Some(f);
+                    self.reward_treasury_last = Some(f);
                 } else if k.starts_with("challenge_function") {
                     self.challenge_function = v.to_string();
                 } else if k.starts_with("bond_function") {

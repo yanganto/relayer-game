@@ -19,13 +19,13 @@ cargo run -- -p challenge_function=100 -v scenario/linear_bond.yml
 echo ""
 
 echo "======== no patch ==========="
-cargo run -- -v scenario/treasure_last.yml
+cargo run -- -v scenario/treasury_last.yml
 echo "== patch reward_split.P=0.7 =="
 cargo run -- -p reward_split.P=0.7 -- scenario/basic.yml
 echo ""
 
 echo "======== no patch ==========="
-cargo run -- -v scenario/treasure_last.yml
-echo "== patch reward_treasure_last.C=90 =="
-cargo run -- -p reward_treasure_last.C=9.0 -- scenario/treasure_last.yml
+cargo run -- -v scenario/treasury_last.yml
+echo "== patch reward_treasury_last.C=90 =="
+cargo run -- -p reward_treasury_last.C=9.0 -- scenario/treasury_last.yml
 echo ""
