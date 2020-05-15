@@ -204,6 +204,8 @@ mod tests {
 			challenge_function = "linear"
 			target_function = "half"
 			bond_function = "10.0"
+			reward_function = "split"
+
 			Dd = 100
 			De = 1000
 
@@ -215,6 +217,9 @@ mod tests {
 			Me = 100
 			B = 1
 			T = 10
+
+			[reward_split]
+			P = 0.5
 
 			[[relayers]]
 			name = "Evil"
