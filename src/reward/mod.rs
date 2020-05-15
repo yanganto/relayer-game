@@ -6,6 +6,7 @@ use crate::chain::Reward;
 use crate::error::Error;
 
 pub mod split;
+pub mod treasure_last;
 
 /// This trait help the main function calculate the Reward and the reserve slash
 pub trait Equation {

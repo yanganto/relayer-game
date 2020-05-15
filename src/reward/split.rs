@@ -4,7 +4,7 @@ use crate::reward::{ConfigValidate, Equation};
 use serde_derive::Deserialize;
 
 /// # Split reward equation
-/// slash value of submit will take P as reward in current round, and leave (1-P) for the next
+/// slash value of submit round will take P as reward in current round, and leave (1-P) for the next
 /// round
 #[allow(non_snake_case)]
 #[derive(Default, Debug, Deserialize, Copy, Clone)]
@@ -21,15 +21,14 @@ impl ConfigValidate for SplitConfig {
         Ok(())
     }
     fn apply_patch(&mut self, k: &str, v: &str) -> Result<(), Error> {
-        match k {
-            "P" => self.P = v.parse::<f64>()?,
-            _ => {
-                return Err(Error::PatchParameterError(
-                    "parameter not correct".to_string(),
-                ))
-            }
+        if k == "P" {
+            self.P = v.parse::<f64>()?;
+            Ok(())
+        } else {
+            Err(Error::PatchParameterError(
+                "parameter not correct".to_string(),
+            ))
         }
-        Ok(())
     }
 }
 

@@ -20,7 +20,10 @@ use crate::challenge::{
     Equation as ChallengeEq,
 };
 use crate::error::Error;
-use crate::reward::{split::SplitConfig, ConfigValidate as RewardVali, Equation as RewardEq};
+use crate::reward::{
+    split::SplitConfig, treasure_last::TreasureLastConfig, ConfigValidate as RewardVali,
+    Equation as RewardEq,
+};
 use crate::target::{half::HalfConfig, Equation as TargetEq};
 
 /// # Scenario Config
@@ -61,6 +64,9 @@ pub struct ScenarioConfig {
 
     /// parameters in split reward
     pub reward_split: Option<SplitConfig>,
+
+    /// parameters in treasure reward the last submit round
+    pub reward_treasure_last: Option<TreasureLastConfig>,
 
     /// The relayers participate in these game
     /// We suppose that there is always a honest relayer provied by Darwinia,
@@ -144,8 +150,13 @@ impl ScenarioConfig {
                     return Ok(Box::new(f));
                 }
             }
+            "TREASURE_LAST" => {
+                if let Some(f) = self.reward_treasure_last {
+                    return Ok(Box::new(f));
+                }
+            }
             _ => {
-                return Err(Error::ParameterError("Target function absent"));
+                return Err(Error::ParameterError("Reward function absent"));
             }
         }
         return Err(Error::ParameterError(
@@ -162,7 +173,9 @@ impl ScenarioConfig {
                 let para = k.split('.').nth(1);
                 if k.starts_with("challenge_linear") {
                     let p = para.ok_or_else(|| {
-                        Error::PatchParameterError("challenge linear parameter absent".to_string())
+                        Error::PatchParameterError(
+                            "parameters of challenge linear are absent".to_string(),
+                        )
                     })?;
                     let mut w = self.challenge_linear.ok_or_else(|| {
                         Error::PatchParameterError("challenge linear absent".to_string())
@@ -172,7 +185,9 @@ impl ScenarioConfig {
                     self.challenge_linear = Some(w);
                 } else if k.starts_with("bond_linear") {
                     let p = para.ok_or_else(|| {
-                        Error::PatchParameterError("bond linear parameter absent".to_string())
+                        Error::PatchParameterError(
+                            "parameters of bond linear are absent".to_string(),
+                        )
                     })?;
                     let mut f = self.bond_linear.ok_or_else(|| {
                         Error::PatchParameterError("bond linear absent".to_string())
@@ -180,9 +195,11 @@ impl ScenarioConfig {
                     f.apply_patch(p, v)?;
                     f.validate()?;
                     self.bond_linear = Some(f);
-                } else if k.starts_with("split_reward") {
+                } else if k.starts_with("reward_split") {
                     let p = para.ok_or_else(|| {
-                        Error::PatchParameterError("reward split parameter absent".to_string())
+                        Error::PatchParameterError(
+                            "parameter of reward split parameter is absent".to_string(),
+                        )
                     })?;
                     let mut f = self.reward_split.ok_or_else(|| {
                         Error::PatchParameterError("reward split config absent".to_string())
@@ -190,10 +207,24 @@ impl ScenarioConfig {
                     f.apply_patch(p, v)?;
                     f.validate()?;
                     self.reward_split = Some(f);
+                } else if k.starts_with("reward_treasure_last") {
+                    let p = para.ok_or_else(|| {
+                        Error::PatchParameterError(
+                            "parameter of reward treasure last model is absent".to_string(),
+                        )
+                    })?;
+                    let mut f = self.reward_treasure_last.ok_or_else(|| {
+                        Error::PatchParameterError("reward treasure last config absent".to_string())
+                    })?;
+                    f.apply_patch(p, v)?;
+                    f.validate()?;
+                    self.reward_treasure_last = Some(f);
                 } else if k.starts_with("challenge_function") {
                     self.challenge_function = v.to_string();
                 } else if k.starts_with("bond_function") {
                     self.bond_function = v.to_string();
+                } else if k.starts_with("reward_function") {
+                    self.reward_function = v.to_string();
                 }
             } else {
                 return Err(Error::PatchParameterError(
