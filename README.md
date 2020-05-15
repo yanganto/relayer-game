@@ -37,6 +37,14 @@ There are some example scenario files listed in [scenario](./scenario).
   - Current support: float number, linear   
   - For example: '10.0', that means the bond of each submit is always 10.0.
 
+- `reward_function`
+  - The reward from relayers including the treasury and the slash from the lie relayers (attackers)
+  - It may be reasonable when that the slash part of reward should be the same as bond functions, 
+    but both the first round submit and the second round submit are to help to beat the attackers in the first round, 
+    so the slash from the first round sumit may split some portion for the honest relayers in the second round.
+  - And also it may be that the treasury part is only for the last submit rounds, if the slash never split to the next round
+    - the treasury part is from the fee of redeem action, but it will be a debet without limitation in simulation
+
 ## Initialize status of Darwinia and Ethereum
 suffix `d`: block difference between last block number relayed on Darwinia, suffix `e`: block difference between last related block number of Ethereum
 - `Dd`(optional)
@@ -74,6 +82,18 @@ The three function can use different equations, base on the function setting, fo
   - `bond = min(W * E, M) + C`
   - W is the weight 
   - M is the maximum value for the variable part
+
+- `[reward_split]`
+  - Split the slash for reward the honest relayers in two rounds
+  - slash value of submit round will take P as reward in current round, and leave (1-P) for the next round
+  - P is the portion 
+  - the slash value for this submit round is slash value * P
+  - the slash value for this next submit round is slash value * (1 - P)
+
+- `[reward_treasury_last]`
+  - The slash for reward the honest relayers in the same round
+  - The treasury will reward the relayers in the last submit round, because there is no attacker(lie relayers) in the last round.
+  - C is the constant of the reward from treasury
 
 # Build & Run
 This executable is written in Rust, it can be easily to build and run with cargo command.  

@@ -20,6 +20,10 @@ use crate::challenge::{
     Equation as ChallengeEq,
 };
 use crate::error::Error;
+use crate::reward::{
+    split::SplitConfig, treasury_last::TreasureLastConfig, ConfigValidate as RewardVali,
+    Equation as RewardEq,
+};
 use crate::target::{half::HalfConfig, Equation as TargetEq};
 
 /// # Scenario Config
@@ -49,11 +53,20 @@ pub struct ScenarioConfig {
     /// The submit bond of function
     pub bond_function: String,
 
+    /// The reward of function
+    pub reward_function: String,
+
     /// parameters in linear wating
     pub challenge_linear: Option<ChallengeLinear>,
 
     /// parameters in linear wating
     pub bond_linear: Option<BondLinear>,
+
+    /// parameters in split reward
+    pub reward_split: Option<SplitConfig>,
+
+    /// parameters in treasury reward the last submit round
+    pub reward_treasury_last: Option<TreasureLastConfig>,
 
     /// The relayers participate in these game
     /// We suppose that there is always a honest relayer provied by Darwinia,
@@ -130,6 +143,26 @@ impl ScenarioConfig {
             "lack prameters for specified bond function",
         ));
     }
+    pub fn get_reward_equation(&self) -> Result<Box<dyn RewardEq>, Error> {
+        match self.reward_function.to_uppercase().as_str() {
+            "SPLIT" => {
+                if let Some(f) = self.reward_split {
+                    return Ok(Box::new(f));
+                }
+            }
+            "TREASURY_LAST" => {
+                if let Some(f) = self.reward_treasury_last {
+                    return Ok(Box::new(f));
+                }
+            }
+            _ => {
+                return Err(Error::ParameterError("Reward function absent"));
+            }
+        }
+        return Err(Error::ParameterError(
+            "lack prameters for specified reward function",
+        ));
+    }
     pub fn apply_patch(&mut self, patches: Vec<&str>) -> Result<(), Error> {
         let split_with_equation = patches.iter().map(|patch| {
             let mut i = patch.split('=').into_iter();
@@ -140,7 +173,9 @@ impl ScenarioConfig {
                 let para = k.split('.').nth(1);
                 if k.starts_with("challenge_linear") {
                     let p = para.ok_or_else(|| {
-                        Error::PatchParameterError("challenge linear parameter absent".to_string())
+                        Error::PatchParameterError(
+                            "parameters of challenge linear are absent".to_string(),
+                        )
                     })?;
                     let mut w = self.challenge_linear.ok_or_else(|| {
                         Error::PatchParameterError("challenge linear absent".to_string())
@@ -150,7 +185,9 @@ impl ScenarioConfig {
                     self.challenge_linear = Some(w);
                 } else if k.starts_with("bond_linear") {
                     let p = para.ok_or_else(|| {
-                        Error::PatchParameterError("bond linear parameter absent".to_string())
+                        Error::PatchParameterError(
+                            "parameters of bond linear are absent".to_string(),
+                        )
                     })?;
                     let mut f = self.bond_linear.ok_or_else(|| {
                         Error::PatchParameterError("bond linear absent".to_string())
@@ -158,10 +195,36 @@ impl ScenarioConfig {
                     f.apply_patch(p, v)?;
                     f.validate()?;
                     self.bond_linear = Some(f);
+                } else if k.starts_with("reward_split") {
+                    let p = para.ok_or_else(|| {
+                        Error::PatchParameterError(
+                            "parameter of reward split parameter is absent".to_string(),
+                        )
+                    })?;
+                    let mut f = self.reward_split.ok_or_else(|| {
+                        Error::PatchParameterError("reward split config absent".to_string())
+                    })?;
+                    f.apply_patch(p, v)?;
+                    f.validate()?;
+                    self.reward_split = Some(f);
+                } else if k.starts_with("reward_treasury_last") {
+                    let p = para.ok_or_else(|| {
+                        Error::PatchParameterError(
+                            "parameter of reward treasury last model is absent".to_string(),
+                        )
+                    })?;
+                    let mut f = self.reward_treasury_last.ok_or_else(|| {
+                        Error::PatchParameterError("reward treasury last config absent".to_string())
+                    })?;
+                    f.apply_patch(p, v)?;
+                    f.validate()?;
+                    self.reward_treasury_last = Some(f);
                 } else if k.starts_with("challenge_function") {
                     self.challenge_function = v.to_string();
                 } else if k.starts_with("bond_function") {
                     self.bond_function = v.to_string();
+                } else if k.starts_with("reward_function") {
+                    self.reward_function = v.to_string();
                 }
             } else {
                 return Err(Error::PatchParameterError(
@@ -224,8 +287,12 @@ impl FromStr for ScenarioConfig {
         if let Some(f) = c.bond_linear {
             f.validate()?;
         }
+        if let Some(r) = c.reward_split {
+            r.validate()?;
+        }
 
         let mut max_chose = 0;
+
         for (i, r) in c.relayers.iter_mut().enumerate() {
             if let Some(n) = &r.name {
                 if n.to_uppercase() == "DARWINIA".to_string() {
@@ -262,6 +329,7 @@ mod tests {
 			challenge_function = "linear"
 			target_function = "half"
 			bond_function = "10.0"
+			reward_function = "split"
 
 			Dd = 100
 			De = 1000
@@ -335,6 +403,7 @@ mod tests {
 			challenge_function = "linear"
 			target_function = "half"
 			bond_function = "10.0"
+			reward_function = "split"
 
 			[challenge_linear]
 			Wd = -10
@@ -359,6 +428,7 @@ mod tests {
 			challenge_function = "linear"
 			target_function = "half"
 			bond_function = "10.0"
+			reward_function = "split"
 
 			[challenge_linear]
 			Wd = 0.0
