@@ -12,6 +12,102 @@ All the behavior of relayers, and the parameters are described a in a yaml file.
 You can easily load the scenario file to simulate the result. 
 There are some example scenario files listed in [scenario](./scenario).
 
+The relay scenario of this tool is including 3 rules.
+1. Anyone can relay a ethereum header on the darwinia chain
+2. Confirmed or open a round of game
+  - if there is only one block (or multiple same blocks) on Darwinia chain the challenge time, this block is confirmed.  (2-1)
+  - else (there are different blocks in the same block height) on Darwinia chain, the game is starts
+    - everyone in the game should submit another block based on the `target function` until the game closed (2-2-1)
+      - Once the a block according target function submit the next round of gamae is started, and become recursive in 2
+  - anyone can get in the game in any round but need to participate until the game closed
+3. Game closed
+  - In following two condition, that all of the submission in the game from a relayer are ignore. (3-1)
+    - if someone in the game did not keep submit the blocks in following rounds in the game
+    - if the block of someone in the game is verified fail by hash
+  - Because some submission are ignored, if all blocks in each round is the only or the same, this block is confirmed, and game is closed. (3-2)
+
+Here is some visualized example with two relayer `Evil` and `Honest`, `Evil` is a bad guy some times relay incorrect header, `Honest` is always relay a correct header.
+
+This is a plot to show Ethereum, G is genesis block or a block already confirmed on Darwinia chain before the game start.
+```
+         G==========================================
+```
+
+Here is the first submit, `Evil` relay a block with lie(`L`), and `Honest` find out this and relay a truth block with the same ehereum block height,  
+so the game starts.  In the meanwhile, the chain can not determine which block is truth or lied, all the information on chain is that there are two different blocks with same block height, at least one of the block with incorrect information.
+```
+         G======================================1===
+Evil                                            L
+Honest                                          T
+```
+Based on `target function`, the `Evil` and `Honest` should submit the header on the `2` position (adopted rule 2-2-1.).
+```
+         G==================2===================1===
+Evil                                            L
+Honest                                          T
+```
+#### From here, the game will become 3 kinds of scenarios, 
+  - `Evil` has no response on 2,
+  - `Evil` submit a true block on 2.
+  - `Evil` submit a block still with lie on 2.
+
+In the first scenario (`Evil` has no response on 2),
+the `Honest` will submit a header on 2
+```
+         G==================2===================1===
+Evil                                            L
+Honest                      T                   T
+```
+And waiting the challenge time over, the lie block from `Evil` will be removed (adopted rule 3-1), 
+and the only block in each round will be confirmed (denote with 'C') (adopted rule 3-2).
+```
+         G==================2===================1===
+Evil                                            -
+Honest                      C                   C
+```
+
+#### In the second scenario (`Evil` submit a true block on 2),
+the `Honest` will submit a header on 2
+```
+         G==================2===================1===
+Evil                        T                   L
+Honest                      T                   T
+```
+
+And waiting the challenge time over, 
+the blocks (the same) in submit round 2 are all confirmed. (adopted rule 2-1)
+And `Evil` and `Honest` are still in the game and base on `target_function`, 
+that should submit header on position 3(adopted rule 2-2-1.).
+```
+         G==================2=========3=========1===
+Evil                        C                   L
+Honest                      C                   T
+```
+
+#### In the third scenario (`Evil` submit a block still with lie on 2),
+the `Honest` will submit a correct header on 2.
+```
+         G==================2===================1===
+Evil                        L                   L
+Honest                      T                   T
+```
+And there is nothing confirmed without different opinions, 
+so base on the `target_function` the position 3 should be submit by `Evil` and `Honest`.
+```
+         G=======3==========2===================1===
+Evil                        L                   L
+Honest                      T                   T
+```
+`Evil` and `Honest` can start to submit the block on position 3 when they have different opinion on position2, but the challenge time of submit round 3 will be star counting after run out the challenge time of submit round 2.
+
+
+#### Conclusion
+- In the first scenario, the game is closed.  
+- In the second and third scenario, the game is still going and will be convergence some where between `G` and `1`.
+
+Once the `Evil` goes into contradictory. All of the bond from `Evil` will be slashed, and the slash to reward can be distributed with different functions.
+In the model, no mater there are how many malicious relayers, one honest relayer always response correct information will win the game.
+
 ## General parameters
 - `title ` (optional)
   - The title for this scenario will print on the console
@@ -43,7 +139,7 @@ There are some example scenario files listed in [scenario](./scenario).
     but both the first round submit and the second round submit are to help to beat the attackers in the first round, 
     so the slash from the first round sumit may split some portion for the honest relayers in the second round.
   - And also it may be that the treasury part is only for the last submit rounds, if the slash never split to the next round
-    - the treasury part is from the fee of redeem action, but it will be a debet without limitation in simulation
+    - the treasury part is from the fee of redeem action, but it will be a debt without limitation in simulation
 
 ## Initialize status of Darwinia and Ethereum
 suffix `d`: block difference between last block number relayed on Darwinia, suffix `e`: block difference between last related block number of Ethereum
@@ -60,7 +156,7 @@ The following parameters are used for relayers
     - if name is not provided, the relayer will be name with serial numbers
   - `choice`
     - relayer may be response as `H`(Honest), `L`(Lie), `N`(No response)
-    - if the lengeht of chose are shorter than other relayers, it will be deem to no response.  
+    - if the length of chose are shorter than other relayers, it will be deem to no response.  
 
 We assume there always is a good guy to relay the correct headers, and the guy will name `Darwinia`, 
 and this relayer will be automatic add into the scenario when load from configure file, 
