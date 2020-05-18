@@ -144,7 +144,11 @@ fn simulate_from_scenario(
     plot::draw("Bonds", iterator.submit_round, bonds)
         .map_err(|e| error::Error::PlotError(format!("{:?}", e)))?;
 
-    println!("Final {}", chains_status);
+    println!(
+        "Final {}\n{}",
+        chains_status,
+        chains_status.fmt_relayers_bar_chart(max_bond_value)
+    );
     println!(
         "Duration: {} blocks,  Max Bond Value: {}",
         chains_status.darwinia_block_hight - darwinia_start_block,

@@ -7,6 +7,7 @@ use crate::scenario::{RelayerConfig, ScenarioConfig};
 use crate::target::Equation;
 
 static TOTAL_RELAYER: AtomicUsize = AtomicUsize::new(0);
+static VISUALIZED_MAX_LENGTH: usize = 64;
 
 #[derive(Debug)]
 pub enum RewardFrom {
@@ -91,6 +92,14 @@ impl ChainsStatus {
         }
         output
     }
+    pub fn fmt_relayers_bar_chart(&self, normalize_value: f64) -> String {
+        let mut output = String::new();
+        for r in self.relayers.iter() {
+            output.push_str(&r.1.format_to_bar_char(normalize_value, VISUALIZED_MAX_LENGTH));
+        }
+        output.push_str("-: slash, +: reward from slash, *: reward from treasury");
+        output
+    }
     fn submit_by(&mut self, relayer: String, bond: f64, lie: bool) {
         let r = self.relayers.get_mut(&relayer).unwrap();
         r.submit(bond, lie);
@@ -117,7 +126,7 @@ impl ChainsStatus {
         let mut p = self.submit_bond_pool - self.treasury_debet;
         for (_key, r) in self.relayers.iter() {
             p -= r.pay;
-            p += r.reward;
+            p += r.reward();
         }
 
         // TODO: check the small number is correct and acceptable
@@ -130,12 +139,13 @@ impl ChainsStatus {
     pub fn reward(&mut self, rewards: Vec<Reward>) {
         for reward in rewards.into_iter() {
             let r = self.relayers.get_mut(&reward.to).unwrap();
-            r.reward += reward.value;
             match reward.from {
                 RewardFrom::Treasure => {
+                    r.reward.1 += reward.value;
                     self.treasury_debet += reward.value;
                 }
                 RewardFrom::Slash => {
+                    r.reward.0 += reward.value;
                     self.submit_bond_pool -= reward.value;
                 }
             }
@@ -148,7 +158,8 @@ pub struct RelayerStatus {
     pub id: usize,
     pub name: Option<String>,
     pub pay: f64,
-    pub reward: f64,
+    // reward.0 is from slash reward.1 is from treasry
+    pub reward: (f64, f64),
     pub submit_times: usize,
     pub lie: bool,
 }
@@ -165,7 +176,7 @@ impl From<RelayerConfig> for RelayerStatus {
 
 impl fmt::Display for RelayerStatus {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let balance = self.reward - self.pay;
+        let balance = self.reward() - self.pay;
         if let Some(n) = &self.name {
             write!(f, "{}({}): {} ", n, self.get_honest_submit_times(), balance)
         } else {
@@ -177,6 +188,36 @@ impl fmt::Display for RelayerStatus {
                 balance
             )
         }
+    }
+}
+
+impl RelayerStatus {
+    fn reward(&self) -> f64 {
+        self.reward.0 + self.reward.1
+    }
+    fn format_to_bar_char(&self, normalize_value: f64, normalize_width: usize) -> String {
+        let reward_slash_part: usize;
+        let reward_treasury_part: usize;
+        let slash_part: usize;
+        if self.reward.0 > self.pay {
+            reward_slash_part =
+                ((self.reward.0 - self.pay) / normalize_value * normalize_width as f64) as usize;
+            reward_treasury_part =
+                (self.reward.1 / normalize_value * normalize_width as f64) as usize;
+
+            slash_part = 0;
+        } else {
+            reward_slash_part = 0;
+            reward_treasury_part = 0;
+            slash_part = (self.pay / normalize_value * normalize_width as f64) as usize;
+        }
+        format!(
+            " {}{}{} {}\n",
+            "-".repeat(slash_part).to_string(),
+            "+".repeat(reward_slash_part),
+            "*".repeat(reward_treasury_part),
+            self
+        )
     }
 }
 
@@ -242,8 +283,8 @@ mod tests {
             value: 30.0,
         }]);
         c.should_balance();
-        assert_eq!(c.relayers["Evil"].reward, 0.0);
-        assert_eq!(c.relayers["Darwinia"].reward, 30.0);
+        assert_eq!(c.relayers["Evil"].reward(), 0.0);
+        assert_eq!(c.relayers["Darwinia"].reward(), 30.0);
     }
     #[test]
     fn test_chain_status_from_scenario_config() {
@@ -265,7 +306,7 @@ mod tests {
             value: 30.0,
         }]);
         c.should_balance();
-        assert_eq!(c.relayers["Evil"].reward, 0.0);
-        assert_eq!(c.relayers["Darwinia"].reward, 30.0);
+        assert_eq!(c.relayers["Evil"].reward(), 0.0);
+        assert_eq!(c.relayers["Darwinia"].reward(), 30.0);
     }
 }
