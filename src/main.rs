@@ -54,6 +54,9 @@ fn simulate_from_scenario(
 
     let mut reward_actions = Vec::<chain::Reward>::new();
     let mut reward_from_previous_round = 0f64;
+    let mut rp = scenario::RelayPositions::default();
+    rp.relay_blocks
+        .push(chains_status.submit_target_ethereum_block);
 
     while let Some(relayer_subitions) = iterator.next() {
         let bond = bond_eq.calculate(iterator.submit_round);
@@ -93,7 +96,8 @@ fn simulate_from_scenario(
 
         if debug {
             print!("{}", format!("{}", chains_status.fmt_status()).cyan());
-            print!("\tSubmitions(Bond: {}): ", bond);
+            println!("\tSubmission Plot: {}", rp.plot());
+            print!("\tSubmission(Bond: {}): ", bond);
             for (r, lie) in relayer_subitions.iter() {
                 print!("{}", r);
                 if *lie {
@@ -112,6 +116,8 @@ fn simulate_from_scenario(
             challenge_time,
             target_eq.calculate(0, chains_status.submit_target_ethereum_block),
         );
+        rp.relay_blocks
+            .push(chains_status.submit_target_ethereum_block);
 
         // TODO: make this as an option
         chains_status.should_balance();
