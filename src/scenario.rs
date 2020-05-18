@@ -74,6 +74,38 @@ pub struct ScenarioConfig {
     pub relayers: Vec<RelayerConfig>,
 }
 
+#[derive(Default)]
+pub struct RelayPositions {
+    pub geneisis: usize,
+    pub relay_blocks: Vec<usize>,
+}
+
+impl RelayPositions {
+    pub fn plot(&self) -> String {
+        let mut output = "G".to_string();
+        let max_relay_block = if self.relay_blocks.len() > 0 {
+            self.relay_blocks[0]
+        } else {
+            1
+        };
+        let block_indece: Vec<usize> = self
+            .relay_blocks
+            .clone()
+            .into_iter()
+            .map(|v| ((v as f64 / max_relay_block as f64) * 64.0) as usize)
+            .collect();
+        for i in 1..65 {
+            if let Some(idx) = block_indece.iter().position(|&x| x == i) {
+                output.push_str(&format!("{}", idx + 1));
+            } else {
+                output.push_str("=");
+            }
+        }
+        output.push_str("==>");
+        output
+    }
+}
+
 pub struct ScenarioConfigIntoIterator {
     relayers: Vec<RelayerConfig>,
     pub submit_round: usize,
@@ -459,5 +491,29 @@ mod tests {
         let bond_function = c.get_bond_equation();
         assert!(bond_function.is_ok());
         assert_eq!(bond_function.unwrap().calculate(0), 1.2222);
+    }
+    #[test]
+    fn test_() {
+        let mut rp = RelayPositions::default();
+        rp.relay_blocks.push(500);
+        assert_eq!(
+            rp.plot(),
+            "G===============================================================1==>".to_string()
+        );
+        rp.relay_blocks.push(250);
+        assert_eq!(
+            rp.plot(),
+            "G===============================2===============================1==>".to_string()
+        );
+        rp.relay_blocks.push(125);
+        assert_eq!(
+            rp.plot(),
+            "G===============3===============2===============================1==>".to_string()
+        );
+        rp.relay_blocks.push(187);
+        assert_eq!(
+            rp.plot(),
+            "G===============3======4========2===============================1==>".to_string()
+        );
     }
 }

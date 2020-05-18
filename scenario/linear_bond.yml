@@ -1,11 +1,13 @@
-title = "Linear bond value for Relayer"
+title = "Linear Bond Scenario for Relayer"
 
 challenge_function = "10"
 target_function = "half"
 bond_function = "linear"
+reward_function = "split"
 
 Dd = 100
 De = 1000
+F = 2.0
 
 [bond_linear]
 # Each submition bond may be related to the rounds of consecutive submitions.
@@ -15,9 +17,9 @@ W = 1.5
 C  = 10.0
 M = 100.0
 
-# We suppose that there is always a good guy, which is provied by Darwinia Bot
-# Other client may be response as H(Honest), L(Lie), N(No response)
-# The choice maynot be the same size
+[reward_split]
+P = 0.5
+
 [[relayers]]
 name = "Evil"
 choice = "LLLLLL"

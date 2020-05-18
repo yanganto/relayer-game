@@ -1,31 +1,14 @@
 # The title for this scenario
-title = "Basic Scenario for Relayer"
+title = "Fix Bond Scenario for Relayer"
 
-# the chalenge function for the relayed header be accepted
-# challenge can be a equation name or int number string for a constant block
 challenge_function = "linear"
-
-# make target block as a function
-# The next relay target block
-# currently we use a very simplify equation for this
-# target_function = (submited_ethereum_block_height - relayed_ethereum_block_height) / 2
 target_function = "half"
-
-# Make submit with bond calculated by a function
-# The bond for each submit
-# bond_function can be a equation name or float number string for a constant bond value
+# The bond value is fixed to 10.0
 bond_function = "10.0"
+reward_function = "split"
 
-# The initail block different
-# surfix d: block difference between last block number relayed on Darwinia,
-# surfix e: block difference between last related block number of Ethereum
-# Dd: the block difference between last block number relayed on Darwinia, 
-# Ee: the block difference between last related block number of Ethereum
 Dd = 100
 De = 1000
-
-# The block producing factor for darwinia / ethereum
-# For example, 2.0 means that darwinia produce 2 blocks and ethereum produce 1 block.
 F = 2.0
 
 [challenge_linear]
@@ -41,9 +24,9 @@ C  = 1
 Md = 500
 Me = 500
 
-# We suppose that there is always a good guy, which is provied by Darwinia Bot
-# Other client may be response as H(Honest), L(Lie), N(No response)
-# The choice maynot be the same size
+[reward_split]
+P = 0.5
+
 [[relayers]]
 name = "Evil"
 choice = "LLLLLL"
