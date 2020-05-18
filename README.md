@@ -212,6 +212,9 @@ Currently, all parameters in `challenge_linear` and `bond_linear`, and also the 
 The challenge times(in blocks), and the bonds for each round will show as plot help you to modify the equation.  
 ![snapshot](https://raw.githubusercontent.com/yanganto/relayer-game/master/demo.png)
 
+After running this tool, the reward and slash from each relayer will show as following picture.
+![snapshot](https://raw.githubusercontent.com/yanganto/relayer-game/master/demo2.png)
+
 If you want to use this tool without plot with a smaller binary, please use `--no-default-features` option when building.
 ```
 cargo build --release --no-default-features
