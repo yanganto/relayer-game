@@ -95,14 +95,9 @@ impl RelayPositions {
             .map(|v| ((v as f64 / max_relay_block as f64) * 64.0) as usize)
             .collect();
         for i in 1..65 {
-            let mut has_submit = false;
-            for (idx, v) in block_indece.iter().enumerate() {
-                if *v == i as usize {
-                    output.push_str(&format!("{}", idx + 1));
-                    has_submit = true;
-                }
-            }
-            if !has_submit {
+            if let Some(idx) = block_indece.iter().position(|&x| x == i) {
+                output.push_str(&format!("{}", idx + 1));
+            } else {
                 output.push_str("=");
             }
         }
