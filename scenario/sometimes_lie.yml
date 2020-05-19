@@ -1,0 +1,74 @@
+# The title for this scenario
+title = "Basic Scenario for Relayer"
+
+# the chalenge function for the relayed header be accepted
+# challenge can be a equation name or int number string for a constant block
+challenge_function = "linear"
+
+# make target block as a function
+# The next relay target block
+# currently we use a very simplify equation for this
+# target_function = (submited_ethereum_block_height - relayed_ethereum_block_height) / 2
+target_function = "half"
+
+# Make submit with bond calculated by a function
+# The bond for each submit
+# bond_function can be a equation name or float number string for a constant bond value
+bond_function = "linear"
+
+# reward for each honest relayer will be calculateed by a function
+reward_function = "split"
+
+# The initail block different
+# surfix d: block difference between last block number relayed on Darwinia,
+# surfix e: block difference between last related block number of Ethereum
+# Dd: the block difference between last block number relayed on Darwinia, 
+# Ee: the block difference between last related block number of Ethereum
+Dd = 100
+De = 1000
+
+# The block producing factor for darwinia / ethereum
+# For example, 2.0 means that darwinia produce 2 blocks and ethereum produce 1 block.
+F = 2.0
+
+[challenge_linear]
+# Waiting Block may related to 
+# Md: the max value about D portion
+# Me: the max value about E portion
+#
+# and also there are maximun value for each portion
+# waiting block = int(min(Wd * D, Md) + min(We * E, Me)) + C
+Wd = 1.5
+We = 2.0
+C  = 1
+Md = 500
+Me = 500
+
+[bond_linear]
+# Each submition bond may be related to the rounds of consecutive submitions.
+# The bond is increasing that can help the submition to be finialized
+# submit bond = min(W * submit_round, M) + C
+W = 1.5
+C  = 10.0
+M = 100.0
+
+[reward_split]
+# The slash of round will be take `P` portion as reward to the honest relayer this round
+# and leave (1 - P) portion as reward to the honest relayer next round
+P = 0.5
+
+[reward_treasury_last]
+# The slash of round will be take as reward to the honest relayer in that round
+# And the treasury will pay all the honest relayer in the last round
+C = 100.0
+
+# We suppose that there is always a good guy, which is provied by Darwinia Bot
+# Other client may be response as H(Honest), L(Lie), N(No response)
+# The choice maynot be the same size
+[[relayers]]
+name = "Evil"
+choice = "LHLHLL"
+
+[[relayers]]
+name = "Honest"
+choice = "HHHHHHH"

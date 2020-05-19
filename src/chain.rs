@@ -130,7 +130,7 @@ impl ChainsStatus {
         }
 
         // TODO: check the small number is correct and acceptable
-        if p != 0.0 || p > 0.00000001 {
+        if p != 0.0 && p > 0.00000001 {
             println!("p: {}", p);
             println!("Chain Status: {:?}", self);
             panic!("System unbalance");

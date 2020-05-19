@@ -29,3 +29,10 @@ cargo run -- -v scenario/treasury_last.yml
 echo "== patch reward_treasury_last.C=90 =="
 cargo run -- -p reward_treasury_last.C=9.0 -- scenario/treasury_last.yml
 echo ""
+
+echo "==================================="
+echo "==== Test some scenario on cli ===="
+echo "==================================="
+echo ""
+cargo run -- -v scenario/sometimes_lie.yml
+echo ""

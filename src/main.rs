@@ -58,6 +58,8 @@ fn simulate_from_scenario(
     rp.relay_blocks
         .push(chains_status.submit_target_ethereum_block);
 
+    let mut latest_confirm_ethereum_block = 0;
+
     while let Some(relayer_subitions) = iterator.next() {
         let bond = bond_eq.calculate(iterator.submit_round);
         bonds.push(bond);
@@ -109,13 +111,20 @@ fn simulate_from_scenario(
             }
             print!("\n");
         }
+        let target_block = if 0 == total_lie_relayer {
+            latest_confirm_ethereum_block = chains_status.submit_target_ethereum_block;
+            target_eq.calculate(
+                chains_status.submit_target_ethereum_block,
+                last_relayed_block.1,
+            )
+        } else {
+            target_eq.calculate(
+                latest_confirm_ethereum_block,
+                chains_status.submit_target_ethereum_block,
+            )
+        };
 
-        chains_status.submit(
-            relayer_subitions,
-            bond,
-            challenge_time,
-            target_eq.calculate(0, chains_status.submit_target_ethereum_block),
-        );
+        chains_status.submit(relayer_subitions, bond, challenge_time, target_block);
         rp.relay_blocks
             .push(chains_status.submit_target_ethereum_block);
 
@@ -133,10 +142,6 @@ fn simulate_from_scenario(
                 "\tSubmit Bond Pool Status: {}",
                 chains_status.submit_bond_pool
             );
-        }
-
-        if 0 == total_lie_relayer {
-            break;
         }
     }
     let max_bond_value = chains_status.submit_bond_pool;
