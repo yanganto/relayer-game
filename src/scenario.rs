@@ -72,6 +72,10 @@ pub struct ScenarioConfig {
     /// We suppose that there is always a honest relayer provied by Darwinia,
     /// so after the config correctly imported, the Darwinia relayer will add into.
     pub relayers: Vec<RelayerConfig>,
+
+    /// current challenge fee is the same with bond function
+    /// challenger list (current implementation allow only one challenger)
+    pub challengers: Option<Vec<RelayerConfig>>,
 }
 
 #[derive(Default)]
@@ -297,6 +301,7 @@ impl Iterator for ScenarioConfigIntoIterator {
 }
 
 /// RelayerConfig
+/// This config is used for Relayer or Challenger
 /// Set up a `name` and the `choice` about the relayer
 #[derive(Debug, Deserialize, Clone)]
 pub struct RelayerConfig {
@@ -344,12 +349,53 @@ impl FromStr for ScenarioConfig {
                 }
             }
         }
-        let mut relayers = vec![RelayerConfig {
-            name: Some("Darwinia".to_string()),
-            choice: "H".repeat(max_chose + 1),
-        }];
-        relayers.append(&mut c.relayers);
-        c.relayers = relayers;
+        if c.challengers.is_some() {
+            // currently, we just handle the scenario with one challenger
+            if c.challengers.clone().unwrap().len() > 1 || c.relayers.len() > 1 {
+                return Err(Error::ParameterError(
+                    "current we only support the scenario for one relayer and one challenger in challenge mode",
+                ));
+            }
+            let relayer = c.relayers[0].clone();
+            // currently, challenger is always honest
+            for (i, r) in c.challengers.clone().unwrap().iter_mut().enumerate() {
+                if r.name.is_none() {
+                    r.name = Some(format!(" {}", i));
+                };
+                for (i, c) in r.choice.chars().enumerate() {
+                    let chose_from_relayer = match relayer.choice.chars().nth(i) {
+                        Some(c) => c,
+                        None => {
+                            return Err(Error::ParameterError(
+                                "currently we are not support that challenger does not challenge to relayer",
+                            ));
+                        }
+                    };
+                    if c == '0' {
+                        if chose_from_relayer != 'L' {
+                            return Err(Error::ParameterError(
+                                "currently we are not support challenger to lie",
+                            ));
+                        }
+                    } else if c == '1' {
+                        if chose_from_relayer != 'H' {
+                            return Err(Error::ParameterError(
+                                "currently we are not support challenger to lie",
+                            ));
+                        }
+                    } else {
+                        return Err(Error::ParameterError("challenger chose must be '0', '1'"));
+                    }
+                }
+            }
+        } else {
+            let mut relayers = vec![RelayerConfig {
+                name: Some("Darwinia".to_string()),
+                choice: "H".repeat(max_chose + 1),
+            }];
+            relayers.append(&mut c.relayers);
+            c.relayers = relayers;
+        }
         Ok(c)
     }
 }
@@ -515,5 +561,67 @@ mod tests {
             rp.plot(),
             "G===============3======4========2===============================1==>".to_string()
         );
+    }
+    #[test]
+    fn test_challenger_mod() {
+        let c = <ScenarioConfig>::from_str(
+            r#"
+			challenge_function = "linear"
+			target_function = "half"
+			bond_function = "10.0"
+			reward_function = "split"
+
+			[challenge_linear]
+			Wd = 0.0
+			We = 0.0
+			C  = 1
+			Md = 100
+			Me = 100
+			B = 1
+			T = 10
+
+			[[relayers]]
+			name = "Evil"
+			choice = "LHLL"
+
+			[[challengers]]
+			name = "Challenger"
+			choice = "0100"
+			"#,
+        );
+        assert_eq!(c.is_ok(), true);
+    }
+    #[test]
+    fn test_should_error_with_challengers() {
+        let c = <ScenarioConfig>::from_str(
+            r#"
+			challenge_function = "linear"
+			target_function = "half"
+			bond_function = "10.0"
+			reward_function = "split"
+
+			[challenge_linear]
+			Wd = 0.0
+			We = 0.0
+			C  = 1
+			Md = 100
+			Me = 100
+			B = 1
+			T = 10
+
+			[[relayers]]
+			name = "Evil"
+			choice = "LHLL"
+
+			[[challengers]]
+			name = "Challenger1"
+			choice = "0100"
+
+			[[challengers]]
+			name = "Challenger2"
+			choice = "0100"
+			"#,
+        );
+        assert_eq!(c.is_ok(), false);
     }
 }
