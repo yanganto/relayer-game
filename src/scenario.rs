@@ -356,12 +356,34 @@ impl FromStr for ScenarioConfig {
                     "current we only support the scenario for one relayer and one challenger in challenge mode",
                 ));
             }
+            let relayer = c.relayers[0].clone();
+            // currently, challenger is always honest
             for (i, r) in c.challengers.clone().unwrap().iter_mut().enumerate() {
                 if r.name.is_none() {
                     r.name = Some(format!(" {}", i));
                 };
-                for c in r.choice.chars() {
-                    if c != '0' && c != '1' {
+                for (i, c) in r.choice.chars().enumerate() {
+                    let chose_from_relayer = match relayer.choice.chars().nth(i) {
+                        Some(c) => c,
+                        None => {
+                            return Err(Error::ParameterError(
+                                "currently we are not support that challenger does not challenge to relayer",
+                            ));
+                        }
+                    };
+                    if c == '0' {
+                        if chose_from_relayer != 'L' {
+                            return Err(Error::ParameterError(
+                                "currently we are not support challenger to lie",
+                            ));
+                        }
+                    } else if c == '1' {
+                        if chose_from_relayer != 'H' {
+                            return Err(Error::ParameterError(
+                                "currently we are not support challenger to lie",
+                            ));
+                        }
+                    } else {
                         return Err(Error::ParameterError("challenger chose must be '0', '1'"));
                     }
                 }

@@ -124,10 +124,19 @@ fn simulate_from_scenario(
             )
         };
 
+        if chains_status.challengers.len() > 0 {
+            for (challenger, _) in chains_status.challengers.clone().iter() {
+                chains_status.challenge_by(challenger.clone(), bond);
+                reward_actions.push(chain::Reward {
+                    from: chain::RewardFrom::Slash,
+                    to: challenger.clone(),
+                    value: bond * 2.0,
+                });
+            }
+        }
         chains_status.submit(relayer_subitions, bond, challenge_time, target_block);
         rp.relay_blocks
             .push(chains_status.submit_target_ethereum_block);
-
         // TODO: make this as an option
         chains_status.should_balance();
 
@@ -138,6 +147,10 @@ fn simulate_from_scenario(
             );
             println!("\tChallenge Time: {} blocks", challenge_time);
             println!("\tRelayer Status: {}", chains_status.fmt_relayers_status());
+            println!(
+                "\tChallenger Status: {}",
+                chains_status.fmt_challengers_status()
+            );
             println!(
                 "\tSubmit Bond Pool Status: {}",
                 chains_status.submit_bond_pool

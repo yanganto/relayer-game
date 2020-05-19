@@ -78,6 +78,10 @@ challenger_fee = 100.0
 # The choice of challenger are 0 or 1
 # 0 mean the challenger does not comfirm the blocks relayer submit
 # 1 mean the challenger comfirm the blocks relayer submit
+#
+# NOTE
+# Currently, we only implement the challenge mode with only one challenger,
+# and the he is good guy and participate to the end of the game
 [[challengers]]
 name = "Challenger"
 choice = "010000"

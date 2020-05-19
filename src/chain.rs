@@ -79,7 +79,13 @@ impl From<ScenarioConfig> for ChainsStatus {
 
 impl fmt::Display for ChainsStatus {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}", self.fmt_status(), self.fmt_relayers_status())
+        write!(
+            f,
+            "{}{}{}",
+            self.fmt_status(),
+            self.fmt_relayers_status(),
+            self.fmt_challengers_status()
+        )
     }
 }
 
@@ -107,10 +113,20 @@ impl ChainsStatus {
         }
         output
     }
+    pub fn fmt_challengers_status(&self) -> String {
+        let mut output = String::new();
+        for r in self.challengers.iter() {
+            output.push_str(&format!("{}", r.1));
+        }
+        output
+    }
     pub fn fmt_relayers_bar_chart(&self, normalize_value: f64) -> String {
         let mut output = String::new();
         for r in self.relayers.iter() {
             output.push_str(&r.1.format_to_bar_char(normalize_value, VISUALIZED_MAX_LENGTH));
+        }
+        for c in self.challengers.iter() {
+            output.push_str(&c.1.format_to_bar_char(normalize_value, VISUALIZED_MAX_LENGTH));
         }
         output.push_str("-: slash, +: reward from slash, *: reward from treasury");
         output
@@ -136,12 +152,21 @@ impl ChainsStatus {
         self.darwinia_block_hight += wait_blocks;
         self.submit_target_ethereum_block = next_target_ethereum_block;
     }
+    pub fn challenge_by(&mut self, challenger: String, bond: f64) {
+        let challenger = self.challengers.get_mut(&challenger).unwrap();
+        challenger.pay += bond;
+        self.submit_bond_pool += bond;
+    }
 
     pub fn should_balance(&self) {
         let mut p = self.submit_bond_pool - self.treasury_debet;
         for (_key, r) in self.relayers.iter() {
             p -= r.pay;
             p += r.reward();
+        }
+        for (_key, c) in self.challengers.iter() {
+            p -= c.pay;
+            p += c.reward();
         }
 
         // TODO: check the small number is correct and acceptable
@@ -153,22 +178,28 @@ impl ChainsStatus {
     }
     pub fn reward(&mut self, rewards: Vec<Reward>) {
         for reward in rewards.into_iter() {
-            let r = self.relayers.get_mut(&reward.to).unwrap();
-            match reward.from {
-                RewardFrom::Treasure => {
-                    r.reward.1 += reward.value;
-                    self.treasury_debet += reward.value;
-                }
-                RewardFrom::Slash => {
-                    r.reward.0 += reward.value;
-                    self.submit_bond_pool -= reward.value;
+            let mut reciver = self.relayers.get_mut(&reward.to);
+            if reciver.is_none() {
+                reciver = self.challengers.get_mut(&reward.to);
+            };
+            let r = reciver.unwrap();
+            if !r.lie {
+                match reward.from {
+                    RewardFrom::Treasure => {
+                        r.reward.1 += reward.value;
+                        self.treasury_debet += reward.value;
+                    }
+                    RewardFrom::Slash => {
+                        r.reward.0 += reward.value;
+                        self.submit_bond_pool -= reward.value;
+                    }
                 }
             }
         }
     }
 }
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone)]
 pub struct RelayerStatus {
     pub id: usize,
     pub name: Option<String>,
