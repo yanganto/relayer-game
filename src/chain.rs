@@ -27,6 +27,7 @@ pub struct ChainsStatus {
     pub darwinia_block_hight: usize,
     pub ethereum_block_hight: usize,
     pub relayers: HashMap<String, RelayerStatus>,
+    pub challengers: HashMap<String, RelayerStatus>,
     pub submit_target_ethereum_block: usize,
     pub submitions: Vec<(usize, usize)>,
     pub block_speed_factor: f64,
@@ -36,6 +37,11 @@ pub struct ChainsStatus {
 
 impl From<ScenarioConfig> for ChainsStatus {
     fn from(c: ScenarioConfig) -> Self {
+        let challengers = if let Some(cs) = c.challengers.clone() {
+            cs
+        } else {
+            vec![]
+        };
         ChainsStatus {
             darwinia_block_hight: c.Dd.unwrap_or(0),
             ethereum_block_hight: c.De.unwrap_or(100),
@@ -52,6 +58,15 @@ impl From<ScenarioConfig> for ChainsStatus {
                     }
                     map
                 }),
+            challengers: challengers.into_iter().fold(HashMap::new(), |mut map, r| {
+                let s: RelayerStatus = r.into();
+                if let Some(n) = &s.name {
+                    map.insert(n.to_string(), s);
+                } else {
+                    map.insert(format!(" {}", s.id), s);
+                }
+                map
+            }),
             submit_target_ethereum_block: c
                 .get_target_equation()
                 .unwrap()

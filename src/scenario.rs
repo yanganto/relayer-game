@@ -73,7 +73,8 @@ pub struct ScenarioConfig {
     /// so after the config correctly imported, the Darwinia relayer will add into.
     pub relayers: Vec<RelayerConfig>,
 
-    pub challenger_fee: Option<f64>,
+    /// current challenge fee is the same with bond function
+    /// challenger list (current implementation allow only one challenger)
     pub challengers: Option<Vec<RelayerConfig>>,
 }
 
@@ -349,9 +350,10 @@ impl FromStr for ScenarioConfig {
             }
         }
         if c.challengers.is_some() {
-            if c.challengers.clone().unwrap().len() > 1 {
+            // currently, we just handle the scenario with one challenger
+            if c.challengers.clone().unwrap().len() > 1 || c.relayers.len() > 1 {
                 return Err(Error::ParameterError(
-                    "there should be only one relayer in challenge mode",
+                    "current we only support the scenario for one relayer and one challenger in challenge mode",
                 ));
             }
             for (i, r) in c.challengers.clone().unwrap().iter_mut().enumerate() {
