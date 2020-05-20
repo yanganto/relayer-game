@@ -9,30 +9,56 @@ use crate::target::Equation;
 static TOTAL_RELAYER: AtomicUsize = AtomicUsize::new(0);
 static VISUALIZED_MAX_LENGTH: usize = 64;
 
+/// # RewardFrom
+/// The source of reward can from the slash value of evil relayer, or the trasury.
+/// In somecase, there is no evil relayer in the submitround, so the relayer may be reward by
+/// treasury.  However, in production, the treasury reward part may be some points.
+/// The user will pay a fee to treasury in redeem action, and then the relayer get the
+/// reward from the fee accorance with the share of powint
+///
 #[derive(Debug)]
 pub enum RewardFrom {
     Treasure,
     Slash,
 }
 
+/// # Reward
+/// This is the action structure for pay reward to someone
 #[derive(Debug)]
 pub struct Reward {
+    /// The reward value from slash or treasury
     pub from: RewardFrom,
+    /// To the user (relayer or challenger)
     pub to: String,
+    /// The value should reward
     pub value: f64,
 }
 
+/// # Chains Status
+/// simulate  the status both Darwinia and Ethereum
+/// The status of challenger and relauer are the same,
+/// the only different is their behavior
 #[derive(Default, Debug)]
 pub struct ChainsStatus {
+    /// The current block height of Darwinia
     pub darwinia_block_hight: usize,
+    /// The current block height of Ethereum
     pub ethereum_block_hight: usize,
+    /// The relayer status
     pub relayers: HashMap<String, RelayerStatus>,
+    /// The challenger status
     pub challengers: HashMap<String, RelayerStatus>,
+    /// The next Ethereum block that relayer should submit
     pub submit_target_ethereum_block: usize,
+    /// The list of submission
     pub submitions: Vec<(usize, usize)>,
+    /// The factor for the block producing speed
     pub block_speed_factor: f64,
+    /// The pool to store the bond value from relayer or challenger
     pub submit_bond_pool: f64,
-    pub treasury_debet: f64,
+    /// We do not simulate the redeem action and the fee, so the debt will occure when pay from
+    /// treasury
+    pub treasury_debt: f64,
 }
 
 impl From<ScenarioConfig> for ChainsStatus {
@@ -159,7 +185,7 @@ impl ChainsStatus {
     }
 
     pub fn should_balance(&self) {
-        let mut p = self.submit_bond_pool - self.treasury_debet;
+        let mut p = self.submit_bond_pool - self.treasury_debt;
         for (_key, r) in self.relayers.iter() {
             p -= r.pay;
             p += r.reward();
@@ -187,7 +213,7 @@ impl ChainsStatus {
                 match reward.from {
                     RewardFrom::Treasure => {
                         r.reward.1 += reward.value;
-                        self.treasury_debet += reward.value;
+                        self.treasury_debt += reward.value;
                     }
                     RewardFrom::Slash => {
                         r.reward.0 += reward.value;
@@ -199,14 +225,21 @@ impl ChainsStatus {
     }
 }
 
+/// # RelayerStatus
+/// the statue we simulate
 #[derive(Default, Debug, Clone)]
 pub struct RelayerStatus {
+    /// id is used when name not provided
     pub id: usize,
+    /// name is option field in scenario file
     pub name: Option<String>,
+    /// current pay out for bond
     pub pay: f64,
-    // reward.0 is from slash reward.1 is from treasry
+    /// the reward from slash (reward.0) and from treasury (reward.1)
     pub reward: (f64, f64),
+    /// the total times the relayer submit
     pub submit_times: usize,
+    /// the relayer has lied or not
     pub lie: bool,
 }
 
