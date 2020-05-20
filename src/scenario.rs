@@ -28,7 +28,7 @@ use crate::target::{half::HalfConfig, Equation as TargetEq};
 
 /// # Scenario Config
 /// In this config, the `challenge_function`, the initial status, and the `relayers` are defined.
-/// The initaial status contains the block difference in the target chain and Darwinia chain.
+/// The initial status contains the block difference in the target chain and Darwinia chain.
 #[allow(non_snake_case)]
 #[derive(Debug, Deserialize)]
 pub struct ScenarioConfig {
@@ -43,10 +43,10 @@ pub struct ScenarioConfig {
     pub F: Option<f64>,
 
     /// Once a relayer submit a header and wait the challenge time in blocks after the calculated value equation from challenge
-    /// function, Darwinia network will deem this header is valided and become a last relayed header.
+    /// function, Darwinia network will deem this header is validated and become a last relayed header.
     pub challenge_function: String,
 
-    /// Once there is disput on any header, the relayer should submit the next ethere block target as
+    /// Once there is dispute on any header, the relayer should submit the next ethereum block target as
     /// calculated.
     pub target_function: String,
 
@@ -56,10 +56,10 @@ pub struct ScenarioConfig {
     /// The reward of function
     pub reward_function: String,
 
-    /// parameters in linear wating
+    /// parameters in linear waiting
     pub challenge_linear: Option<ChallengeLinear>,
 
-    /// parameters in linear wating
+    /// parameters in linear waiting
     pub bond_linear: Option<BondLinear>,
 
     /// parameters in split reward
@@ -69,7 +69,7 @@ pub struct ScenarioConfig {
     pub reward_treasury_last: Option<TreasureLastConfig>,
 
     /// The relayers participate in these game
-    /// We suppose that there is always a honest relayer provied by Darwinia,
+    /// We suppose that there is always a honest relayer provided by Darwinia,
     /// so after the config correctly imported, the Darwinia relayer will add into.
     pub relayers: Vec<RelayerConfig>,
 
@@ -353,7 +353,7 @@ impl FromStr for ScenarioConfig {
             // currently, we just handle the scenario with one challenger
             if c.challengers.clone().unwrap().len() > 1 || c.relayers.len() > 1 {
                 return Err(Error::ParameterError(
-                    "current we only support the scenario for one relayer and one challenger in challenge mode",
+                    "current we only support the scenario for one relayer and one challenger in relayer-challenger mode",
                 ));
             }
             let relayer = c.relayers[0].clone();

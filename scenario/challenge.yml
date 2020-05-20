@@ -31,7 +31,7 @@ C = 100.0
 name = "Evil"
 choice = "LHLLLL"
 
-# If there is a challenger, the tool will simulate the game as challenge mode
+# If there is a challenger, the tool will simulate the game as relayer-challenger mode
 #
 # The challenger can challenge relayer without submit real blocks
 # Currently, we only implement the challenge mode with only one challenger,
