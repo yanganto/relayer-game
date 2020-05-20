@@ -55,12 +55,12 @@ Evil                                            L
 Honest                                          H
 ```
 #### From here, the game will become 3 kinds of scenarios, 
-  - `Evil` has no response on 2,
-  - `Evil` submit a true block on 2 honestly.
-  - `Evil` submit a block still with lie on 2.
+  - `Evil` has no response on position 2,
+  - `Evil` submit a true block on position 2 honestly.
+  - `Evil` submit a block still with lie on position 2.
 
-##### In the first scenario (`Evil` has no response on 2),
-the `Honest` will submit a header on 2
+##### In the first scenario (`Evil` has no response on position 2),
+the `Honest` will submit a header on position 2
 ```
          G==================2===================1===>
 Evil                                            L
@@ -109,6 +109,50 @@ Honest                      H                   H
 `Evil` and `Honest` can start to submit the block on position 3 when they have different opinion on position 2, 
 but the challenge time of submit round 3 will be star counting after run out the challenge time of submit round 2.
 
+#### Pseudo code of relayer-only mode
+Here is the pseudo code, help you to comprehensive this model
+```python
+submit_headers = OrderDefaultdict(list)  # implement __missing__ for defaultdict, than you can get this type
+target_block_height = in_the_middle_of(last_comfirm_block_height, header.block_height)
+last_comfirm_block_height = 0   # the block height of gensis
+challege_time_in_blocks = 100 # wait 100 blocks for challenge time
+
+def header_submit_by_relayer(header):
+  if header.block_height in submit_headers.keys() and submit_headers[header.block_height][0].challenge_block_height < current_block_height: 
+    return Err("Block is comfirmed")
+  elif submit_headers.keys() and header.block_height != target_block_height:
+    return Err("Submission is not target block")
+
+  relayer = ensure_signed()
+
+  if header not in submit_headers[header.block_height]:  # implement __equal__ to check only the block info but not relayers and challenge_block_height
+    if validate(relayer, header, submit_headers):  # validate header and check not contradictory
+      if submit_headers.keys():
+        last_challenge_wait_block_height = submit_headers[submit_headers.keys()[-1]][0].challenge_block_height 
+      else:
+        last_challenge_wait_block_height = current_block_height
+      header.challenge_block_height = last_challenge_wait_block_height + challege_time_in_blocks 
+      header.relayers = [relayer]
+      submit_headers[header.block_height].append(header)
+
+      if len(submit_headers[header.block_height]) == 2:  # dispute occure, more than one submit the same block height
+       target_block_height = in_the_middle_of(last_comfirm_block_height, header.block_height)
+  else:
+    submit_headers[header.block_height].relayers.append(relayer)
+
+def offchain_worker():
+  last_submit_block_height = submit_headers.keys()[-1]
+
+  if len(submit_headers[last_submit_block_height]) == 1 and 
+      submit_headers[last_submit_block_height][0].challenge_block_height < current_block_height:
+
+    honest_relayers = submit_headers[last_submit_block_height].relayers
+
+    slash_and_reward()
+
+  if no_uncomfirm_blocks():
+    close_game()
+```
 
 #### Conclusion of relayer-only mode
 - In the first scenario, the game is closed.  
@@ -151,15 +195,15 @@ Evil                                                L
 Challenger                                          0
 ```
 #### From here, the game will become 3 kinds of scenarios, 
-  - `Evil` has no response on 2,
-  - `Evil` submit a block on 2 honestly.
-  - `Evil` submit a block still with lie on 2.
+  - `Evil` has no response on position 2,
+  - `Evil` submit a block on position 2 honestly.
+  - `Evil` submit a block still with lie on position 2.
 
-##### In the first scenario (`Evil` has no response on 2),
+##### In the first scenario (`Evil` has no response on position 2),
 If `Evil` is not response before the half challenge time over, 
 the `Challenger` will win the game and the bond of `Evil` in position 1 will become the be slashed and become reward for `Challenger`.
 
-##### In the second scenario (`Evil` submit a block on 2 honestly),
+##### In the second scenario (`Evil` submit a block on position 2 honestly),
 If `Evil` submit a correct block in position 2, the challenger will challenge with `0` on position 1 and '1' on position 2.
 ```
              G=================2====================1===>
@@ -185,6 +229,61 @@ Such that, based on `target function`, the next target will be between the genes
 Evil                           L                    L
 Challenger                     0                    0
 ```
+
+#### Pseudo code of relayer-challenger mode
+Here is the pseudo code, help you to comprehensive this model
+```python
+
+# game status on chain
+submit_headers = []
+target_block_height = None
+last_comfirm_block_height = 0 # the block height of gensis
+challege_time_in_blocks = 100 # wait 100 blocks for challenge time
+challenger = None
+
+def header_submit_by_relayer(header):
+  if target_block_height is not None and header.block_height != target_block_height:
+    return Err("Submission is not target block")
+
+  relayer = ensure_signed()
+     
+  if validate(header, submit_headers):  # validate header and check if contradictory or not
+    heaser.relayer = relayer
+    header.challenge_block_height = current_block_height + challege_time_in_blocks 
+    submit_headers.append(header)
+  else:
+    slash_relayer_and_reward_challenger()
+    close_game()
+
+
+def challenge(challenge_info):
+  if challenger is None:
+    challenger = ensure_signed() 
+  elif challenger != ensure_signed():
+    return Err("There is challenger")
+  elif submit_headers[-1].challenge_block_height < current_block_height: 
+    return Err("game is closed")
+
+  if challenge_info.agree_with(submit_headers[-1]):
+    if len(submit_headers) == 1:
+      slash_challenger_and_reward_relayer()
+      close_game()
+      return 
+      
+    last_comfirm_block_height = submit_headers[-1].block_height
+    target_block_height = in_the_middle_of(last_comfirm_block_height, submit_headers[-2].block_height)
+
+  else:
+    target_block_height = in_the_middle_of(last_comfirm_block_height, submit_headers[-2].block_height)
+
+
+def offchain_worker():
+  if submit_headers[-1].challenge_block_height < current_block_height:
+    slash_challenger_and_reward_relayer()
+    close_game()
+
+```
+
 #### Conclusion of relayer-challenger mode
 - In the first scenario, the game is closed.  
 - In the second and third scenario, the game is still going and will be convergence some where between `G` and `1`.
