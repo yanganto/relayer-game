@@ -112,7 +112,8 @@ but the challenge time of submit round 3 will be star counting after run out the
 #### Pseudo code of relayer-only mode
 Here is the pseudo code, help you to comprehensive this model with multiple relayers in one game
 ```python
-submit_headers = OrderDefaultdict(list)  # implement __missing__ for defaultdict, than you can get this type
+# game status stored on chain
+submit_headers = OrderedDefaultdict(list)  # implement __missing__ for OrderedDict, than you can get this type
 target_block_height = None
 last_comfirm_block_height = 0   # the block height of gensis
 challege_time_in_blocks = 100   # wait 100 blocks for challenge time, here is a simplify constant waiting time
@@ -121,9 +122,9 @@ def header_submit_by_relayer(header):
   if header.block_height in submit_headers.keys() and submit_headers[header.block_height][0].challenge_block_height < current_block_height: 
     return Err("Block is comfirmed")
   elif submit_headers.keys() and header.block_height != target_block_height:
-    return Err("Submission is not target block")
+    return Err("Submission is not a target block")
 
-  relayer = ensure_signed()
+  relayer = ensure_signed()  # this function will return the identity of the relayer
 
   if header not in submit_headers[header.block_height]:  # implement __equal__ to check only the block info but not relayers and challenge_block_height
     if validate(relayer, header, submit_headers):  # validate header and check not contradictory
@@ -141,6 +142,7 @@ def header_submit_by_relayer(header):
     submit_headers[header.block_height].relayers.append(relayer)
 
 def offchain_worker():
+  """ the proccess will called for each block based on substrate """
   last_submit_block_height = submit_headers.keys()[-1]
 
   if len(submit_headers[last_submit_block_height]) == 1 and 
@@ -162,9 +164,8 @@ def close_game()
 
 def validate(relayer, header, submit_headers):
   """validate the block"""
-  # 1. basic block info mation check, for example, validate mix_hash, difficulty, in ethereum
+  # 1. basic block information check, for example, validate mix_hash, difficulty, in ethereum
   # 2. check the block in not controversy with the blocks in `submit_headers` and submited by `relayer`
-
 ```
 
 Here is the pseudo code for the client as the initial relayer
@@ -177,10 +178,9 @@ while chain.submit_headers:  # check game is closed or not
     header = get_header_by_block_height(chain.target_block_height)
     last_submit_block_height = header.block_height
     chain.header_submit_by_relayer(header)  
-
 ```
 
-Here is the pseudo code for the client to variy submitting block on chain
+Here is the pseudo code for the client validating submitting block on chain
 ```python
 last_submit_block_height = None
 
@@ -197,7 +197,6 @@ while chain.target_block_height:
     header = get_header_by_block_height(chain.target_block_height)
     last_submit_block_height = header.block_height
     chain.header_submit_by_relayer(header)  
-
 ```
 
 #### Conclusion of relayer-only mode
@@ -291,7 +290,7 @@ def header_submit_by_relayer(header):
   if target_block_height is not None and header.block_height != target_block_height:
     return Err("Submission is not target block")
 
-  relayer = ensure_signed()
+  relayer = ensure_signed()  # this function will return the identity of the relayer
      
   if validate(header, submit_headers):  # validate header and check if contradictory or not
     heaser.relayer = relayer
@@ -305,8 +304,8 @@ def header_submit_by_relayer(header):
 def challenge(challenge_info):
   if challenger is None:
     challenger = ensure_signed() 
-  elif challenger != ensure_signed():
-    return Err("There is challenger")
+  elif challenger != ensure_signed():   # the identity of challenger are different
+    return Err("There is a challenger")
   elif submit_headers[-1].challenge_block_height < current_block_height: 
     return Err("game is closed")
 
