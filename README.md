@@ -110,12 +110,12 @@ Honest                      H                   H
 but the challenge time of submit round 3 will be star counting after run out the challenge time of submit round 2.
 
 #### Pseudo code of relayer-only mode
-Here is the pseudo code, help you to comprehensive this model
+Here is the pseudo code, help you to comprehensive this model with multiple relayers in one game
 ```python
 submit_headers = OrderDefaultdict(list)  # implement __missing__ for defaultdict, than you can get this type
-target_block_height = in_the_middle_of(last_comfirm_block_height, header.block_height)
+target_block_height = None
 last_comfirm_block_height = 0   # the block height of gensis
-challege_time_in_blocks = 100 # wait 100 blocks for challenge time
+challege_time_in_blocks = 100   # wait 100 blocks for challenge time, here is a simplify constant waiting time
 
 def header_submit_by_relayer(header):
   if header.block_height in submit_headers.keys() and submit_headers[header.block_height][0].challenge_block_height < current_block_height: 
@@ -152,6 +152,52 @@ def offchain_worker():
 
   if no_uncomfirm_blocks():
     close_game()
+
+def close_game()
+  """update the last comfirm block and reset the status on chain"""
+  last_comfirm_block_height = submit_headers[submit_headers.keys()[0]].block_height
+  submit_headers = OrderDefaultdict(list)
+  target_block_height = None
+
+
+def validate(relayer, header, submit_headers):
+  """validate the block"""
+  # 1. basic block info mation check, for example, validate mix_hash, difficulty, in ethereum
+  # 2. check the block in not controversy with the blocks in `submit_headers` and submited by `relayer`
+
+```
+
+Here is the pseudo code for the client as the initial relayer
+```python
+last_submit_block_height = first_header.block_height
+chain.header_submit_by_relayer(first_header)  # submit the first block
+
+while chain.submit_headers:  # check game is closed or not
+  if chain.target_block_height != last_submit_block_height:  # This means the target has updated
+    header = get_header_by_block_height(chain.target_block_height)
+    last_submit_block_height = header.block_height
+    chain.header_submit_by_relayer(header)  
+
+```
+
+Here is the pseudo code for the client to variy submitting block on chain
+```python
+last_submit_block_height = None
+
+while chain.submit_headers:  # check there is a game 
+  for _, header in chain.submit_headers.items():
+    if !validation(header):  # find the block is not correct
+      header = get_header_by_block_height(chain.target_block_height)
+      chain.header_submit_by_relayer(header)  
+      last_submit_block_height = header.block_height
+      break  # now the game start, and then just watching the target block
+
+while chain.target_block_height:
+  if chain.target_block_height != last_submit_block_height:  # This means the target has updated
+    header = get_header_by_block_height(chain.target_block_height)
+    last_submit_block_height = header.block_height
+    chain.header_submit_by_relayer(header)  
+
 ```
 
 #### Conclusion of relayer-only mode
@@ -231,15 +277,15 @@ Challenger                     0                    0
 ```
 
 #### Pseudo code of relayer-challenger mode
-Here is the pseudo code, help you to comprehensive this model
+Here is the pseudo code, help you to comprehensive this model with one relayer and one challenger,
+Once challenger determine a block pending on chain is correct or not, he will not change his idea.
 ```python
-
-# game status on chain
+# game status stored on chain
 submit_headers = []
 target_block_height = None
 last_comfirm_block_height = 0 # the block height of gensis
-challege_time_in_blocks = 100 # wait 100 blocks for challenge time
-challenger = None
+challege_time_in_blocks = 100 # wait 100 blocks for challenge time, here is a simplify constant waiting time
+challenger = None             # This simplify model only have one relayer and one challenger
 
 def header_submit_by_relayer(header):
   if target_block_height is not None and header.block_height != target_block_height:
@@ -278,11 +324,63 @@ def challenge(challenge_info):
 
 
 def offchain_worker():
+  """ the proccess will called for each block based on substrate """
   if submit_headers[-1].challenge_block_height < current_block_height:
     slash_challenger_and_reward_relayer()
     close_game()
 
+def close_game()
+  """ reset status on chain """
+  submit_headers = []
+  target_block_height = None
+  challenger = None             
+
 ```
+Here is the pseudo code for the relayer, this code is the same with the initial relayer in `relayer-only` model
+```python
+last_submit_block_height = first_header.block_height
+chain.header_submit_by_relayer(first_header)  # submit the first block
+
+while chain.submit_headers:  # check game is closed or not
+  if chain.target_block_height != last_submit_block_height:  # This means the target has updated
+    header = get_header_by_block_height(chain.target_block_height)
+    last_submit_block_height = header.block_height
+    chain.header_submit_by_relayer(header)  
+```
+
+Here is the pseudo code for challenger
+```python
+class ChallengeInfo(UserDict):
+  def agree_with(self, header):
+    return self[header.block_height]
+
+last_submit_block_height = None
+challenge_info = ChallengeInfo()
+
+while chain.submit_headers:  # check there is a game 
+  for _, header in chain.submit_headers:
+    if !validation(header):  # find the block is not correct
+      challenge_info[header.block_height] = false
+      chain.challenge(challenge_info)  
+      last_submit_block_height = header.block_height
+      break  # now the game start, and then just watching the target block
+
+while chain.target_block_height:
+  if chain.target_block_height != last_submit_block_height:  # This means the target has updated
+    target_block_is_valid = check_the_block_on_chain_correct_or_not(chain.target_block_height, chain.submit_headers)
+    if target_block_is_valid is not None:
+      challenge_info[chain.target_block_height] = target_block_is_valid
+      last_submit_block_height = header.block_height
+      chain.challenge(challenge_info)  
+
+def check_the_block_on_chain_correct_or_not(block_height, headers):
+  for h in headers:
+    if h.block_height == block_height
+      return validate(h)
+  else:
+    return None  # relayer still not submit yet, keep waiting
+```
+
 
 #### Conclusion of relayer-challenger mode
 - In the first scenario, the game is closed.  
