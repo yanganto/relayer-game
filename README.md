@@ -223,10 +223,12 @@ and keep submit the challenge info base on the relayer's new submit.
 - In the second and third scenario, the game is still going and will be convergence some where between `G` and `1`.
   - Following are the assumption, that challenger will beat the evil relayer
     - The fake blocks are not easy to pass validation blocks when near by
-    - challenger is not collusion with the evil relayer, namely there are two uncorrect near by blocks by one can verify each other.
+    - If challenger is not collusion with the evil relayer.
 
 Once the `Evil` goes into contradictory. All of the bond from `Evil` will be slashed, and the game is closed.
 Please note there is no correct block on position 1 after the game closed, so there may be multiple parallel relayer-challenger games on chain to keep the bridge works.
+In this model, there is an assumption that the challenger will be honest to keep the bridge secure, so it is required some legal enforcement or high value staking for challenger, 
+such that it is not truly decentralized for this model.
 
 ### relayer-challengers mode
 In relayer-challengers mode, when someone is not accepted the block submitted by other relayer, he just put a challenge on chain to express his opinion.
