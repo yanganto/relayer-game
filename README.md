@@ -114,13 +114,13 @@ but the challenge time of submit round 3 will be star counting after run out the
 
 #### Pseudo code of relayer-only mode
 Here is the [pseudo code](./pseudo/relayer-only/chain.md) of chain, help you to comprehensive this model with multiple relayers in one game.
->> the rpc on chain allow anyone to submit headers to challenge blocks still in challenge time, or submit the header according to the sampling function.  The offchain worker keep updating the next sampling tartget.
+> the rpc on chain allow anyone to submit headers to challenge blocks still in challenge time, or submit the header according to the sampling function.  The offchain worker keep updating the next sampling tartget.
 
 Here is the [pseudo code](./pseudo/relayer-only/initial-relayer.md) for the client as the initial relayer
->> the client first submit the initial header, and than keep watch the `next_sampling_block`, and submit header of `next_sampling_block`.
+> the client first submit the initial header, and than keep watch the `next_sampling_block`, and submit header of `next_sampling_block`.
 
 Here is the [pseudo code](./pseudo/relayer-only/validating-relayer.md) for the client validating submitting block on chain
->> the client first findout a uncorrect initial header, and than keep watch the `next_sampling_block`, and submit header of `next_sampling_block`.
+> the client first findout a uncorrect initial header, and than keep watch the `next_sampling_block`, and submit header of `next_sampling_block`.
 
 #### Conclusion of relayer-only mode
 - In the first scenario, the game is closed.  
@@ -201,22 +201,22 @@ Challenger                     0                    0
 #### Pseudo code of relayer-challenger mode
 Here is the [pseudo code](./pseudo/relayer-challenger/chain.md), help you to comprehensive this model with one relayer and one challenger,
 Once challenger determine a block pending on chain is correct or not, he will not change his idea.
->> 
+> 
 The rpc on chain allow relayer to submit headers, and any one to challenge blocks still in challenge time.  
 The offchain worker keep updating the next sampling tartget.
->> 
+> 
 
 Here is the [pseudo code](./pseudo/relayer-challenger/relayer.md) for the relayer, this code is the same with the initial relayer in `relayer-only` model
->>
+>
 The client first submit the initial header, and than keep watch the `next_sampling_block`, 
 and submit header of `next_sampling_block`.
->>
+>
 
 Here is the [pseudo code](./pseudo/relayer-challenger/challenger.md) for challenger
->> 
+> 
 The client first findout a uncorrect initial header and submit a challenge info , and than keep watch the `next_sampling_block`, 
 and keep submit the challenge info base on the relayer's new submit.
->>
+>
 
 #### Conclusion of relayer-challenger mode
 - In the first scenario, the game is closed.  
