@@ -25,8 +25,8 @@ There are 3 rules in relayers-only mode.
 2. Confirmed or open a round of game
     - if there is only one block (or same blocks) over the challenge time, this block is confirmed.  (2-1)
     - else (there are different blocks in the same block height) the game is starts
-      - everyone in the game should submit the block based on the `target function` until closed (2-2-1)
-        - Once the a block according target function submit the next round of gamae is started, and become recursive in 2
+      - everyone in the game should submit the block based on the `sample function` until closed (2-2-1)
+        - Once the a block according sample function submit the next round of gamae is started, and become recursive in 2
     - anyone can get in the game in any round but need to participate until the game closed
 3. Game closed
     - In following two condition, that all of the submission in the game from a relayer are ignored. (3-1)
@@ -48,7 +48,7 @@ so the game starts.  In the meanwhile, the chain can not determine which block i
 Evil                                            L
 Honest                                          H
 ```
-Based on `target function`, the `Evil` and `Honest` should submit the header on the `2` position (adopted rule 2-2-1.).
+Based on `sample function`, the `Evil` and `Honest` should submit the header on the `2` position (adopted rule 2-2-1.).
 ```
          G==================2===================1===>
 Evil                                            L
@@ -84,7 +84,7 @@ Honest                      H                   H
 
 And waiting the challenge time over, 
 the blocks (the same) in submit round 2 are all confirmed. (adopted rule 2-1)
-And `Evil` and `Honest` are still in the game and base on `target_function`, 
+And `Evil` and `Honest` are still in the game and base on `sample_function`, 
 that should submit header on position 3(adopted rule 2-2-1.).
 ```
          G==================2=========3=========1===>
@@ -100,7 +100,7 @@ Evil                        L                   L
 Honest                      H                   H
 ```
 And there is nothing confirmed without different opinions, 
-so base on the `target_function` the position 3 should be submit by `Evil` and `Honest`.
+so base on the `sample_function` the position 3 should be submit by `Evil` and `Honest`.
 ```
          G=======3==========2===================1===>
 Evil                        L                   L
@@ -110,94 +110,14 @@ Honest                      H                   H
 but the challenge time of submit round 3 will be star counting after run out the challenge time of submit round 2.
 
 #### Pseudo code of relayer-only mode
-Here is the pseudo code, help you to comprehensive this model with multiple relayers in one game
-```python
-# game status stored on chain
-submit_headers = OrderedDefaultdict(list)  # implement __missing__ for OrderedDict, than you can get this type
-target_block_height = None
-last_comfirm_block_height = 0   # the block height of gensis
-challege_time_in_blocks = 100   # wait 100 blocks for challenge time, here is a simplify constant waiting time
+Here is the [pseudo code](./pseudo/relayer-only/chain.md) of chain, help you to comprehensive this model with multiple relayers in one game.
+>> the rpc on chain allow anyone to submit headers to challenge blocks still in challenge time, or submit the header according to the sampling function.  The offchain worker keep updating the next sampling tartget.
 
-def header_submit_by_relayer(header):
-  if header.block_height in submit_headers.keys() and submit_headers[header.block_height][0].challenge_block_height < current_block_height: 
-    return Err("Block is comfirmed")
-  elif submit_headers.keys() and header.block_height != target_block_height:
-    return Err("Submission is not a target block")
+Here is the [pseudo code](./pseudo/relayer-only/initial-relayer.md) for the client as the initial relayer
+>> the client first submit the initial header, and than keep watch the `next_sampling_block`, and submit header of `next_sampling_block`.
 
-  relayer = ensure_signed()  # this function will return the identity of the relayer
-
-  if header not in submit_headers[header.block_height]:  # implement __equal__ to check only the block info but not relayers and challenge_block_height
-    if validate(relayer, header, submit_headers):  # validate header and check not contradictory
-      if submit_headers.keys():
-        last_challenge_wait_block_height = submit_headers[submit_headers.keys()[-1]][0].challenge_block_height 
-      else:
-        last_challenge_wait_block_height = current_block_height
-      header.challenge_block_height = last_challenge_wait_block_height + challege_time_in_blocks 
-      header.relayers = [relayer]
-      submit_headers[header.block_height].append(header)
-
-      if len(submit_headers[header.block_height]) == 2:  # dispute occure, more than one submit the same block height
-       target_block_height = in_the_middle_of(last_comfirm_block_height, header.block_height)
-  else:
-    submit_headers[header.block_height].relayers.append(relayer)
-
-def offchain_worker():
-  """ the proccess will called for each block based on substrate """
-  last_submit_block_height = submit_headers.keys()[-1]
-
-  if len(submit_headers[last_submit_block_height]) == 1 and 
-      submit_headers[last_submit_block_height][0].challenge_block_height < current_block_height:
-
-    honest_relayers = submit_headers[last_submit_block_height].relayers
-
-    slash_and_reward()
-
-  if no_uncomfirm_blocks():
-    close_game()
-
-def close_game()
-  """update the last comfirm block and reset the status on chain"""
-  last_comfirm_block_height = submit_headers[submit_headers.keys()[0]].block_height
-  submit_headers = OrderDefaultdict(list)
-  target_block_height = None
-
-
-def validate(relayer, header, submit_headers):
-  """validate the block"""
-  # 1. basic block information check, for example, validate mix_hash, difficulty, in ethereum
-  # 2. check the block in not controversy with the blocks in `submit_headers` and submited by `relayer`
-```
-
-Here is the pseudo code for the client as the initial relayer
-```python
-last_submit_block_height = first_header.block_height
-chain.header_submit_by_relayer(first_header)  # submit the first block
-
-while chain.submit_headers:  # check game is closed or not
-  if chain.target_block_height != last_submit_block_height:  # This means the target has updated
-    header = get_header_by_block_height(chain.target_block_height)
-    last_submit_block_height = header.block_height
-    chain.header_submit_by_relayer(header)  
-```
-
-Here is the pseudo code for the client validating submitting block on chain
-```python
-last_submit_block_height = None
-
-while chain.submit_headers:  # check there is a game 
-  for _, header in chain.submit_headers.items():
-    if !validation(header):  # find the block is not correct
-      header = get_header_by_block_height(chain.target_block_height)
-      chain.header_submit_by_relayer(header)  
-      last_submit_block_height = header.block_height
-      break  # now the game start, and then just watching the target block
-
-while chain.target_block_height:
-  if chain.target_block_height != last_submit_block_height:  # This means the target has updated
-    header = get_header_by_block_height(chain.target_block_height)
-    last_submit_block_height = header.block_height
-    chain.header_submit_by_relayer(header)  
-```
+Here is the [pseudo code](./pseudo/relayer-only/validating-relayer.md) for the client validating submitting block on chain
+>> the client first findout a uncorrect initial header, and than keep watch the `next_sampling_block`, and submit header of `next_sampling_block`.
 
 #### Conclusion of relayer-only mode
 - In the first scenario, the game is closed.  
@@ -213,10 +133,10 @@ However, there is still a bond for the challenger to challenge.
 1. Any relayer can relay a ethereum header on the darwinia chain
 2. Any challenger can challenge the relayer and open the game
     - challenger needs to bond some value for each challenge before the half challenge time over
-    - relayer needs to submit the next specified block by `target function`
+    - relayer needs to submit the next specified block by `sample function`
 3. Game closed
     1. The challenger stop challenging, the relayer wins and challenger will be slashed
-    2. The relayer can not provided the target block block pass the validation before the next half challenge time over
+    2. The relayer can not provided the next sampling block block pass the validation before the next half challenge time over
 
 Here is some visualized example with relayer `Evil` and challenger `Challenger`, `Evil` is a bad guy some times relay incorrect header, `Challenger` is honest challenger challenge with the correct opinion.
 
@@ -233,7 +153,7 @@ Evil                                                L
 Challenger                                          0
 ```
 
-Based on `target function`, the `Evil` should submit the block on position 2.
+Based on `sample function`, the `Evil` should submit the block on position 2.
 ```
              G=================2====================1===>
 Evil                                                L
@@ -255,7 +175,7 @@ If `Evil` submit a correct block in position 2, the challenger will challenge wi
 Evil                           H                    L
 Challenger                     1                    0
 ```
-Such that, based on `target function`, the next target will be between the position 1 and position 2.
+Such that, based on `sample function`, the next sampling block will be between the position 1 and position 2.
 ```
              G=================2==========3=========1===>
 Evil                           H                    L
@@ -268,7 +188,7 @@ If `Evil` submit a correct block in position 2, the challenger will challenge wi
 Evil                           L                    L
 Challenger                     0                    0
 ```
-Such that, based on `target function`, the next target will be between the genesis and position 2.
+Such that, based on `sample function`, the next sampling block will be between the genesis and position 2.
 ```
              G=======3=========2====================1===>
 Evil                           L                    L
@@ -276,110 +196,24 @@ Challenger                     0                    0
 ```
 
 #### Pseudo code of relayer-challenger mode
-Here is the pseudo code, help you to comprehensive this model with one relayer and one challenger,
+Here is the [pseudo code](./pseudo/relayer-challenger/chain.md), help you to comprehensive this model with one relayer and one challenger,
 Once challenger determine a block pending on chain is correct or not, he will not change his idea.
-```python
-# game status stored on chain
-submit_headers = []
-target_block_height = None
-last_comfirm_block_height = 0 # the block height of gensis
-challege_time_in_blocks = 100 # wait 100 blocks for challenge time, here is a simplify constant waiting time
-challenger = None             # This simplify model only have one relayer and one challenger
+>> 
+The rpc on chain allow relayer to submit headers, and any one to challenge blocks still in challenge time.  
+The offchain worker keep updating the next sampling tartget.
+>> 
 
-def header_submit_by_relayer(header):
-  if target_block_height is not None and header.block_height != target_block_height:
-    return Err("Submission is not target block")
+Here is the [pseudo code](./pseudo/relayer-challenger/relayer.md) for the relayer, this code is the same with the initial relayer in `relayer-only` model
+>>
+The client first submit the initial header, and than keep watch the `next_sampling_block`, 
+and submit header of `next_sampling_block`.
+>>
 
-  relayer = ensure_signed()  # this function will return the identity of the relayer
-     
-  if validate(header, submit_headers):  # validate header and check if contradictory or not
-    heaser.relayer = relayer
-    header.challenge_block_height = current_block_height + challege_time_in_blocks 
-    submit_headers.append(header)
-  else:
-    slash_relayer_and_reward_challenger()
-    close_game()
-
-
-def challenge(challenge_info):
-  if challenger is None:
-    challenger = ensure_signed() 
-  elif challenger != ensure_signed():   # the identity of challenger are different
-    return Err("There is a challenger")
-  elif submit_headers[-1].challenge_block_height < current_block_height: 
-    return Err("game is closed")
-
-  if challenge_info.agree_with(submit_headers[-1]):
-    if len(submit_headers) == 1:
-      slash_challenger_and_reward_relayer()
-      close_game()
-      return 
-      
-    last_comfirm_block_height = submit_headers[-1].block_height
-    target_block_height = in_the_middle_of(last_comfirm_block_height, submit_headers[-2].block_height)
-
-  else:
-    target_block_height = in_the_middle_of(last_comfirm_block_height, submit_headers[-2].block_height)
-
-
-def offchain_worker():
-  """ the proccess will called for each block based on substrate """
-  if submit_headers[-1].challenge_block_height < current_block_height:
-    slash_challenger_and_reward_relayer()
-    close_game()
-
-def close_game()
-  """ reset status on chain """
-  submit_headers = []
-  target_block_height = None
-  challenger = None             
-
-```
-Here is the pseudo code for the relayer, this code is the same with the initial relayer in `relayer-only` model
-```python
-last_submit_block_height = first_header.block_height
-chain.header_submit_by_relayer(first_header)  # submit the first block
-
-while chain.submit_headers:  # check game is closed or not
-  if chain.target_block_height != last_submit_block_height:  # This means the target has updated
-    header = get_header_by_block_height(chain.target_block_height)
-    last_submit_block_height = header.block_height
-    chain.header_submit_by_relayer(header)  
-```
-
-Here is the pseudo code for challenger
-```python
-class ChallengeInfo(UserDict):
-  def agree_with(self, header):
-    return self[header.block_height]
-
-last_submit_block_height = None
-challenge_info = ChallengeInfo()
-
-while chain.submit_headers:  # check there is a game 
-  for _, header in chain.submit_headers:
-    if !validation(header):  # find the block is not correct
-      challenge_info[header.block_height] = false
-      chain.challenge(challenge_info)  
-      last_submit_block_height = header.block_height
-      break  # now the game start, and then just watching the target block
-
-while chain.target_block_height:
-  if chain.target_block_height != last_submit_block_height:  # This means the target has updated
-    target_block_is_valid = check_the_block_on_chain_correct_or_not(chain.target_block_height, chain.submit_headers)
-    if target_block_is_valid is not None:
-      challenge_info[chain.target_block_height] = target_block_is_valid
-      last_submit_block_height = header.block_height
-      chain.challenge(challenge_info)  
-
-def check_the_block_on_chain_correct_or_not(block_height, headers):
-  for h in headers:
-    if h.block_height == block_height
-      return validate(h)
-  else:
-    return None  # relayer still not submit yet, keep waiting
-```
-
+Here is the [pseudo code](./pseudo/relayer-challenger/challenger.md) for challenger
+>> 
+The client first findout a uncorrect initial header and submit a challenge info , and than keep watch the `next_sampling_block`, 
+and keep submit the challenge info base on the relayer's new submit.
+>>
 
 #### Conclusion of relayer-challenger mode
 - In the first scenario, the game is closed.  
@@ -406,10 +240,10 @@ Please note there is no correct block on position 1 after the game closed, so th
   - For example: '10', that means a submit block will be deem to relayed and finalized after 10 Darwinia blocks.
   - For example: `challenge_linear`, that means a submit block will wait according the linear function, and the parameters of function need to provide.
 
-- `target_function`
-  - Once there is dispute on any header, the relayer should submit the next Ethereum block target as calculated.  
+- `sample_function`
+  - Once there is dispute on any header, the relayer should submit the next Ethereum block sampling as calculated.  
   - Current support: half
-  - For example: 'half', that means the next target will be `(submited_ethereum_block_height - relayed_ethereum_block_height) / 2`
+  - For example: 'half', that means the next sampling block will be `(submited_ethereum_block_height - relayed_ethereum_block_height) / 2`
 
 - `bond_function`
   - The bond function will increase the bond to improve speed of the finality, and the cost of keeping lie will be enormous.  
@@ -520,5 +354,5 @@ cargo build --release --no-default-features
 ## Develop and Document
 This project has document, you can use this command to show the document on browser.
 `cargo doc --no-deps --open`
-If you want to add more equation for different function, you can take a look the trait in [bond](./src/bond/mod.rs), [challenge](./src/challenge/mod.rs), [target](./src/target/mod.rs).
+If you want to add more equation for different function, you can take a look the trait in [bond](./src/bond/mod.rs), [challenge](./src/challenge/mod.rs), [sample](./src/sample/mod.rs).
 The `Equation` trait and `ConfigValidate` will guild you to add you customized equation. 
