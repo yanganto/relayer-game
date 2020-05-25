@@ -11,12 +11,15 @@ All the behavior of relayers, and the parameters are described a in a yaml file.
 You can easily load the scenario file to simulate the result. 
 There are some example scenario files listed in [scenario](./scenario).
 
-There are two different gaming models, one is `relayers-only` mode, and the other is `relayer-challenger` mode.
-In relayers-only mode, when someone is not accepted the block submitted by other relayer, he should submit the correct block to express his opinion.
-In relayer-challenger mode, when someone is not accepted the block submitted by other relayer, he just put a challenge on chain to express his opinion.
+There are three different gaming models, one is `relayers-only` mode, another is `relayer-challenger` mode, and the other is `relayer-challengers` mode.
+In `relayers-only` mode, when someone is not accepted the block submitted by other relayer, he should submit the correct block to express his opinion.
+In `relayer-challenger` mode and `relayer-challengers` mode, when someone is not accepted the block submitted by other relayer, he just put a challenge on chain to express his opinion.
 
-If there is any `[[challengers]]` in scenario file, the scenario will run in relayer-challenger mode.
-The `scenario/challenge.yml` is a scenario for one relayer and one challenger, you may run it with `-v` option to know more about this.
+If there is only one `[[challengers]]` in scenario file, the scenario will run in relayer-challenger mode.
+The `scenario/challenger.yml` is a scenario for one relayer and one challenger, you may run it with `-v` option to know more about this.
+
+If there is more than one `[[challengers]]` in scenario file, the scenario will run in relayer-challengers mode.
+The `scenario/challengers.yml` is a scenario for one relayer with multiple challengers, you may run it with `-v` option to know more about this.
 
 
 ### relayers-only mode

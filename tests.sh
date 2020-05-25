@@ -36,5 +36,5 @@ echo "==================================="
 echo ""
 cargo run -- -v scenario/sometimes_lie.yml
 echo ""
-cargo run -- -v scenario/challenge.yml
+cargo run -- -v scenario/challenger.yml
 echo ""
