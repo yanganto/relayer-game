@@ -24,7 +24,7 @@ use crate::reward::{
     split::SplitConfig, treasury_last::TreasureLastConfig, ConfigValidate as RewardVali,
     Equation as RewardEq,
 };
-use crate::target::{half::HalfConfig, Equation as TargetEq};
+use crate::sample::{half::HalfConfig, Equation as TargetEq};
 
 /// # Scenario Config
 /// In this config, the `challenge_function`, the initial status, and the `relayers` are defined.
