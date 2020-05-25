@@ -29,17 +29,12 @@ def challenge(challenge_info):
   elif submit_headers[-1].challenge_block_height < current_block_height: 
     return Err("game is closed")
 
-  if challenge_info.agree_with(submit_headers[-1]):
-    if len(submit_headers) == 1:
-      slash_challenger_and_reward_relayer()
-      close_game()
-      return 
+  for c in challenge_info.keys():
+    if c not in map(lambda h: h.block_height, submit_headers):
+      return Err("challenge info is not correct")
       
     last_comfirm_block_height = submit_headers[-1].block_height
-    next_sampling_block_height = in_the_middle_of(last_comfirm_block_height, submit_headers[-2].block_height)
-
-  else:
-    next_sampling_block_height = in_the_middle_of(last_comfirm_block_height, submit_headers[-2].block_height)
+  next_sampling_block_height = in_the_middle_of(last_comfirm_block_height, submit_headers[-2].block_height)
 
 
 def offchain_worker():
