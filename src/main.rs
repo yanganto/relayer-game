@@ -13,7 +13,7 @@ use std::str::FromStr;
 use clap::{App, Arg};
 use colored::Colorize;
 
-use crate::target::Equation as TargetEq;
+use crate::sample::Equation as TargetEq;
 
 mod bond;
 mod chain;
@@ -22,8 +22,8 @@ mod error;
 #[cfg(feature = "plot")]
 mod plot;
 mod reward;
+mod sample;
 mod scenario;
-mod target;
 
 fn simulate_from_scenario(
     file_name: &str,

@@ -1,6 +1,6 @@
-use crate::target::Equation;
+use crate::sample::Equation;
 
-/// There is no parameter for Half Target Equation
+/// There is no parameter for Half Sampling Equation
 pub struct HalfConfig {}
 
 impl Equation for HalfConfig {

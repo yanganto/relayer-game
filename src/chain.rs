@@ -3,8 +3,8 @@ use std::collections::HashMap;
 use std::fmt;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
+use crate::sample::Equation;
 use crate::scenario::{RelayerConfig, ScenarioConfig};
-use crate::target::Equation;
 
 static TOTAL_RELAYER: AtomicUsize = AtomicUsize::new(0);
 static VISUALIZED_MAX_LENGTH: usize = 64;
