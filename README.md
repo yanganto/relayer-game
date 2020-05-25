@@ -375,7 +375,7 @@ In this model, we are not determine each block in different round is correct or 
 We just make sure we have a solution which can always to challenge a evil relayer and let him to provide more information on chain.
 Once the relayer contradictory itself the relay is slashed and the game is close.
 On the other hand, the honest relayer can get the corresponding rewards for each block from the corresponding slash of challenge.
-The bond entry barrier for a honest relayer is `blocks_from_last comfirm  * bond`.
+The bond entry barrier for a honest relayer is `blocks_from_last_comfirm * bond` and the max game round is the number of blocks from last comfirm block.
 
 ## General parameters
 - `title ` (optional)
@@ -432,7 +432,6 @@ and this relayer will be automatic add into the scenario when load from configur
 so please avoid to use this name for the relayer.
 
 ## Challengers' Chose
-Challengers will always be honest in current model
 The following parameters are used for challenger
 - `[[challengers]]` 
   - `name` (optional)
