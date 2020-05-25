@@ -114,7 +114,7 @@ but the challenge time of submit round 3 will be star counting after run out the
 
 #### Pseudo code of relayer-only mode
 Here is the [pseudo code](./pseudo/relayer-only/chain.md) of chain, help you to comprehensive this model with multiple relayers in one game.
-> the rpc on chain allow anyone to submit headers to challenge blocks still in challenge time, or submit the header according to the sampling function.  The offchain worker keep updating the next sampling tartget.
+> the rpc on chain allow anyone to submit headers to challenge blocks still in challenge time, or submit the header according to the sampling function.  The offchain worker keep updating the next sampling block.
 
 Here is the [pseudo code](./pseudo/relayer-only/initial-relayer.md) for the client as the initial relayer
 > the client first submit the initial header, and than keep watch the `next_sampling_block`, and submit header of `next_sampling_block`.
@@ -370,6 +370,24 @@ The slash and reward can be related as following:
 - The value slashed from `Challenger3` is as reward for the submission of block 3a
 
 #### Pseudo code of relayer-challengers mode
+Here is the [pseudo code](./pseudo/relayer-challengers/chain.md), help you to comprehensive this model with one relayer and one challenger,
+Once challenger determine a block pending on chain is correct or not, he will not change his idea.
+> 
+The rpc on chain allow relayer to submit headers, and any one to challenge blocks still in challenge time.  
+The offchain worker keep updating the next sampling blocks.
+> 
+
+Here is the [pseudo code](./pseudo/relayer-challengers/relayer.md) for the relayer, this code is the same with the initial relayer in `relayer-only` model
+>
+The client first submit the initial header, and than keep watch the list of `next_sampling_blocks`, 
+and submit each header listed in `next_sampling_blocks`.
+>
+
+Here is the [pseudo code](./pseudo/relayer-challengers/challenger.md) for challenger
+> 
+The client first findout an uncorrect initial header and submit a challenge info , and than keep watch the `next_sampling_blocks`, 
+and keep submit the challenge info base on the relayer's new submit.
+>
 
 
 #### Conclusion of relayer-challengers mode
@@ -378,6 +396,8 @@ We just make sure we have a solution which can always to challenge a evil relaye
 Once the relayer contradictory itself the relay is slashed and the game is close.
 On the other hand, the honest relayer can get the corresponding rewards for each block from the corresponding slash of challenge.
 The bond entry barrier for a honest relayer is `blocks_from_last_comfirm * bond` and the max game round is the number of blocks from last comfirm block.
+The challenging time of block may be extended with `graceful period` for relayer only.
+The `graceful period` will be calculate by `graceful_function` when implementing.
 
 ## General parameters
 - `title ` (optional)
