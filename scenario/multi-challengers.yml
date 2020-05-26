@@ -49,7 +49,7 @@ name = "Challenger2"
 choice = "01"
 
 [[challengers]]
-name = "Accomplice"
+name = "Evil_Challenger"
 choice = "00"
 
 [[challengers]]
