@@ -522,7 +522,7 @@ then the binary will be placed in ./target/release, you can run this command wit
 ```
 Also, you can put `-v` option to see all status in each round of submit.
 ```
-./target/release/relayer-game -v scenario/basic.yml
+./target/release/relayer-game -v scenario/multi-challengers2.yml
 ```
 following picture is the example what you will see with verbose flag
 ![snapshot](https://raw.githubusercontent.com/yanganto/relayer-game/master/demo-vebose.png)

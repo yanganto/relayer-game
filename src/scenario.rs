@@ -75,33 +75,49 @@ pub struct ScenarioConfig {
 
     /// current challenge fee is the same with bond function
     /// challenger list (current implementation allow only one challenger)
-    pub challengers: Option<Vec<RelayerConfig>>,
+    pub challengers: Option<Vec<ChallengerConfig>>,
 }
 
 #[derive(Default)]
 pub struct RelayPositions {
     pub geneisis: usize,
-    pub relay_blocks: Vec<usize>,
+    pub relay_blocks: Vec<Vec<usize>>,
 }
 
 impl RelayPositions {
     pub fn plot(&self) -> String {
         let mut output = "G".to_string();
         let max_relay_block = if self.relay_blocks.len() > 0 {
-            self.relay_blocks[0]
+            self.relay_blocks[0][0]
         } else {
             1
         };
-        let block_indece: Vec<usize> = self
+        let block_indece: Vec<Vec<usize>> = self
             .relay_blocks
             .clone()
             .into_iter()
-            .map(|v| ((v as f64 / max_relay_block as f64) * 64.0) as usize)
+            .map(|vs| {
+                vs.into_iter()
+                    .map(|v| ((v as f64 / max_relay_block as f64) * 64.0) as usize)
+                    .collect()
+            })
             .collect();
         for i in 1..65 {
-            if let Some(idx) = block_indece.iter().position(|&x| x == i) {
-                output.push_str(&format!("{}", idx + 1));
-            } else {
+            let mut has_submit = false;
+            for (idx, vs) in block_indece.iter().enumerate() {
+                if vs.len() == 1 && vs[0] == i {
+                    output.push_str(&format!("{}", idx + 1));
+                    has_submit = true;
+                } else if vs.len() > 1 {
+                    for (j, v) in vs.iter().enumerate() {
+                        if *v == i {
+                            output.push_str(&format!("{}{}", idx + 1, (97 + j) as u8 as char));
+                            has_submit = true;
+                        }
+                    }
+                }
+            }
+            if !has_submit {
                 output.push_str("=");
             }
         }
@@ -153,7 +169,7 @@ impl ScenarioConfig {
             "lack prameters for specified challenge function",
         ));
     }
-    pub fn get_target_equation(&self) -> Result<impl TargetEq, Error> {
+    pub fn get_sample_equation(&self) -> Result<impl TargetEq, Error> {
         match self.target_function.to_uppercase().as_str() {
             "HALF" => return Ok(HalfConfig {}),
             _ => {
@@ -312,6 +328,18 @@ pub struct RelayerConfig {
     pub choice: String,
 }
 
+/// ChallengerConfig
+/// This config is used for Relayer or Challenger
+/// Set up a `name` and the `choice` about the relayer
+#[derive(Debug, Deserialize, Clone)]
+pub struct ChallengerConfig {
+    /// Optional field help you to know the relayer in
+    pub name: Option<String>,
+    /// The client can choice to be Honest(H), Lie(L), No response(N), if the choice is not lone as
+    /// other replayer, it will be automaticaly no response
+    pub choice: String,
+}
+
 impl FromStr for ScenarioConfig {
     type Err = Error;
     /// Pase from the scenario toml file as listed in `/scenario `
@@ -350,40 +378,22 @@ impl FromStr for ScenarioConfig {
             }
         }
         if c.challengers.is_some() {
-            // currently, we just handle the scenario with one challenger
-            if c.challengers.clone().unwrap().len() > 1 || c.relayers.len() > 1 {
-                return Err(Error::ParameterError(
-                    "current we only support the scenario for one relayer and one challenger in relayer-challenger mode",
-                ));
+            if c.relayers.len() > 1 {
+                return Err(Error::ParameterError("There is only one relayer in relayer-challenger mode or in relayer-challengers mode"));
             }
-            let relayer = c.relayers[0].clone();
-            // currently, challenger is always honest
-            for (i, r) in c.challengers.clone().unwrap().iter_mut().enumerate() {
-                if r.name.is_none() {
-                    r.name = Some(format!(" {}", i));
+            let relayer_chose_length = c.relayers[0].clone().choice.len();
+
+            for (i, ch) in c.challengers.clone().unwrap().iter_mut().enumerate() {
+                if ch.choice.len() > relayer_chose_length {
+                    return Err(Error::ParameterError(
+                        "challenger chose must smaller than relayer",
+                    ));
+                }
+                if ch.name.is_none() {
+                    ch.name = Some(format!(" {}", i));
                 };
-                for (i, c) in r.choice.chars().enumerate() {
-                    let chose_from_relayer = match relayer.choice.chars().nth(i) {
-                        Some(c) => c,
-                        None => {
-                            return Err(Error::ParameterError(
-                                "currently we are not support that challenger does not challenge to relayer",
-                            ));
-                        }
-                    };
-                    if c == '0' {
-                        if chose_from_relayer != 'L' {
-                            return Err(Error::ParameterError(
-                                "currently we are not support challenger to lie",
-                            ));
-                        }
-                    } else if c == '1' {
-                        if chose_from_relayer != 'H' {
-                            return Err(Error::ParameterError(
-                                "currently we are not support challenger to lie",
-                            ));
-                        }
-                    } else {
+                for (_i, c) in ch.choice.chars().enumerate() {
+                    if c != '0' && c != '1' {
                         return Err(Error::ParameterError("challenger chose must be '0', '1'"));
                     }
                 }
@@ -539,27 +549,51 @@ mod tests {
         assert_eq!(bond_function.unwrap().calculate(0), 1.2222);
     }
     #[test]
-    fn test_() {
+    fn test_plot_relay_position() {
         let mut rp = RelayPositions::default();
-        rp.relay_blocks.push(500);
+        rp.relay_blocks.push(vec![500]);
         assert_eq!(
             rp.plot(),
             "G===============================================================1==>".to_string()
         );
-        rp.relay_blocks.push(250);
+        rp.relay_blocks.push(vec![250]);
         assert_eq!(
             rp.plot(),
             "G===============================2===============================1==>".to_string()
         );
-        rp.relay_blocks.push(125);
+        rp.relay_blocks.push(vec![125]);
         assert_eq!(
             rp.plot(),
             "G===============3===============2===============================1==>".to_string()
         );
-        rp.relay_blocks.push(187);
+        rp.relay_blocks.push(vec![187]);
         assert_eq!(
             rp.plot(),
             "G===============3======4========2===============================1==>".to_string()
+        );
+    }
+    #[test]
+    fn test_plot_multi_relay_position() {
+        let mut rp = RelayPositions::default();
+        rp.relay_blocks.push(vec![500]);
+        assert_eq!(
+            rp.plot(),
+            "G===============================================================1==>".to_string()
+        );
+        rp.relay_blocks.push(vec![250]);
+        assert_eq!(
+            rp.plot(),
+            "G===============================2===============================1==>".to_string()
+        );
+        rp.relay_blocks.push(vec![125, 375]);
+        assert_eq!(
+            rp.plot(),
+            "G===============3a===============2===============3b===============1==>".to_string()
+        );
+        rp.relay_blocks.push(vec![187]);
+        assert_eq!(
+            rp.plot(),
+            "G===============3a======4========2===============3b===============1==>".to_string()
         );
     }
     #[test]
@@ -592,7 +626,7 @@ mod tests {
         assert_eq!(c.is_ok(), true);
     }
     #[test]
-    fn test_should_error_with_challengers() {
+    fn test_should_allow_with_challengers() {
         let c = <ScenarioConfig>::from_str(
             r#"
 			challenge_function = "linear"
@@ -622,6 +656,6 @@ mod tests {
 			choice = "0100"
 			"#,
         );
-        assert_eq!(c.is_ok(), false);
+        assert_eq!(c.is_ok(), true);
     }
 }

@@ -42,7 +42,7 @@ fn simulate_from_scenario(
 
     let mut iterator = config.get_iter();
     let challenge_eq = config.get_challenge_equation()?;
-    let target_eq = config.get_target_equation()?;
+    let sample_eq = config.get_sample_equation()?;
     let reward_eq = config.get_reward_equation()?;
     let bond_eq = config.get_bond_equation()?;
     let mut chains_status: chain::ChainsStatus = config.into();
@@ -56,11 +56,11 @@ fn simulate_from_scenario(
     let mut reward_from_previous_round = 0f64;
     let mut rp = scenario::RelayPositions::default();
     rp.relay_blocks
-        .push(chains_status.submit_target_ethereum_block);
+        .push(vec![chains_status.submit_target_ethereum_block]);
 
     let mut latest_confirm_ethereum_block = 0;
 
-    while let Some(relayer_subitions) = iterator.next() {
+    while let Some(mut relayer_submissions) = iterator.next() {
         let bond = bond_eq.calculate(iterator.submit_round);
         bonds.push(bond);
         let submition_times = chains_status.submitions.len();
@@ -82,12 +82,12 @@ fn simulate_from_scenario(
         };
         challenge_times.push(challenge_time as f64);
 
-        let total_lie_relayer = relayer_subitions.iter().filter(|r| r.1).count();
+        let total_lie_relayer = relayer_submissions.iter().filter(|r| r.1).count();
         let mut r = reward_eq.calculate(
             reward_from_previous_round,
             total_lie_relayer as f64 * bond,
             bond,
-            relayer_subitions
+            relayer_submissions
                 .iter()
                 .filter(|r| !r.1)
                 .map(|r| r.0.clone())
@@ -100,7 +100,7 @@ fn simulate_from_scenario(
             print!("{}", format!("{}", chains_status.fmt_status()).cyan());
             println!("\tSubmission Plot: {}", rp.plot());
             print!("\tSubmission(Bond: {}): ", bond);
-            for (r, lie) in relayer_subitions.iter() {
+            for (r, lie) in relayer_submissions.iter() {
                 print!("{}", r);
                 if *lie {
                     print!("(lie)");
@@ -111,20 +111,23 @@ fn simulate_from_scenario(
             }
             print!("\n");
         }
+
         let target_block = if 0 == total_lie_relayer {
             latest_confirm_ethereum_block = chains_status.submit_target_ethereum_block;
-            target_eq.calculate(
+            sample_eq.calculate(
                 chains_status.submit_target_ethereum_block,
                 last_relayed_block.1,
             )
         } else {
-            target_eq.calculate(
+            sample_eq.calculate(
                 latest_confirm_ethereum_block,
                 chains_status.submit_target_ethereum_block,
             )
         };
 
-        if chains_status.challengers.len() > 0 {
+        let mut relay_blocks = Vec::new();
+        if chains_status.challengers.len() == 1 {
+            // relayer-challenger mod
             for (challenger, _) in chains_status.challengers.clone().iter() {
                 chains_status.challenge_by(challenger.clone(), bond);
                 reward_actions.push(chain::Reward {
@@ -133,10 +136,55 @@ fn simulate_from_scenario(
                     value: bond * 2.0,
                 });
             }
+        } else if chains_status.challengers.len() > 1 {
+            // relayer-challengers mod
+            let relayer = relayer_submissions[0].0.clone();
+            let mut is_additional_challenge = false;
+            for (challenger, obj) in chains_status.challengers.clone().iter() {
+                if obj.submit_round == submition_times + 1 {
+                    if is_additional_challenge {
+                        relayer_submissions.push((relayer.clone(), false));
+                        if total_lie_relayer == 0 {
+                            relay_blocks.push(
+                                chains_status.submit_target_ethereum_block * 2
+                                    - (chains_status.submit_target_ethereum_block
+                                        + last_relayed_block.1)
+                                        / 2,
+                            );
+                        } else {
+                            relay_blocks.push(
+                                (chains_status.submit_target_ethereum_block + last_relayed_block.1)
+                                    / 2,
+                            );
+                        }
+                    }
+
+                    chains_status.challenge_by(challenger.clone(), bond);
+                    if obj.lie {
+                        // We can not sure the challenge is lie or not, so we return the bond
+                        reward_actions.push(chain::Reward {
+                            from: chain::RewardFrom::Slash,
+                            to: challenger.clone(),
+                            value: bond,
+                        });
+                    } else {
+                        reward_actions.push(chain::Reward {
+                            from: chain::RewardFrom::Slash,
+                            to: challenger.clone(),
+                            value: bond * 2.0,
+                        });
+                    }
+
+                    is_additional_challenge = true;
+                }
+            }
         }
-        chains_status.submit(relayer_subitions, bond, challenge_time, target_block);
-        rp.relay_blocks
-            .push(chains_status.submit_target_ethereum_block);
+
+        chains_status.submit(relayer_submissions, bond, challenge_time, target_block);
+
+        relay_blocks.push(chains_status.submit_target_ethereum_block);
+        rp.relay_blocks.push(relay_blocks);
+
         // TODO: make this as an option
         chains_status.should_balance();
 

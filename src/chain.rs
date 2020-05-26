@@ -4,7 +4,7 @@ use std::fmt;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use crate::sample::Equation;
-use crate::scenario::{RelayerConfig, ScenarioConfig};
+use crate::scenario::{ChallengerConfig, RelayerConfig, ScenarioConfig};
 
 static TOTAL_RELAYER: AtomicUsize = AtomicUsize::new(0);
 static VISUALIZED_MAX_LENGTH: usize = 64;
@@ -45,9 +45,9 @@ pub struct ChainsStatus {
     /// The current block height of Ethereum
     pub ethereum_block_hight: usize,
     /// The relayer status
-    pub relayers: HashMap<String, RelayerStatus>,
+    pub relayers: HashMap<String, ParticipatorStatus>,
     /// The challenger status
-    pub challengers: HashMap<String, RelayerStatus>,
+    pub challengers: HashMap<String, ParticipatorStatus>,
     /// The next Ethereum block that relayer should submit
     pub submit_target_ethereum_block: usize,
     /// The list of submission
@@ -68,6 +68,8 @@ impl From<ScenarioConfig> for ChainsStatus {
         } else {
             vec![]
         };
+        let relayer_choice = c.relayers[0].choice.clone();
+
         ChainsStatus {
             darwinia_block_hight: c.Dd.unwrap_or(0),
             ethereum_block_hight: c.De.unwrap_or(100),
@@ -76,7 +78,7 @@ impl From<ScenarioConfig> for ChainsStatus {
                 .clone()
                 .into_iter()
                 .fold(HashMap::new(), |mut map, r| {
-                    let s: RelayerStatus = r.into();
+                    let s: ParticipatorStatus = r.into();
                     if let Some(n) = &s.name {
                         map.insert(n.to_string(), s);
                     } else {
@@ -85,7 +87,8 @@ impl From<ScenarioConfig> for ChainsStatus {
                     map
                 }),
             challengers: challengers.into_iter().fold(HashMap::new(), |mut map, r| {
-                let s: RelayerStatus = r.into();
+                let s: ParticipatorStatus =
+                    ParticipatorStatus::from_challenger_config(r, &relayer_choice);
                 if let Some(n) = &s.name {
                     map.insert(n.to_string(), s);
                 } else {
@@ -94,7 +97,7 @@ impl From<ScenarioConfig> for ChainsStatus {
                 map
             }),
             submit_target_ethereum_block: c
-                .get_target_equation()
+                .get_sample_equation()
                 .unwrap()
                 .calculate(0, c.De.unwrap_or(100)),
             block_speed_factor: c.F.unwrap_or(2.0),
@@ -209,7 +212,13 @@ impl ChainsStatus {
                 reciver = self.challengers.get_mut(&reward.to);
             };
             let r = reciver.unwrap();
-            if !r.lie {
+            if r.lie {
+                if r.submit_round > 0 {
+                    // evil challenger got return but not reward
+                    r.reward.0 += reward.value;
+                    self.submit_bond_pool -= reward.value;
+                }
+            } else {
                 match reward.from {
                     RewardFrom::Treasure => {
                         r.reward.1 += reward.value;
@@ -225,10 +234,10 @@ impl ChainsStatus {
     }
 }
 
-/// # RelayerStatus
+/// # ParticipatorStatus
 /// the statue we simulate
 #[derive(Default, Debug, Clone)]
-pub struct RelayerStatus {
+pub struct ParticipatorStatus {
     /// id is used when name not provided
     pub id: usize,
     /// name is option field in scenario file
@@ -239,13 +248,15 @@ pub struct RelayerStatus {
     pub reward: (f64, f64),
     /// the total times the relayer submit
     pub submit_times: usize,
+    /// the submit_rount the challenger submit (for relayer-challengers mod)
+    pub submit_round: usize,
     /// the relayer has lied or not
     pub lie: bool,
 }
 
-impl From<RelayerConfig> for RelayerStatus {
+impl From<RelayerConfig> for ParticipatorStatus {
     fn from(c: RelayerConfig) -> Self {
-        RelayerStatus {
+        ParticipatorStatus {
             id: TOTAL_RELAYER.fetch_add(1, Ordering::SeqCst),
             name: c.name,
             ..Default::default()
@@ -253,11 +264,25 @@ impl From<RelayerConfig> for RelayerStatus {
     }
 }
 
-impl fmt::Display for RelayerStatus {
+impl fmt::Display for ParticipatorStatus {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let balance = self.reward() - self.pay;
         if let Some(n) = &self.name {
-            write!(f, "{}({}): {} ", n, self.get_honest_submit_times(), balance)
+            if self.submit_round > 0 {
+                // challenger
+                if self.lie {
+                    write!(f, "{}(lie): {} ", n, balance)
+                } else {
+                    write!(f, "{}: {} ", n, balance)
+                }
+            } else {
+                // relayer
+                if self.get_honest_submit_times() > 0 {
+                    write!(f, "{}({}): {} ", n, self.get_honest_submit_times(), balance)
+                } else {
+                    write!(f, "{}: {} ", n, balance)
+                }
+            }
         } else {
             write!(
                 f,
@@ -270,7 +295,28 @@ impl fmt::Display for RelayerStatus {
     }
 }
 
-impl RelayerStatus {
+impl ParticipatorStatus {
+    fn from_challenger_config(c: ChallengerConfig, relayer_choice: &str) -> Self {
+        let mut lie = false;
+        for (i, ch) in c.choice.chars().enumerate() {
+            if ch == '0' && relayer_choice.as_bytes()[i] != b'L' {
+                lie = true;
+                break;
+            }
+            if ch == '1' && relayer_choice.as_bytes()[i] != b'H' {
+                lie = true;
+                break;
+            }
+        }
+
+        ParticipatorStatus {
+            id: TOTAL_RELAYER.fetch_add(1, Ordering::SeqCst),
+            name: c.name,
+            submit_round: c.choice.len(),
+            lie,
+            ..Default::default()
+        }
+    }
     fn reward(&self) -> f64 {
         self.reward.0 + self.reward.1
     }
@@ -278,7 +324,7 @@ impl RelayerStatus {
         let reward_slash_part: usize;
         let reward_treasury_part: usize;
         let slash_part: usize;
-        if self.reward.0 > self.pay {
+        if self.reward.0 >= self.pay {
             reward_slash_part =
                 ((self.reward.0 - self.pay) / normalize_value * normalize_width as f64) as usize;
             reward_treasury_part =
@@ -291,16 +337,13 @@ impl RelayerStatus {
             slash_part = (self.pay / normalize_value * normalize_width as f64) as usize;
         }
         format!(
-            " {}{}{} {}\n",
+            "● {:<25} {}{}{}\n",
+            format!("{}", self),
             "-".repeat(slash_part).to_string(),
             "+".repeat(reward_slash_part),
             "*".repeat(reward_treasury_part),
-            self
         )
     }
-}
-
-impl RelayerStatus {
     fn submit(&mut self, bond: f64, lie: bool) {
         self.pay += bond;
         self.lie |= lie;
