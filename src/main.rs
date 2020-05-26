@@ -56,7 +56,7 @@ fn simulate_from_scenario(
     let mut reward_from_previous_round = 0f64;
     let mut rp = scenario::RelayPositions::default();
     rp.relay_blocks
-        .push(chains_status.submit_target_ethereum_block);
+        .push(vec![chains_status.submit_target_ethereum_block]);
 
     let mut latest_confirm_ethereum_block = 0;
 
@@ -136,7 +136,7 @@ fn simulate_from_scenario(
         }
         chains_status.submit(relayer_subitions, bond, challenge_time, target_block);
         rp.relay_blocks
-            .push(chains_status.submit_target_ethereum_block);
+            .push(vec![chains_status.submit_target_ethereum_block]);
         // TODO: make this as an option
         chains_status.should_balance();
 
