@@ -1,0 +1,69 @@
+title = "Basic Scenario for Challenger"
+
+challenge_function = "linear"
+target_function = "half"
+bond_function = "linear"
+reward_function = "split"
+
+Dd = 100
+De = 1000
+F = 2.0
+
+[challenge_linear]
+Wd = 1.5
+We = 2.0
+C  = 1
+Md = 500
+Me = 500
+
+[bond_linear]
+W = 1.5
+C  = 10.0
+M = 100.0
+
+[reward_split]
+P = 0.5
+
+[reward_treasury_last]
+C = 100.0
+
+[[relayers]]
+name = "Evil"
+choice = "LHLLLL"
+
+# If there is a challenger, the tool will simulate the game as relayer-challenger mode
+#
+# The challenger can challenge relayer without submit real blocks
+# Currently, we only implement the challenge mode with only one challenger,
+# and the he is good guy and participate to the end of the game
+#
+# The choice of challenger are 0 or 1
+# 0 mean the challenger does not comfirm the blocks relayer submit
+# 1 mean the challenger comfirm the blocks relayer submit
+[[challengers]]
+name = "Challenger1"
+choice = "0"
+
+[[challengers]]
+name = "Challenger2"
+choice = "01"
+
+[[challengers]]
+name = "Accomplice"
+choice = "00"
+
+[[challengers]]
+name = "Challenger3"
+choice = "010"
+
+[[challengers]]
+name = "Challenger4"
+choice = "0100"
+
+[[challengers]]
+name = "Challenger5"
+choice = "01000"
+
+[[challengers]]
+name = "Challenger6"
+choice = "010000"
