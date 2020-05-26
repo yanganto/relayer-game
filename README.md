@@ -134,12 +134,13 @@ Here is the [pseudo code](./pseudo/relayer-only/validating-relayer.md) for the c
 > &emsp;if the block not correct  
 > &emsp;&emsp;submit new correct block  
 
-#### Conclusion of relayer-only mode
+#### Conclusion of relayers-only mode
 - In the first scenario, the game is closed.  
 - In the second and third scenario, the game is still going and will be convergence some where between `G` and `1`.
 
 Once the `Evil` goes into contradictory. All of the bond from `Evil` will be slashed, and the slash to reward can be distributed with different functions.
 In the model, no mater there are how many malicious relayers, one honest relayer always response correct information will win the game.
+For a honest relayer, the bond entry barrier is `log2(first submit block - blocks_from_last_comfirm) * bond` and the max game round is `first submit block - blocks_from_last_comfirm`.
 
 ### relayer-challenger mode
 In relayer-challenger mode, when someone is not accepted the block submitted by other relayer, he just put a challenge on chain to express his opinion.
@@ -242,6 +243,7 @@ Here is the [pseudo code](./pseudo/relayer-challenger/challenger.md) for challen
 
 Once the `Evil` goes into contradictory. All of the bond from `Evil` will be slashed, and the game is closed.
 Please note there is no correct block on position 1 after the game closed, so there may be multiple parallel relayer-challenger games on chain to keep the bridge works.
+For a honest challenger or relayer, the bond entry barrier is `log2(first submit block - blocks_from_last_comfirm) * bond` and the max game round is `log2(first submit block - blocks_from_last_comfirm)`.
 In this model, there is an assumption that the challenger will be honest to keep the bridge secure, so it is required some legal enforcement or high value staking for challenger, 
 such that it is not truly decentralized for this model.
 
@@ -414,7 +416,8 @@ In this model, we are not determine each block in different round is correct or 
 We just make sure we have a solution which can always to challenge a evil relayer and let him to provide more information on chain.
 Once the relayer contradictory itself the relay is slashed and the game is close.
 On the other hand, the honest relayer can get the corresponding rewards for each block from the corresponding slash of challenge.
-The bond entry barrier for a honest relayer is `blocks_from_last_comfirm * bond` and the max game round is the number of blocks from last comfirm block.
+For a honest relayer, the bond entry barrier is `blocks_from_last_comfirm * bond` and the max game round is `first submit block - blocks_from_last_comfirm`.
+For a honest challenger, the bond entry barrier is `log2(first submit block - blocks_from_last_comfirm) * bond` and the max game round is `log2(first submit block - blocks_from_last_comfirm)`.
 The challenging time of block may be extended with `graceful period` for relayer only.
 The `graceful period` will be calculate by `graceful_function` when implementing.
 
