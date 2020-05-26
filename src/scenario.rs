@@ -75,7 +75,7 @@ pub struct ScenarioConfig {
 
     /// current challenge fee is the same with bond function
     /// challenger list (current implementation allow only one challenger)
-    pub challengers: Option<Vec<RelayerConfig>>,
+    pub challengers: Option<Vec<ChallengerConfig>>,
 }
 
 #[derive(Default)]
@@ -169,7 +169,7 @@ impl ScenarioConfig {
             "lack prameters for specified challenge function",
         ));
     }
-    pub fn get_target_equation(&self) -> Result<impl TargetEq, Error> {
+    pub fn get_sample_equation(&self) -> Result<impl TargetEq, Error> {
         match self.target_function.to_uppercase().as_str() {
             "HALF" => return Ok(HalfConfig {}),
             _ => {
@@ -321,6 +321,18 @@ impl Iterator for ScenarioConfigIntoIterator {
 /// Set up a `name` and the `choice` about the relayer
 #[derive(Debug, Deserialize, Clone)]
 pub struct RelayerConfig {
+    /// Optional field help you to know the relayer in
+    pub name: Option<String>,
+    /// The client can choice to be Honest(H), Lie(L), No response(N), if the choice is not lone as
+    /// other replayer, it will be automaticaly no response
+    pub choice: String,
+}
+
+/// ChallengerConfig
+/// This config is used for Relayer or Challenger
+/// Set up a `name` and the `choice` about the relayer
+#[derive(Debug, Deserialize, Clone)]
+pub struct ChallengerConfig {
     /// Optional field help you to know the relayer in
     pub name: Option<String>,
     /// The client can choice to be Honest(H), Lie(L), No response(N), if the choice is not lone as
