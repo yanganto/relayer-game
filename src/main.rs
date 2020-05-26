@@ -112,6 +112,19 @@ fn simulate_from_scenario(
             print!("\n");
         }
 
+        let target_block = if 0 == total_lie_relayer {
+            latest_confirm_ethereum_block = chains_status.submit_target_ethereum_block;
+            sample_eq.calculate(
+                chains_status.submit_target_ethereum_block,
+                last_relayed_block.1,
+            )
+        } else {
+            sample_eq.calculate(
+                latest_confirm_ethereum_block,
+                chains_status.submit_target_ethereum_block,
+            )
+        };
+
         let mut relay_blocks = Vec::new();
         if chains_status.challengers.len() == 1 {
             // relayer-challenger mod
@@ -130,23 +143,17 @@ fn simulate_from_scenario(
             for (challenger, obj) in chains_status.challengers.clone().iter() {
                 if obj.submit_round == submition_times + 1 {
                     if is_additional_challenge {
-                        relayer_submissions.push((relayer.clone(), true));
-
-                        let before_last_relayed_block = if submition_times > 1 {
-                            chains_status.submitions[submition_times - 2].1
-                        } else {
-                            0
-                        };
-                        if chains_status.submit_target_ethereum_block > before_last_relayed_block {
+                        relayer_submissions.push((relayer.clone(), false));
+                        if total_lie_relayer == 0 {
                             relay_blocks.push(
-                                (chains_status.submit_target_ethereum_block
-                                    - before_last_relayed_block)
-                                    / 2,
+                                chains_status.submit_target_ethereum_block * 2
+                                    - (chains_status.submit_target_ethereum_block
+                                        + last_relayed_block.1)
+                                        / 2,
                             );
                         } else {
                             relay_blocks.push(
-                                (before_last_relayed_block
-                                    - chains_status.submit_target_ethereum_block)
+                                (chains_status.submit_target_ethereum_block + last_relayed_block.1)
                                     / 2,
                             );
                         }
@@ -173,20 +180,8 @@ fn simulate_from_scenario(
             }
         }
 
-        let target_block = if 0 == total_lie_relayer {
-            latest_confirm_ethereum_block = chains_status.submit_target_ethereum_block;
-            sample_eq.calculate(
-                chains_status.submit_target_ethereum_block,
-                last_relayed_block.1,
-            )
-        } else {
-            sample_eq.calculate(
-                latest_confirm_ethereum_block,
-                chains_status.submit_target_ethereum_block,
-            )
-        };
-
         chains_status.submit(relayer_submissions, bond, challenge_time, target_block);
+
         relay_blocks.push(chains_status.submit_target_ethereum_block);
         rp.relay_blocks.push(relay_blocks);
 

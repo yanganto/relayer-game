@@ -40,3 +40,5 @@ cargo run -- -v scenario/challenger.yml
 echo ""
 cargo run -- -v scenario/multi-challengers.yml
 echo ""
+cargo run -- -v scenario/multi-challengers2.yml
+echo ""
