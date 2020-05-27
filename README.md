@@ -1,9 +1,12 @@
 # Relayer Game
 [![Build Status](https://travis-ci.com/yanganto/s3handler.svg?branch=master)](https://travis-ci.com/yanganto/relayer-game)
 
-`relayer-game` is a tool to simulate the optimized game for relayers in Darwinia Network. 
+`refit` is a **re**layer **f**ee **i**nference **t**ool to simulate and optimized the game for relayers in Darwinia Network.  
 In order to ban the replay who lies, and also we want to help make thing finalize as soon as possible, 
 this tool can easily to change three important equations and load from different scenario to simulate the relayer game.  
+Such that you can easily to tune tha parameters.
+
+The `chain`, `relayer`, `challenger` in `/scenario/<model>`folder can read the scenario file and simulate with more detail.
 
 ## Scenario
 In this tool we assume the target chain is Ethereum, however you can simulate different chain by changing parameters.
@@ -521,18 +524,18 @@ cargo build --release
 ```
 then the binary will be placed in ./target/release, you can run this command with scenario file as following command.  
 ```
-./target/release/relayer-game scenario/basic.yml
+./target/release/refit scenario/basic.yml
 ```
 Also, you can put `-v` option to see all status in each round of submit.
 ```
-./target/release/relayer-game -v scenario/multi-challengers2.yml
+./target/release/refit -v scenario/multi-challengers2.yml
 ```
 following picture is the example what you will see with verbose flag
 ![snapshot](https://raw.githubusercontent.com/yanganto/relayer-game/master/demo-vebose.png)
 
 Besides, you can patch some equation parameters with option `p`, for examples.
 ```
-./target/release/relayer-game -p challenge_linear.C=9 challenge_linear.Wd=10.0 -- scenario/basic.yml
+./target/release/refit -p challenge_linear.C=9 challenge_linear.Wd=10.0 -- scenario/basic.yml
 ```
 Currently, all parameters in `challenge_linear` and `bond_linear`, and also the values of `challenge_function` and `bond_function` can be patched.  
 The challenge times(in blocks), and the bonds for each round will show as plot help you to modify the equation.  
