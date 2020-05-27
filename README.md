@@ -115,18 +115,18 @@ Honest                      H                   H
 `Evil` and `Honest` can start to submit the block on position 3 when they have different opinion on position 2, 
 but the challenge time of submit round 3 will be star counting after run out the challenge time of submit round 2.
 
-#### Pseudo code of relayer-only mode
-Here is the [pseudo code](./pseudo/relayer-only/chain.md) of chain, help you to comprehensive this model with multiple relayers in one game.
+#### Pseudo code of relayers-only mode
+Here is the [pseudo code](./pseudo/relayers-only/chain.md) of chain, help you to comprehensive this model with multiple relayers in one game.
 > the rpc on chain allow anyone to submit headers to challenge blocks still in challenge time, or submit the header according to the sampling function.  The offchain worker keep updating the next sampling block.
 
-Here is the [pseudo code](./pseudo/relayer-only/initial-relayer.md) for the client as the initial relayer
+Here is the [pseudo code](./pseudo/relayers-only/initial-relayer.md) for the client as the initial relayer
 > the client first submit the initial header, and than keep watch the `next_sampling_block`, and submit header of `next_sampling_block`.
 >
 > submit the initial header   
 > while `next_sampling_block`  
 > &emsp;submit `next_sampling_block`
 
-Here is the [pseudo code](./pseudo/relayer-only/validating-relayer.md) for the client validating submitting block on chain
+Here is the [pseudo code](./pseudo/relayers-only/validating-relayer.md) for the client validating submitting block on chain
 > the client first findout a uncorrect initial header, and than keep watch the `next_sampling_block`, and submit header of `next_sampling_block`.
 >
 > while submit headers  
@@ -220,7 +220,7 @@ Once challenger determine a block pending on chain is correct or not, he will no
 > The rpc on chain allow relayer to submit headers, and any one to challenge blocks still in challenge time.  
 > The offchain worker keep updating the next sampling tartget.
 
-Here is the [pseudo code](./pseudo/relayer-challenger/relayer.md) for the relayer, this code is the same with the initial relayer in `relayer-only` model
+Here is the [pseudo code](./pseudo/relayer-challenger/relayer.md) for the relayer, this code is the same with the initial relayer in `relayers-only` model
 > The client first submit the initial header, and than keep watch the `next_sampling_block`, and submit header of `next_sampling_block`.
 >
 > submit the initial header   
@@ -395,7 +395,7 @@ Once challenger determine a block pending on chain is correct or not, he will no
 > The rpc on chain allow relayer to submit headers, and any one to challenge blocks still in challenge time.  
 > The offchain worker keep updating the next sampling blocks.
 
-Here is the [pseudo code](./pseudo/relayer-challengers/relayer.md) for the relayer, this code is the same with the initial relayer in `relayer-only` model
+Here is the [pseudo code](./pseudo/relayer-challengers/relayer.md) for the relayer, this code is the same with the initial relayer in `relayers-only` model
 > The client first submit the initial header, and than keep watch the list of `next_sampling_blocks`, and submit each header listed in `next_sampling_blocks`.
 >
 > submit the initial header  
