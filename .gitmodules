@@ -1,0 +1,4 @@
+[submodule "simulation/relayers-only/chain"]
+	path = simulation/relayers-only/chain
+	url = git@github.com:yanganto/substrate-node-template.git
+	branch = relayer-game-relayers-only

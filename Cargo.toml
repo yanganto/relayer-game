@@ -1,21 +1,4 @@
-[package]
-name = "relayer-game"
-version = "0.1.0"
-authors = ["Antonio Yang <yanganto@gmail.com>"]
-edition = "2018"
-
-[features]
-default = ["plot"]
-plot = [
-    "plotters"
+[workspace]
+members = [
+	"refit"
 ]
-
-[dependencies]
-clap = "3.0.0-beta.1"
-serde = "1.0.107"
-serde_derive = "1.0.107"
-toml = "0.5"
-failure = "0.1.8"
-failure_derive = "0.1.8"
-colored = "1.9.3"
-plotters = {version="0.2.14", optional=true}

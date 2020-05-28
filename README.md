@@ -1,9 +1,12 @@
 # Relayer Game
 [![Build Status](https://travis-ci.com/yanganto/s3handler.svg?branch=master)](https://travis-ci.com/yanganto/relayer-game)
 
-`relayer-game` is a tool to simulate the optimized game for relayers in Darwinia Network. 
+`refit` is a **re**layer **f**ee **i**nference **t**ool to simulate and optimized the game for relayers in Darwinia Network.  
 In order to ban the replay who lies, and also we want to help make thing finalize as soon as possible, 
 this tool can easily to change three important equations and load from different scenario to simulate the relayer game.  
+Such that you can easily to tune tha parameters.
+
+The `chain`, `relayer`, `challenger` in `/scenario/<model>`folder can read the scenario file and simulate with more detail.
 
 ## Scenario
 In this tool we assume the target chain is Ethereum, however you can simulate different chain by changing parameters.
@@ -112,18 +115,18 @@ Honest                      H                   H
 `Evil` and `Honest` can start to submit the block on position 3 when they have different opinion on position 2, 
 but the challenge time of submit round 3 will be star counting after run out the challenge time of submit round 2.
 
-#### Pseudo code of relayer-only mode
-Here is the [pseudo code](./pseudo/relayer-only/chain.md) of chain, help you to comprehensive this model with multiple relayers in one game.
+#### Pseudo code of relayers-only mode
+Here is the [pseudo code](./pseudo/relayers-only/chain.md) of chain, help you to comprehensive this model with multiple relayers in one game.
 > the rpc on chain allow anyone to submit headers to challenge blocks still in challenge time, or submit the header according to the sampling function.  The offchain worker keep updating the next sampling block.
 
-Here is the [pseudo code](./pseudo/relayer-only/initial-relayer.md) for the client as the initial relayer
+Here is the [pseudo code](./pseudo/relayers-only/initial-relayer.md) for the client as the initial relayer
 > the client first submit the initial header, and than keep watch the `next_sampling_block`, and submit header of `next_sampling_block`.
 >
 > submit the initial header   
 > while `next_sampling_block`  
 > &emsp;submit `next_sampling_block`
 
-Here is the [pseudo code](./pseudo/relayer-only/validating-relayer.md) for the client validating submitting block on chain
+Here is the [pseudo code](./pseudo/relayers-only/validating-relayer.md) for the client validating submitting block on chain
 > the client first findout a uncorrect initial header, and than keep watch the `next_sampling_block`, and submit header of `next_sampling_block`.
 >
 > while submit headers  
@@ -217,7 +220,7 @@ Once challenger determine a block pending on chain is correct or not, he will no
 > The rpc on chain allow relayer to submit headers, and any one to challenge blocks still in challenge time.  
 > The offchain worker keep updating the next sampling tartget.
 
-Here is the [pseudo code](./pseudo/relayer-challenger/relayer.md) for the relayer, this code is the same with the initial relayer in `relayer-only` model
+Here is the [pseudo code](./pseudo/relayer-challenger/relayer.md) for the relayer, this code is the same with the initial relayer in `relayers-only` model
 > The client first submit the initial header, and than keep watch the `next_sampling_block`, and submit header of `next_sampling_block`.
 >
 > submit the initial header   
@@ -392,7 +395,7 @@ Once challenger determine a block pending on chain is correct or not, he will no
 > The rpc on chain allow relayer to submit headers, and any one to challenge blocks still in challenge time.  
 > The offchain worker keep updating the next sampling blocks.
 
-Here is the [pseudo code](./pseudo/relayer-challengers/relayer.md) for the relayer, this code is the same with the initial relayer in `relayer-only` model
+Here is the [pseudo code](./pseudo/relayer-challengers/relayer.md) for the relayer, this code is the same with the initial relayer in `relayers-only` model
 > The client first submit the initial header, and than keep watch the list of `next_sampling_blocks`, and submit each header listed in `next_sampling_blocks`.
 >
 > submit the initial header  
@@ -521,18 +524,18 @@ cargo build --release
 ```
 then the binary will be placed in ./target/release, you can run this command with scenario file as following command.  
 ```
-./target/release/relayer-game scenario/basic.yml
+./target/release/refit scenario/basic.yml
 ```
 Also, you can put `-v` option to see all status in each round of submit.
 ```
-./target/release/relayer-game -v scenario/multi-challengers2.yml
+./target/release/refit -v scenario/multi-challengers2.yml
 ```
 following picture is the example what you will see with verbose flag
 ![snapshot](https://raw.githubusercontent.com/yanganto/relayer-game/master/demo-vebose.png)
 
 Besides, you can patch some equation parameters with option `p`, for examples.
 ```
-./target/release/relayer-game -p challenge_linear.C=9 challenge_linear.Wd=10.0 -- scenario/basic.yml
+./target/release/refit -p challenge_linear.C=9 challenge_linear.Wd=10.0 -- scenario/basic.yml
 ```
 Currently, all parameters in `challenge_linear` and `bond_linear`, and also the values of `challenge_function` and `bond_function` can be patched.  
 The challenge times(in blocks), and the bonds for each round will show as plot help you to modify the equation.  

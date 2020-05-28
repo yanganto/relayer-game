@@ -2,6 +2,8 @@ language: rust
 rust:
   - stable
   - nightly
+git:
+  submodules: false
 
 jobs:
   include:
@@ -14,5 +16,7 @@ jobs:
     - stage: "Build"
       script: cargo build --release --verbose --all
 
-    - stage: "Build without Features"
-      script: cargo build --release --verbose --all --no-default-features
+    - stage: "Build refit without Features"
+      script: 
+        - cd refit
+        - cargo build --release --verbose --all --no-default-features
