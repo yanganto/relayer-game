@@ -18,6 +18,10 @@ There are three different gaming models, one is `relayers-only` mode, another is
 In `relayers-only` mode, when someone is not accepted the block submitted by other relayer, he should submit the correct block to express his opinion.
 In `relayer-challenger` mode and `relayer-challengers` mode, when someone is not accepted the block submitted by other relayer, he just put a challenge on chain to express his opinion.
 
+In all mode, the `sample function` will point out the next one or many blocks, the relayer(s) should submit on it.  
+The `sample function` is subtle, and should different when the target chain using different consensus mechanism.  
+There is a discussion session later, but we will explain the mode with a general `half` sampling equation.
+
 If there is only one `[[challengers]]` in scenario file, the scenario will run in relayer-challenger mode.
 The `scenario/challenger.yml` is a scenario for one relayer and one challenger, you may run it with `-v` option to know more about this.
 
@@ -423,6 +427,18 @@ For a honest relayer, the bond entry barrier is `blocks_from_last_comfirm * bond
 For a honest challenger, the bond entry barrier is `log2(first submit block - blocks_from_last_comfirm) * bond` and the max game round is `log2(first submit block - blocks_from_last_comfirm)`.  
 The challenging time of block may be extended with `graceful period` for relayer only.
 The `graceful period` will be calculate by `graceful_function` when implementing.
+
+## Sample function
+Sample function is an equation to provide the block height numbers, that relayer should submit the blocks at that block height.
+Sample function is the key part to prevent the attacker, and also determine the total consuming time in relayer game.
+And it is reasonable for using different sample equation for different target chain with different consensus algorithm.
+Following listed are the design philosophy.  
+- Transparent and with ambiguous part
+  - The sample equation should be clear and transparent for people, and there will be also some ambiguous part provided by random number, such that the attacker need much affair to making fake headers.  
+- Sampling the tail at first
+  - By nature, the **PoW** consensus mechanism, the branch will occur and not greater than a reasonable length, for example 6.  To accelerate the process of relayer verification game, the sample function will label the `N-6` to `N-1` blocks at the second round, such that the nature branch point can be find out as soon as possible.
+- Sampling the blocks near by the confirmed blocks on chain
+  - It is easy to find out the counterfeit block which is near by a confirmed block
 
 ## General parameters
 - `title ` (optional)
