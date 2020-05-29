@@ -14,9 +14,23 @@ All the behavior of relayers, and the parameters are described a in a yaml file.
 You can easily load the scenario file to simulate the result. 
 There are some example scenario files listed in [scenario](./scenario).
 
-There are three different gaming models, one is `relayers-only` mode, another is `relayer-challenger` mode, and the other is `relayer-challengers` mode.
-In `relayers-only` mode, when someone is not accepted the block submitted by other relayer, he should submit the correct block to express his opinion.
+There are four different gaming models: `relayers-only`, `relayer-challenger`, `relayer-challengers`, and `relayers-take-over`.
+
+
+In `relayers-only` mode and `relayers-take-over`, when someone is not accepted the block submitted by other relayer, he should submit the correct block to express his opinion.
 In `relayer-challenger` mode and `relayer-challengers` mode, when someone is not accepted the block submitted by other relayer, he just put a challenge on chain to express his opinion.
+
+Following table shows the main different between these mode.
+
+| Rule \Mode                       | **Relayers-Only**  | **Relayer-Challenger** | **Relayer-Challengers** | **Relayers-Take-Over** |
+|----------------------------------|--------------------|------------------------|-------------------------|------------------------|
+| Only 1 relay submit blocks       |                    | :heavy_check_mark:     | :heavy_check_mark:      |                        |
+| Allow challenger take over       |                    |                        | :heavy_check_mark:      | :heavy_check_mark:     |
+| Once in participate all          | :heavy_check_mark: | :heavy_check_mark:     |                         |                        |
+| Estoppel                         | :heavy_check_mark: |                        |                         |                        |
+| Ensure correct 1st block overall | :heavy_check_mark: |                        |                         |                        |
+| Versus mode                      | 1 vs many          | 1 vs 1                 | 1 vs many               | 1 vs many              |
+| Possible results                 | slash/reward       | slash/reward           | slash/reward/return     | slash/reward/return    |
 
 In all mode, the `sample function` will point out the next one or many blocks, the relayer(s) should submit on it.  
 The `sample function` is subtle, and should different when the target chain using different consensus mechanism.  
