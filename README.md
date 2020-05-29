@@ -458,7 +458,7 @@ that relayers submit the blocks `A` to `E`, and the *Evil* decides to quit the g
              G======3a==========2=========3b=========1===>
 Evil                            B                    A  slash
 Challenger1                                          C  Return
-Challenger2                     D                    C  Return  
+Challenger2                     D                    C  Return  (take over from Challenger1)
 Challenger3                     B                    E  Return  
 ```
 The game is closed and `C` is **not** comfirmed, because of `E`.
@@ -470,7 +470,7 @@ The results are 3 status, following 2 cases help you to know more about this.
              G======3a==========2=========3b=========1===>
 Evil                            B                    A  slash
 Challenger1                                          C  Return
-Challenger2                     D                    C  Return  
+Challenger2                     D                    C  Return   (take over from Challenger1)
 Challenger3                     B                    E  Return  
 Challenger4                                          E  slash
 ```
