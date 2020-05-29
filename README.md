@@ -14,9 +14,23 @@ All the behavior of relayers, and the parameters are described a in a yaml file.
 You can easily load the scenario file to simulate the result. 
 There are some example scenario files listed in [scenario](./scenario).
 
-There are three different gaming models, one is `relayers-only` mode, another is `relayer-challenger` mode, and the other is `relayer-challengers` mode.
-In `relayers-only` mode, when someone is not accepted the block submitted by other relayer, he should submit the correct block to express his opinion.
+There are four different gaming models: `relayers-only`, `relayer-challenger`, `relayer-challengers`, and `relayers-take-over`.
+
+
+In `relayers-only` mode and `relayers-take-over`, when someone is not accepted the block submitted by other relayer, he should submit the correct block to express his opinion.
 In `relayer-challenger` mode and `relayer-challengers` mode, when someone is not accepted the block submitted by other relayer, he just put a challenge on chain to express his opinion.
+
+Following table shows the main different between these mode.
+
+| Rule \Mode                       | **Relayers-Only**  | **Relayer-Challenger** | **Relayer-Challengers** | **Relayers-Take-Over** |
+|----------------------------------|--------------------|------------------------|-------------------------|------------------------|
+| Only 1 relay submit blocks       |                    | :heavy_check_mark:     | :heavy_check_mark:      |                        |
+| Allow challenger take over       |                    |                        | :heavy_check_mark:      | :heavy_check_mark:     |
+| Once in participate all          | :heavy_check_mark: | :heavy_check_mark:     |                         |                        |
+| Estoppel                         | :heavy_check_mark: |                        |                         |                        |
+| Ensure correct 1st block overall | :heavy_check_mark: |                        |                         |                        |
+| Versus mode                      | 1 vs many          | 1 vs 1                 | 1 vs many               | 1 vs many              |
+| Possible results                 | slash/reward       | slash/reward           | slash/reward/return     | slash/reward/return    |
 
 In all mode, the `sample function` will point out the next one or many blocks, the relayer(s) should submit on it.  
 The `sample function` is subtle, and should different when the target chain using different consensus mechanism.  
@@ -431,6 +445,49 @@ For a honest relayer, the bond entry barrier is `blocks_from_last_comfirm * bond
 For a honest challenger, the bond entry barrier is `log2(first submit block - blocks_from_last_comfirm) * bond` and the max game round is `log2(first submit block - blocks_from_last_comfirm)`.  
 The challenging time of block may be extended with `graceful period` for relayer only.
 The `graceful period` will be calculate by `graceful_function` when implementing.
+
+### relayers-take-over mode
+The `relayer-take-over` mode is similar to the `relayer-challengers` mode, and the challenger need to provide header to express the different opinions.
+In this mode the challengers should submit header to prevent the evil challengers to malresponse easy and DoS the system.
+However, there is still no the rule `Once in participate all` for `Estoppel`, so there is some rare case wihtout comfirm block at all.
+
+Here in, the plots is converted from the second scenario (`Evil` submit block on position 2) in `relayer-challengers` mode, 
+that relayers submit the blocks `A` to `E`, and the *Evil* decides to quit the game without response on `3a` and `3b`.
+
+```
+             G======3a==========2=========3b=========1===>
+Evil                            B                    A  slash
+Challenger1                                          C  Return
+Challenger2                     D                    C  Return  (take over from Challenger1)
+Challenger3                     B                    E  Return  
+```
+The game is closed and `C` is **not** comfirmed, because of `E`.
+
+The results are 3 status, following 2 cases help you to know more about this.
+
+**Case 2**
+```
+             G======3a==========2=========3b=========1===>
+Evil                            B                    A  slash
+Challenger1                                          C  Return
+Challenger2                     D                    C  Return   (take over from Challenger1)
+Challenger3                     B                    E  Return  
+Challenger4                                          E  slash
+```
+Challenger2 and Challenger3 beat the Evil.
+Without `Estoppel`, the possible blocks in position 1 are `A`, `C`, `E`.
+There is no rule to eliminate blocks, so there is no comfirm block.
+
+**Case 2**
+```
+             G======3a==========2=========3b=========1===>
+Evil                            B                    A  slash
+Challenger1                                          C  Reward
+Challenger2                     D                    C  Reward
+Challenger3                                          E  slash
+```
+Only Challenger2 beat the Evil, so we can deem the result from Challenger 2 is correct.
+So Challenger1 and Challenger2 got the reward, and the `C` is comfirmed.
 
 ## Sample Function
 Sample function is an equation to provide the block height numbers, that relayer should submit the blocks at that block height.
