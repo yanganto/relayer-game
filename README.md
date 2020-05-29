@@ -20,7 +20,11 @@ In `relayer-challenger` mode and `relayer-challengers` mode, when someone is not
 
 In all mode, the `sample function` will point out the next one or many blocks, the relayer(s) should submit on it.  
 The `sample function` is subtle, and should different when the target chain using different consensus mechanism.  
-There is a discussion session later, but we will explain the mode with a general `half` sampling equation.
+There is a discussion **Sample function** section, but we will explain the mode with a general `half` sampling equation.
+
+There is still a little possibility that the initial submit in from a valid branch chain,
+so there is a stage two in the game, after that the blocks from the initial relayer are verified on chain.
+There is a discussion in **Stage two** section.
 
 If there is only one `[[challengers]]` in scenario file, the scenario will run in relayer-challenger mode.
 The `scenario/challenger.yml` is a scenario for one relayer and one challenger, you may run it with `-v` option to know more about this.
@@ -428,7 +432,7 @@ For a honest challenger, the bond entry barrier is `log2(first submit block - bl
 The challenging time of block may be extended with `graceful period` for relayer only.
 The `graceful period` will be calculate by `graceful_function` when implementing.
 
-## Sample function
+## Sample Function
 Sample function is an equation to provide the block height numbers, that relayer should submit the blocks at that block height.
 Sample function is the key part to prevent the attacker, and also determine the total consuming time in relayer game.
 And it is reasonable for using different sample equation for different target chain with different consensus algorithm.
@@ -440,14 +444,46 @@ Following listed are the design philosophy.
 - Sampling the blocks near by the confirmed blocks on chain
   - It is easy to find out the counterfeit block which is near by a confirmed block
 
-## General parameters
+## Stage Two
+In stage two of the relayer verification game, the nature branch will be solved.
+When a relayer with dispute on chain but all blocks is correct, the challenger or second relayer can ask to open the stage two of the game.
+Here is status when the stage two opening in `relayers-only` mode.
+
+```
+               G==============================nnnn1=====>
+InitialRelayer                                CAAAA
+Relayer2                                      CBBBB
+```
+**C**: is the latested comfirm block
+
+Only the longest validated chain will be accepted in blockchain network.
+Relayer 2 start to provide the chain as long as posible after the point of first submission to open the stage two.
+
+```
+               G==============================nnnn1=====>
+InitialRelayer                                CAAAA
+Relayer2                                      CBBBBbbbb
+```
+
+Then, the initial relayer should provide a longer chain to prove that he is the longest validated chain in the challenge time as following.
+```
+               G==============================nnnn1=====>
+InitialRelayer                                CAAAAaaaaa
+Relayer2                                      CBBBBbbbb
+```
+
+If Relayer2 can still have keep challenge by providing more headers, and so on.
+
+The stage two of game should be rare, because relayer should submit a block already finialized, bute we still design the stage two to solve the branch issue just in case.
+
+## General Parameters
 - `title ` (optional)
   - The title for this scenario will print on the console
 - `F` (optional)
   - The block producing factor for Darwinia / Ethereum
   - For example: 2.0, that means that Darwinia produce 2 blocks and Ethereum produce 1 block.
 
-## Specify functions type
+## Specify Functions Type
 - `challenge_function`
   - Once a relayer submit a header and challenge the time in blocks after the calculated value from challenge function, 
     Darwinia network will deem this header is valided and become a best header.  
@@ -473,7 +509,7 @@ Following listed are the design philosophy.
   - And also it may be that the treasury part is only for the last submit rounds, if the slash never split to the next round
     - the treasury part is from the fee of redeem action, but it will be a debt without limitation in simulation
 
-## Initialize status of Darwinia and Ethereum
+## Initialize Status of Darwinia and Ethereum
 suffix `d`: block difference between last block number relayed on Darwinia, suffix `e`: block difference between last related block number of Ethereum
 - `Dd`(optional)
   - the block difference between last block number relayed on Darwinia, 
