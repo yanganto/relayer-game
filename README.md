@@ -446,6 +446,49 @@ For a honest challenger, the bond entry barrier is `log2(first submit block - bl
 The challenging time of block may be extended with `graceful period` for relayer only.
 The `graceful period` will be calculate by `graceful_function` when implementing.
 
+### relayers-take-over mode
+The `relayer-take-over` mode is similar to the `relayer-challengers` mode, and the challenger need to provide header to express the different opinions.
+In this mode the challengers should submit header to prevent the evil challengers to malresponse easy and DoS the system.
+However, there is still no the rule `Once in participate all` for `Estoppel`, so there is some rare case wihtout comfirm block at all.
+
+Here in, the plots is converted from the second scenario (`Evil` submit block on position 2) in `relayer-challengers` mode, 
+that relayers submit the blocks `A` to `E`, and the *Evil* decides to quick the game without response on `3a` and `3b`.
+
+```
+             G======3a==========2=========3b=========1===>
+Evil                            B                    A  slash
+Challenger1                                          C  Return
+Challenger2                     D                    C  Return  
+Challenger3                     B                    A  Return  
+```
+The game is closed and `C` is **not** comfirmed, because of `A`.
+
+The results are 3 status, following 2 cases help you to know more about this.
+
+**Case 2**
+```
+             G======3a==========2=========3b=========1===>
+Evil                            B                    A  slash
+Challenger1                                          C  Return
+Challenger2                     D                    C  Return  
+Challenger3                     B                    A  Return  
+Challenger4                                          E  slash
+```
+Challenger2 and Challenger3 beat the Evil.
+Without `Estoppel`, the possible blocks in position 1 are `A`, `C`, `E`.
+There is no rule to eliminate blocks, so there is no comfirm block.
+
+**Case 2**
+```
+             G======3a==========2=========3b=========1===>
+Evil                            B                    A  slash
+Challenger1                                          C  Reward
+Challenger2                     D                    C  Reward
+Challenger3                                          E  slash
+```
+Only Challenger2 beat the Evil, so we can deem the result from Challenger 2 is correct.
+So Challenger1 and Challenger2 got the reward, and the `C` is comfirmed.
+
 ## Sample Function
 Sample function is an equation to provide the block height numbers, that relayer should submit the blocks at that block height.
 Sample function is the key part to prevent the attacker, and also determine the total consuming time in relayer game.
