@@ -452,7 +452,7 @@ In this mode the challengers should submit header to prevent the evil challenger
 However, there is still no the rule `Once in participate all` for `Estoppel`, so there is some rare case wihtout comfirm block at all.
 
 Here in, the plots is converted from the second scenario (`Evil` submit block on position 2) in `relayer-challengers` mode, 
-that relayers submit the blocks `A` to `E`, and the *Evil* decides to quick the game without response on `3a` and `3b`.
+that relayers submit the blocks `A` to `E`, and the *Evil* decides to quit the game without response on `3a` and `3b`.
 
 ```
              G======3a==========2=========3b=========1===>
