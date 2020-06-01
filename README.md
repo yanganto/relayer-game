@@ -672,6 +672,8 @@ And it is reasonable for using different sample equation for different target ch
 Following listed are the design philosophy.  
 - Transparent and with ambiguous part
   - The sample equation should be clear and transparent for people, and there will be also some ambiguous part provided by random number, such that the attacker need much affair to making fake headers.  
+  - Once calulate the sample, will reuse the block number returned.  
+    - Take proposal mode for example, if same agree position and same disagree position will get the same sample block number as output
 - Sampling the tail at first
   - By nature, the **PoW** consensus mechanism, the branch will occur and not greater than a reasonable length, for example 6.  To accelerate the process of relayer verification game, the sample function will label the `N-6` to `N-1` blocks at the second round, such that the nature branch point can be find out as soon as possible.
 - Sampling the blocks near by the confirmed blocks on chain
