@@ -17,23 +17,30 @@ All the behavior of relayers, and the parameters are described a in a yaml file.
 You can easily load the scenario file to simulate the result. 
 There are some example scenario files listed in [scenario](./scenario).
 
-There are four different gaming models: `relayers-only`, `relayer-challenger`, `relayer-challengers`, and `relayers-take-over`.
+There are five different gaming models: `relayers-only`, `relayer-challenger`, `relayer-challengers`, `relayers-take-over`, `proposal`.
 
 
-In `relayers-only` mode and `relayers-take-over`, when someone is not accepted the block submitted by other relayer, he should submit the correct block to express his opinion.
+In `relayers-only` mode, `relayers-take-over` and `proposal`, when someone is not accepted the block submitted by other relayer, he should submit the correct block to express his opinion.
 In `relayer-challenger` mode and `relayer-challengers` mode, when someone is not accepted the block submitted by other relayer, he just put a challenge on chain to express his opinion.
+
 
 Following table shows the main different between these mode.
 
-| Rule \Mode                       | **Relayers-Only**  | **Relayer-Challenger** | **Relayer-Challengers** | **Relayers-Take-Over** |
-|----------------------------------|--------------------|------------------------|-------------------------|------------------------|
-| Only 1 relay submit blocks       |                    | :heavy_check_mark:     | :heavy_check_mark:      |                        |
-| Allow challenger take over       |                    |                        | :heavy_check_mark:      | :heavy_check_mark:     |
-| Once in participate all          | :heavy_check_mark: | :heavy_check_mark:     |                         |                        |
-| Estoppel                         | :heavy_check_mark: |                        |                         |                        |
-| Ensure correct 1st block overall | :heavy_check_mark: |                        |                         |                        |
-| Versus mode                      | 1 vs many          | 1 vs 1                 | 1 vs many               | 1 vs many              |
-| Possible results                 | slash/reward       | slash/reward           | slash/reward/return     | slash/reward/return    |
+| Rule \Mode                       | **Relayers-Only**  | **Relayer-Challenger** | **Relayer-Challengers** | **Relayers-Take-Over** | **Proposal**       |
+|----------------------------------|--------------------|------------------------|-------------------------|------------------------|--------------------|
+| Only 1 relay submit blocks       |                    | :heavy_check_mark:     | :heavy_check_mark:      |                        |                    |
+| Allow challenger take over       |                    |                        | :heavy_check_mark:      | :heavy_check_mark:     | :heavy_check_mark: |
+| initial relayer can take over    |                    |                        |                         |                        | :heavy_check_mark: |
+| Once in participate all          | :heavy_check_mark: | :heavy_check_mark:     |                         |                        |                    |
+| Estoppel                         | :heavy_check_mark: |                        |                         |                        |                    |
+| Ensure correct 1st block overall | :heavy_check_mark: |                        |                         | :white_check_mark:     | :white_check_mark: | 
+| Versus mode                      | 1 vs many          | 1 vs 1                 | 1 vs many               | 1 vs many              | many vs many       |
+| Possible results                 | slash/reward       | slash/reward           | slash/reward/return     | slash/reward/return    | slash/reward       |
+
+| Label              | Meaning                        |
+|--------------------|--------------------------------|
+| :heavy_check_mark: | in any condition               |
+| :white_check_mark: | in most condition (Optimistic) |
 
 In all mode, the `sample function` will point out the next one or many blocks, the relayer(s) should submit on it.  
 The `sample function` is subtle, and should different when the target chain using different consensus mechanism.  
@@ -473,17 +480,17 @@ The results are 3 status, following 2 cases help you to know more about this.
              G======3a==========2=========3b=========1===>
 Evil                            b                    a      
 Challenger1                                          c     
-Challenger2                     d                    c    
-Challenger3                                          e   
+Challenger2                                          e   
+Challenger3                     d                    c    
 ```
-Only Challenger2 beat the Evil, so we can deem the result from Challenger 2 is correct.
-So Challenger1 and Challenger2 got the reward, and the `c` is confirmed as following plot.
+Only Challenger3 beat the Evil, so we can deem the result from Challenger 3 is correct.
+So Challenger1 and Challenger3 got the reward, and the `c` is confirmed as following plot.
 ```
              G======3a==========2=========3b=========1===>
 Evil                            -                    -      Slash
 Challenger1                                          C      Reward
-Challenger2                     C                    C      Reward
-Challenger3                                          -      Slash
+Challenger2                                          -      Slash
+Challenger3                     C                    C      Reward
 ```
 
 **Case 2**
@@ -548,9 +555,112 @@ Challenger2                     -                    -      Return   (take over 
 Challenger3                                          -      Return
 Challenger4                     -                    -      Return   (take over from Challenger3)
 ```
-This is the worst case for this mode, nothing is confirmed.
+
+#### Conclusion of relayer-take-over mode
+Case 2  is the worst case for this mode, nothing is confirmed, and not bad block relay on chain.
 However, in optimistic game, there is always a good guy in each round.  
 Such that the good guy will return in position `3a` or `3b` to beat Challenger2 or Challenger4.
+
+### Proposal mode
+In the `relayer-take-over` mode, the take over only happened on challengers, but not the initial relayer.
+In proposal mode, each submit from relayer is a proposal, anyone can against or take-over each other.
+
+Consider the Case 1 of `relayer-take-over` mode.
+```
+                 G======3a==========2=========3b=========1===>
+Initial Relayer                     b                    a      
+Challenger1                                              c     
+Challenger2                         d                    c    
+Challenger3                                              e   
+```
+
+If the Initial Relayer is not evil, but he run into network issues.
+The take over only allow for Challenger is not fair for the Initial Relayer.
+So the same case in proposal mode it will become following table. 
+
+Note: 
+  - following position is block number, the content in brackets is block info help you understand.
+  - the content in brackets for Proposal is propsing level
+
+| Proposal  | Level | Chain Status                                    | **Against** | Disagree        | Agree            | **Take Over** | Sample Added     | Allow Samples |
+|-----------|-------|-------------------------------------------------|-------------|-----------------|------------------|---------------|------------------|---------------|
+|           |       | `G======3a==========2=========3b=========1===>` |             |                 |                  |               |                  |               |
+| Proposal1 | 1     | `                                        a    ` | None        | None            | position 1(self) | None          | None             | 1             |
+| Proposal2 | 1     | `                                        c    ` | Proposal1   | position 1(a)   | position G       | None          | Position 2       | 1, 2          |
+| Proposal3 | 1     | `                                        e    ` | Proposal1   | position 1(a,c) | position G       | None          | reuse Position 2 | 1, 2, 3a ,3b  |
+| Proposal4 | 2     | `                   b                    a    ` | Proposal2   | position 1(c)   | position 2(self) | Proposal1 (1) | Position 3b      | 1, 2, 3b      |
+| Proposal5 | 2     | `                   d                    c    ` | Proposal4   | position 2(b)   | position G       | Proposal2 (1) | Position 3a      | 1, 2, 3a, 3b  |
+
+When every submit become a proposal, the good guy can take over the honest proposal and again other lie proposals.
+The sample function takes 2 parameters(position 1 and position G) and return the position 2, which is with some random effect.
+When Proposal2 submitting on chain, the position 2 will be calculated.  
+Because there is no consensus on position 1, he can not say he agree on posiion 1.
+There is only one relay block on position 2, so he can say agree on position 2.
+After position 2 is determined, Proposal 5 still get the same positon for position 2.
+When Proposal 3 submiting on chain the position 3a will be calculated.
+Also, when Proposal 4 submiting on chain the position 3a and 3b will be calculate
+
+
+Here in, a guy disagree Proposal4 may submit Proposal 6, and another guy disagree Proposal6 as following
+| Proposal  | Level | Chain Status                                     | **Against** | Disagree       | Agree             | **Take Over** | Sample Added | Allow Samples        |
+|-----------|-------|--------------------------------------------------|-------------|----------------|-------------------|---------------|--------------|----------------------|
+|           |       | `G==4a==3a====4b====2=========3b==========1===>` |             |                |                   |               |              |                      |
+| Proposal6 | 3     | `       f           b                     a    ` | Proposal5   | position 2(d)  | position 3a(self) | Proposal4(2)  | Position 4b  | 1, 2, 3a ,3b, 4b     |
+| Proposal7 | 3     | `       g           b                     a    ` | Proposal6   | position 3a(f) | position G        | Proposal4(2)  | Position 4a  | 1, 2, 3a ,3b, 4a, 4b |
+
+
+On ther other hand, a guy disagree Proposal3 may submit Proposal 6, and another guy disagree Proposal6  as following
+| Proposal  | Level | Chain Status                                     | **Against** | Disagree        | Agree             | **Take Over** | Sample Added | Allow Samples        |
+|-----------|-------|--------------------------------------------------|-------------|-----------------|-------------------|---------------|--------------|----------------------|
+|           |       | `G======3a==========2====4c===3b====4d====1===>` |             |                 |                   |               |              |                      |
+| Proposal6 | 3     | `                   d         f           c    ` | Proposal4   | position 1(a,e) | position 3b(self) | Proposal5(2)  | Position 4d  | 1, 2, 3a ,3b, 4d     |
+| Proposal7 | 3     | `                   d         g           c    ` | Proposal6   | position 3b(f)  | position 2(d)     | Proposal5(2)  | Position 4c  | 1, 2, 3a ,3b, 4c, 4d |
+
+
+If the blocks of proposals in the **Allow Samples**, the proposals are in the same game, and one proposal submitting only add one or zero sample.
+
+### Pseudo code of proposal mode
+Here is the basic material for proposing for a initial relayer
+- provide a **block**, not exist on chain and not in allow samples
+
+Here is the basic material to propose for a relayer (not initial) find out a evil proposal
+- provide a **block** in allow samples, **against** proposal,
+- if the level of proposal greater than 1, the proposal (level n) should **take over** the proposal with level (n-1)
+
+Here is the pseudo code on chain to find out the disagree postion and the agree position
+- find out the agree position and the disagree position
+```
+if self position first on chain, 
+  agree self.position, 
+  disagree smallest_and_greater_than_self(recursive on the position of against proposal and its take over proposals)
+else 
+  agree biggest_and_smaller_than_self(recursive on the position of take over proposal and its take over proposal, and G)
+  disagree against_proposal.position
+```
+- add a challenge_time for the proposal
+
+
+```
+If current block is greater the challenge_time of the largest_level_proposal
+
+if largest_level_proposal conflict the block confirm on chain,
+  slash the proposal into treasury
+
+let correct_proposal = largest_level_proposal 
+
+while correct_proposal:  
+  confirm correct_proposal.position
+  slash correct_proposal.against as reward
+  del correct_proposal.against
+  next_proposal = correct_proposal.take_over
+  del correct_proposal
+```
+
+### Conclusion of proposal mode
+Base on optimistic condition, there is alwasys a good relayer submit a correct proposal on each round.
+So the proposal mode, provide a `many-to-many` game, it provided a system let honest guys take over each other.
+Besides, the a comfirm block can slash more than one evil proposals provids a better game for honest relayer.
+
 
 ## Sample Function
 Sample function is an equation to provide the block height numbers, that relayer should submit the blocks at that block height.
