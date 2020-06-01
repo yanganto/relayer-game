@@ -633,34 +633,31 @@ Here is the basic material to propose for a relayer (not initial) find out a evi
 - provide a **block** in allow samples, **against** proposal,
 - if the level of proposal greater than 1, the proposal (level n) should **take over** the proposal with level (n-1)
 
-Here is the pseudo code on chain to find out the disagree postion and the agree position
+Here is the pseudo code on rpc handler of chain to find out the disagree postion and the agree position
 - find out the agree position and the disagree position
-```
-if self position first on chain, 
-  agree self.position, 
-  disagree smallest_and_greater_than_self(recursive on the position of against proposal and its take over proposals)
-else 
-  agree biggest_and_smaller_than_self(recursive on the position of take over proposal and its take over proposal, and G)
-  disagree against_proposal.position
-```
+> if self position first on chain  
+> &emsp;agree self.position  
+> &emsp;disagree smallest_and_greater_than_self(recursive on the position of against proposal and its take over proposals)  
+> else  
+> &emsp;agree biggest_and_smaller_than_self(recursive on the position of take over proposal and its take over proposal, and G)  
+> &emsp;disagree against_proposal.position  
 - add a challenge_time for the proposal
 
 
-```
+Here is the pseudo code for the offchain worker on chain  
 If current block is greater the challenge_time of the largest_level_proposal
-
-if largest_level_proposal conflict the block confirm on chain,
-  slash the proposal into treasury
-
-let correct_proposal = largest_level_proposal 
-
-while correct_proposal:  
-  confirm correct_proposal.position
-  slash correct_proposal.against as reward
-  del correct_proposal.against
-  next_proposal = correct_proposal.take_over
-  del correct_proposal
-```
+> 
+> if largest_level_proposal conflict the block confirm on chain,
+> &emsp;slash the proposal into treasury
+> 
+> let correct_proposal = largest_level_proposal 
+> 
+> while correct_proposal:  
+> &emsp;confirm correct_proposal.position
+> &emsp;slash correct_proposal.against as reward
+> &emsp;del correct_proposal.against
+> &emsp;next_proposal = correct_proposal.take_over
+> &emsp;del correct_proposal
 
 ### Conclusion of proposal mode
 Base on optimistic condition, there is alwasys a good relayer submit a correct proposal on each round.
