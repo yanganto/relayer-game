@@ -582,14 +582,16 @@ Note:
   - following position is block number, the content in brackets is block info help you understand.
   - the content in brackets for Proposal is propsing level
 
-| Proposal(Level) | Chain Status                                        | **Against** | Disagree        | Agree            | **Take Over** | Sample Added     | Allow Samples |
-|-----------------|-----------------------------------------------------|-------------|-----------------|------------------|---------------|------------------|---------------|
-|                 | ```G======3a==========2=========3b=========1===>``` |             |                 |                  |               |                  |               |
-| Proposal1(1)    | ```                                        a    ``` | None        | None            | position 1(self) | None          | None             | 1             |
-| Proposal2(1)    | ```                                        c    ``` | Proposal1   | position 1(a)   | position G       | None          | Position 2       | 1, 2          |
-| Proposal3(1)    | ```                                        e    ``` | Proposal1   | position 1(a,c) | position G       | None          | reuse Position 2 | 1, 2, 3a ,3b  |
-| Proposal4(2)    | ```                   b                    a    ``` | Proposal2   | position 1(c)   | position 2(self) | Proposal1 (1) | Position 3b      | 1, 2, 3b      |
-| Proposal5(2)    | ```                   d                    c    ``` | Proposal4   | position 2(b)   | position G       | Proposal2 (1) | Position 3a      | 1, 2, 3a, 3b  |
+```
+| Proposal(Level) | Chain Status                                  | **Against** | Disagree        | Agree            | **Take Over** | Sample Added     | Allow Samples |
+|-----------------|-----------------------------------------------|-------------|-----------------|------------------|---------------|------------------|---------------|
+|                 | G======3a==========2=========3b=========1===> |             |                 |                  |               |                  |               |
+| Proposal1(1)    |                                         a     | None        | None            | position 1(self) | None          | None             | 1             |
+| Proposal2(1)    |                                         c     | Proposal1   | position 1(a)   | position G       | None          | Position 2       | 1, 2          |
+| Proposal3(1)    |                                         e     | Proposal1   | position 1(a,c) | position G       | None          | reuse Position 2 | 1, 2, 3a ,3b  |
+| Proposal4(2)    |                    b                    a     | Proposal2   | position 1(c)   | position 2(self) | Proposal1 (1) | Position 3b      | 1, 2, 3b      |
+| Proposal5(2)    |                    d                    c     | Proposal4   | position 2(b)   | position G       | Proposal2 (1) | Position 3a      | 1, 2, 3a, 3b  |
+```
 
 When every submit become a proposal, the good guy can take over the honest proposal and again other lie proposals.
 The sample function takes 2 parameters(position 1 and position G) and return the position 2, which is with some random effect.
@@ -602,19 +604,23 @@ Also, when Proposal 4 submiting on chain the position 3a and 3b will be calculat
 
 
 Here in, a guy disagree Proposal4 may submit Proposal 6, and another guy disagree Proposal6 as following
-| Proposal(Level) | Chain Status                                         | **Against** | Disagree       | Agree             | **Take Over** | Sample Added | Allow Samples        |
-|-----------------|------------------------------------------------------|-------------|----------------|-------------------|---------------|--------------|----------------------|
-|                 | ```G==4a==3a====4b====2=========3b==========1===>``` |             |                |                   |               |              |                      |
-| Proposal6(3)    | ```       f           b                     a    ``` | Proposal5   | position 2(d)  | position 3a(self) | Proposal4(2)  | Position 4b  | 1, 2, 3a ,3b, 4b     |
-| Proposal7 (3)   | ```       g           b                     a    ``` | Proposal6   | position 3a(f) | position G        | Proposal4(2)  | Position 4a  | 1, 2, 3a ,3b, 4a, 4b |
+```
+| Proposal(Level) | Chain Status                                   | **Against** | Disagree       | Agree             | **Take Over** | Sample Added | Allow Samples        |
+|-----------------|------------------------------------------------|-------------|----------------|-------------------|---------------|--------------|----------------------|
+|                 | G==4a==3a====4b====2=========3b==========1===> |             |                |                   |               |              |                      |
+| Proposal6(3)    |        f           b                     a     | Proposal5   | position 2(d)  | position 3a(self) | Proposal4(2)  | Position 4b  | 1, 2, 3a ,3b, 4b     |
+| Proposal7 (3)   |        g           b                     a     | Proposal6   | position 3a(f) | position G        | Proposal4(2)  | Position 4a  | 1, 2, 3a ,3b, 4a, 4b |
+```
 
 
 On ther other hand, a guy disagree Proposal3 may submit Proposal 6, and another guy disagree Proposal6  as following
-| Proposal(Level) | Chain Status                                         | **Against** | Disagree        | Agree             | **Take Over** | Sample Added | Allow Samples        |
-|-----------------|------------------------------------------------------|-------------|-----------------|-------------------|---------------|--------------|----------------------|
-|                 | ```G======3a==========2====4c===3b====4d====1===>``` |             |                 |                   |               |              |                      |
-| Proposal6(3)    | ```                   d         f           c    ``` | Proposal4   | position 1(a,e) | position 3b(self) | Proposal5(2)  | Position 4d  | 1, 2, 3a ,3b, 4d     |
-| Proposal7(3)    | ```                   d         g           c    ``` | Proposal6   | position 3b(f)  | position 2(d)     | Proposal5(2)  | Position 4c  | 1, 2, 3a ,3b, 4c, 4d |
+```
+| Proposal(Level) | Chain Status                                   | **Against** | Disagree        | Agree             | **Take Over** | Sample Added | Allow Samples        |
+|-----------------|------------------------------------------------|-------------|-----------------|-------------------|---------------|--------------|----------------------|
+|                 | G======3a==========2====4c===3b====4d====1===> |             |                 |                   |               |              |                      |
+| Proposal6(3)    |                    d         f           c     | Proposal4   | position 1(a,e) | position 3b(self) | Proposal5(2)  | Position 4d  | 1, 2, 3a ,3b, 4d     |
+| Proposal7(3)    |                    d         g           c     | Proposal6   | position 3b(f)  | position 2(d)     | Proposal5(2)  | Position 4c  | 1, 2, 3a ,3b, 4c, 4d |
+```
 
 
 If the blocks of proposals in the **Allow Samples**, the proposals are in the same game, and one proposal submitting only add one or zero sample.
