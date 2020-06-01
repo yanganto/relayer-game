@@ -609,7 +609,7 @@ Proposal(Level)|Chain Status                                  |**Against**|Disag
 ---------------|----------------------------------------------|-----------|--------------|-----------------|-------------|------------|--------------------
                |G==4a==3a====4b====2=========3b==========1===>|           |              |                 |             |            |                    
 Proposal6(3)   |       f           b                     a    |Proposal5  |position 2(d) |position 3a(self)|Proposal4(2) |Position 4b |1, 2, 3a ,3b, 4b    
-Proposal7 (3)  |       g           b                     a    |Proposal6  |position 3a(f)|position G       |Proposal4(2) |Position 4a |1, 2, 3a ,3b, 4a, 4b
+Proposal7(3)   |       g           b                     a    |Proposal6  |position 3a(f)|position G       |Proposal4(2) |Position 4a |1, 2, 3a ,3b, 4a, 4b
 ```
 
 
