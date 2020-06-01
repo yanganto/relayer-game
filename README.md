@@ -456,23 +456,23 @@ that relayers submit the blocks `A` to `E`, and the *Evil* decides to quit the g
 
 ```
              G======3a==========2=========3b=========1===>
-Evil                            B                    A  slash
-Challenger1                                          C  Return
-Challenger2                     D                    C  Return  (take over from Challenger1)
-Challenger3                     B                    E  Return  
+Evil                            B                    A      Slash
+Challenger1                                          C      Return
+Challenger2                     D                    C      Return  (take over from Challenger1)
+Challenger3                     B                    E      Return  
 ```
 The game is closed and `C` is **not** comfirmed, because of `E`.
 
 The results are 3 status, following 2 cases help you to know more about this.
 
-**Case 2**
+**Case 1**
 ```
              G======3a==========2=========3b=========1===>
-Evil                            B                    A  slash
-Challenger1                                          C  Return
-Challenger2                     D                    C  Return   (take over from Challenger1)
-Challenger3                     B                    E  Return  
-Challenger4                                          E  slash
+Evil                            B                    A      Slash
+Challenger1                                          C      Return
+Challenger2                     D                    C      Return   (take over from Challenger1)
+Challenger3                     B                    E      Return  
+Challenger4                                          E      Slash
 ```
 Challenger2 and Challenger3 beat the Evil.
 Without `Estoppel`, the possible blocks in position 1 are `A`, `C`, `E`.
@@ -481,10 +481,10 @@ There is no rule to eliminate blocks, so there is no comfirm block.
 **Case 2**
 ```
              G======3a==========2=========3b=========1===>
-Evil                            B                    A  slash
-Challenger1                                          C  Reward
-Challenger2                     D                    C  Reward
-Challenger3                                          E  slash
+Evil                            B                    A      Slash
+Challenger1                                          C      Reward
+Challenger2                     D                    C      Reward
+Challenger3                                          E      Slash
 ```
 Only Challenger2 beat the Evil, so we can deem the result from Challenger 2 is correct.
 So Challenger1 and Challenger2 got the reward, and the `C` is comfirmed.
