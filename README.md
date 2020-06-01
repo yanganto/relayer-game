@@ -452,38 +452,45 @@ In this mode the challengers should submit header to prevent the evil challenger
 However, there is still no the rule `Once in participate all` for `Estoppel`, so there is some rare case wihtout comfirm block at all.
 
 Here in, the plots is converted from the second scenario (`Evil` submit block on position 2) in `relayer-challengers` mode, 
-that relayers submit the blocks `A` to `E`, and the Evil decides to quit the game without response on `3a` and `3b`.
+that relayers submit the blocks `a` to `e`, and the Evil decides to quit the game without response on `3a` and `3b`.
 
 ```
              G======3a==========2=========3b=========1===>
-Evil                            B                    A      Slash
-Challenger1                                          C      Return
-Challenger2                     D                    C      Return  (take over from Challenger1)
-Challenger3                     B                    E      Return  
+Evil                            b                    a      Slash
+Challenger1                                          c      Return
+Challenger2                     d                    c      Return  (take over from Challenger1)
+Challenger3                     b                    e      Return  
 ```
-The game is closed and `C` is **not** confirmed, because of `E`.
+The game is closed and `c` is **not** confirmed, because of `e`.
 
 The results are 3 status, following 2 cases help you to know more about this.
 
 **Case 1**
 ```
              G======3a==========2=========3b=========1===>
-Evil                            B                    A      Slash
-Challenger1                                          C      Reward
-Challenger2                     D                    C      Reward
-Challenger3                                          E      Slash
+Evil                            b                    a      
+Challenger1                                          c     
+Challenger2                     d                    c    
+Challenger3                                          e   
 ```
 Only Challenger2 beat the Evil, so we can deem the result from Challenger 2 is correct.
-So Challenger1 and Challenger2 got the reward, and the `C` is confirmed.
+So Challenger1 and Challenger2 got the reward, and the `c` is confirmed as following plot.
+```
+             G======3a==========2=========3b=========1===>
+Evil                            -                    -      Slash
+Challenger1                                          C      Reward
+Challenger2                     C                    C      Reward
+Challenger3                                          -      Slash
+```
 
 **Case 2**
 ```
              G======3a==========2=========3b=========1===>
-Evil                            B                    A      Slash
-Challenger1                                          C      Return
-Challenger2                     D                    C      Return   (take over from Challenger1)
-Challenger3                                          E      Return
-Challenger4                     B                    E      Return   (take over from Challenger3)
+Evil                            b                    a      Slash
+Challenger1                                          c      Return
+Challenger2                     d                    c      Return   (take over from Challenger1)
+Challenger3                                          e      Return
+Challenger4                     b                    e      Return   (take over from Challenger3)
 ```
 Challenger2 and Challenger4 beat the Evil.
 Without `Once in participate all` and `Estoppel`, the possible blocks in position 1 are `C`, `E`.
@@ -529,9 +536,18 @@ Challenger3                                          L      Return
 Challenger4                     L                    L      Return   (take over from Challenger3)
 ```
 
-Therefor, if the game rarely stop as the status show in the **Case 2**, we just slash Evil and return the bond for challengers.
+Therefor, if the game rarely stop as the status show in the **Case 2**, we just slash Evil and return the bond for challengers as following plot.
+```
+             G======3a==========2=========3b=========1===>
+Evil                            -                    -      Slash
+Challenger1                                          -      Return
+Challenger2                     -                    -      Return   (take over from Challenger1)
+Challenger3                                          -      Return
+Challenger4                     -                    -      Return   (take over from Challenger3)
+```
+This is the worst case for this mode, nothing is confirmed.
 However, in optimistic game, there is always a good guy in each round.  
-Such that the good guy will retrun in position `3a` or `3b` to beat Challenger2 or Challenger4.
+Such that the good guy will return in position `3a` or `3b` to beat Challenger2 or Challenger4.
 
 ## Sample Function
 Sample function is an equation to provide the block height numbers, that relayer should submit the blocks at that block height.
@@ -552,8 +568,8 @@ Here is status when the stage two opening in `relayers-only` mode.
 
 ```
                G==============================nnnn1=====>
-InitialRelayer                                CAAAA
-Relayer2                                      CBBBB
+InitialRelayer                                Caaaa
+Relayer2                                      Cbbbb
 ```
 **C**: is the latested comfirm block
 
@@ -562,15 +578,15 @@ Relayer 2 start to provide the chain as long as posible after the point of first
 
 ```
                G==============================nnnn1=====>
-InitialRelayer                                CAAAA
-Relayer2                                      CBBBBbbbb
+InitialRelayer                                Caaaa
+Relayer2                                      Cbbbbbbbb
 ```
 
 Then, the initial relayer should provide a longer chain to prove that he is the longest validated chain in the challenge time as following.
 ```
                G==============================nnnn1=====>
-InitialRelayer                                CAAAAaaaaa
-Relayer2                                      CBBBBbbbb
+InitialRelayer                                Caaaaaaaaa
+Relayer2                                      Cbbbbbbbb
 ```
 
 If Relayer2 can still have keep challenge by providing more headers, and so on.
