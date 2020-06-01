@@ -1,12 +1,15 @@
 # Relayer Game
 [![Build Status](https://travis-ci.com/yanganto/s3handler.svg?branch=master)](https://travis-ci.com/yanganto/relayer-game)
 
-`refit` is a **re**layer **f**ee **i**nference **t**ool to simulate and optimized the game for relayers in Darwinia Network.  
+This project have serveral tools.  Read this document to know there are more possible to do a relayer game,
+and there are the tools help you to know more about this.
+
+- `refit` is a **re**layer **f**ee **i**nference **t**ool to simulate and optimized the game for relayers in Darwinia Network.  
 In order to ban the replay who lies, and also we want to help make thing finalize as soon as possible, 
 this tool can easily to change three important equations and load from different scenario to simulate the relayer game.  
 Such that you can easily to tune tha parameters.
 
-The `chain`, `relayer`, `challenger` in `/scenario/<model>`folder can read the scenario file and simulate with more detail.
+- The `chain`, `relayer`, `challenger` in `/scenario/<model>`folder can read the scenario file and simulate with more detail.
 
 ## Scenario
 In this tool we assume the target chain is Ethereum, however you can simulate different chain by changing parameters.
@@ -452,42 +455,102 @@ In this mode the challengers should submit header to prevent the evil challenger
 However, there is still no the rule `Once in participate all` for `Estoppel`, so there is some rare case wihtout comfirm block at all.
 
 Here in, the plots is converted from the second scenario (`Evil` submit block on position 2) in `relayer-challengers` mode, 
-that relayers submit the blocks `A` to `E`, and the *Evil* decides to quit the game without response on `3a` and `3b`.
+that relayers submit the blocks `a` to `e`, and the Evil decides to quit the game without response on `3a` and `3b`.
 
 ```
              G======3a==========2=========3b=========1===>
-Evil                            B                    A      Slash
-Challenger1                                          C      Return
-Challenger2                     D                    C      Return  (take over from Challenger1)
-Challenger3                     B                    E      Return  
+Evil                            b                    a      Slash
+Challenger1                                          c      Return
+Challenger2                     d                    c      Return  (take over from Challenger1)
+Challenger3                     b                    e      Return  
 ```
-The game is closed and `C` is **not** comfirmed, because of `E`.
+The game is closed and `c` is **not** confirmed, because of `e`.
 
 The results are 3 status, following 2 cases help you to know more about this.
 
 **Case 1**
 ```
              G======3a==========2=========3b=========1===>
-Evil                            B                    A      Slash
-Challenger1                                          C      Return
-Challenger2                     D                    C      Return   (take over from Challenger1)
-Challenger3                     B                    E      Return  
-Challenger4                                          E      Slash
+Evil                            b                    a      
+Challenger1                                          c     
+Challenger2                     d                    c    
+Challenger3                                          e   
 ```
-Challenger2 and Challenger3 beat the Evil.
-Without `Estoppel`, the possible blocks in position 1 are `A`, `C`, `E`.
-There is no rule to eliminate blocks, so there is no comfirm block.
+Only Challenger2 beat the Evil, so we can deem the result from Challenger 2 is correct.
+So Challenger1 and Challenger2 got the reward, and the `c` is confirmed as following plot.
+```
+             G======3a==========2=========3b=========1===>
+Evil                            -                    -      Slash
+Challenger1                                          C      Reward
+Challenger2                     C                    C      Reward
+Challenger3                                          -      Slash
+```
 
 **Case 2**
 ```
              G======3a==========2=========3b=========1===>
-Evil                            B                    A      Slash
-Challenger1                                          C      Reward
-Challenger2                     D                    C      Reward
-Challenger3                                          E      Slash
+Evil                            b                    a      Slash
+Challenger1                                          c      Return
+Challenger2                     d                    c      Return   (take over from Challenger1)
+Challenger3                                          e      Return
+Challenger4                     b                    e      Return   (take over from Challenger3)
 ```
-Only Challenger2 beat the Evil, so we can deem the result from Challenger 2 is correct.
-So Challenger1 and Challenger2 got the reward, and the `C` is comfirmed.
+Challenger2 and Challenger4 beat the Evil.
+Without `Once in participate all` and `Estoppel`, the possible blocks in position 1 are `C`, `E`.
+`A` is eliminated, because the initial relayer having responsibility to keep relay the sampling blocks.
+There is no rule to eliminate blocks `C` or `E`, so there is no confirm block.
+
+And let us using Honest(`H`) and Lie(`L`) to show the four possible sub-cases.
+
+**Case 2-1**
+```
+             G======3a==========2=========3b=========1===>
+Evil                            H                    L      Slash
+Challenger1                                          H      Return
+Challenger2                     L                    H      Return   (take over from Challenger1)
+Challenger3                                          L      Return
+Challenger4                     H                    L      Return   (take over from Challenger3)
+```
+**Case 2-2**
+```
+             G======3a==========2=========3b=========1===>
+Evil                            H                    L      Slash
+Challenger1                                          L      Return
+Challenger2                     L                    L      Return   (take over from Challenger1)
+Challenger3                                          H      Return
+Challenger4                     H                    H      Return   (take over from Challenger3)
+```
+**Case 2-3**
+```
+             G======3a==========2=========3b=========1===>
+Evil                            L                    L      Slash
+Challenger1                                          L      Return
+Challenger2                     H                    L      Return   (take over from Challenger1)
+Challenger3                                          H      Return
+Challenger4                     L                    H      Return   (take over from Challenger3)
+```
+**Case 2-4**
+```
+             G======3a==========2=========3b=========1===>
+Evil                            L                    L      Slash
+Challenger1                                          H      Return
+Challenger2                     H                    H      Return   (take over from Challenger1)
+Challenger3                                          L      Return
+Challenger4                     L                    L      Return   (take over from Challenger3)
+```
+
+Therefor, if the game rarely stop as the status show in the **Case 2**, we just slash Evil and return the bond for challengers as following plot.
+```
+             G======3a==========2=========3b=========1===>
+Evil                            -                    -      Slash
+Challenger1                                          -      Return
+Challenger2                     -                    -      Return   (take over from Challenger1)
+Challenger3                                          -      Return
+Challenger4                     -                    -      Return   (take over from Challenger3)
+```
+This is the worst case for this mode, nothing is confirmed.
+However, in optimistic game, there is always a good guy in each round.  
+Such that the good guy will return in position `3a` or `3b` to beat Challenger2 or Challenger4.
 
 ## Sample Function
 Sample function is an equation to provide the block height numbers, that relayer should submit the blocks at that block height.
@@ -508,8 +571,8 @@ Here is status when the stage two opening in `relayers-only` mode.
 
 ```
                G==============================nnnn1=====>
-InitialRelayer                                CAAAA
-Relayer2                                      CBBBB
+InitialRelayer                                Caaaa
+Relayer2                                      Cbbbb
 ```
 **C**: is the latested comfirm block
 
@@ -518,15 +581,15 @@ Relayer 2 start to provide the chain as long as posible after the point of first
 
 ```
                G==============================nnnn1=====>
-InitialRelayer                                CAAAA
-Relayer2                                      CBBBBbbbb
+InitialRelayer                                Caaaa
+Relayer2                                      Cbbbbbbbb
 ```
 
 Then, the initial relayer should provide a longer chain to prove that he is the longest validated chain in the challenge time as following.
 ```
                G==============================nnnn1=====>
-InitialRelayer                                CAAAAaaaaa
-Relayer2                                      CBBBBbbbb
+InitialRelayer                                Caaaaaaaaa
+Relayer2                                      Cbbbbbbbb
 ```
 
 If Relayer2 can still have keep challenge by providing more headers, and so on.
