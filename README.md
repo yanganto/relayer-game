@@ -1,12 +1,15 @@
 # Relayer Game
 [![Build Status](https://travis-ci.com/yanganto/s3handler.svg?branch=master)](https://travis-ci.com/yanganto/relayer-game)
 
-`refit` is a **re**layer **f**ee **i**nference **t**ool to simulate and optimized the game for relayers in Darwinia Network.  
+This project have serveral tools.  Read this document to know there are more possible to do a relayer game,
+and there are the tools help you to know more about this.
+
+- `refit` is a **re**layer **f**ee **i**nference **t**ool to simulate and optimized the game for relayers in Darwinia Network.  
 In order to ban the replay who lies, and also we want to help make thing finalize as soon as possible, 
 this tool can easily to change three important equations and load from different scenario to simulate the relayer game.  
 Such that you can easily to tune tha parameters.
 
-The `chain`, `relayer`, `challenger` in `/scenario/<model>`folder can read the scenario file and simulate with more detail.
+- The `chain`, `relayer`, `challenger` in `/scenario/<model>`folder can read the scenario file and simulate with more detail.
 
 ## Scenario
 In this tool we assume the target chain is Ethereum, however you can simulate different chain by changing parameters.
