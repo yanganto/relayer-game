@@ -588,9 +588,9 @@ Proposal(Level)|Chain Status                                 |**Against**|Disagr
                |G======3a==========2=========3b=========1===>|           |               |                |             |                |             
 Proposal1(1)   |                                        a    |None       |None           |position 1(self)|None         |None            |1            
 Proposal2(1)   |                                        c    |Proposal1  |position 1(a)  |position G      |None         |Position 2      |1, 2         
-Proposal3(1)   |                                        e    |Proposal1  |position 1(a,c)|position G      |None         |reuse Position 2|1, 2, 3a ,3b 
-Proposal4(2)   |                   b                    a    |Proposal2  |position 1(c)  |position 2(self)|Proposal1 (1)|Position 3b     |1, 2, 3b     
-Proposal5(2)   |                   d                    c    |Proposal4  |position 2(b)  |position G      |Proposal2 (1)|Position 3a     |1, 2, 3a, 3b 
+Proposal3(2)   |                   b                    a    |Proposal2  |position 1(c)  |position 2(self)|Proposal1 (1)|Position 3b     |1, 2, 3b     
+Proposal4(2)   |                   d                    c    |Proposal3  |position 2(b)  |position G      |Proposal2 (1)|Position 3a     |1, 2, 3a, 3b 
+Proposal5(1)   |                                        e    |Proposal1  |position 1(a,c)|position G      |None         |reuse Position 2|1, 2, 3a, 3b 
 ```
 
 When every submit become a proposal, the good guy can take over the honest proposal and again other lie proposals.
@@ -608,8 +608,8 @@ Here in, a guy disagree Proposal4 may submit Proposal 6, and another guy disagre
 Proposal(Level)|Chain Status                                  |**Against**|Disagree      |Agree            |**Take Over**|Sample Added|Allow Samples       
 ---------------|----------------------------------------------|-----------|--------------|-----------------|-------------|------------|--------------------
                |G==4a==3a====4b====2=========3b==========1===>|           |              |                 |             |            |                    
-Proposal6(3)   |       f           b                     a    |Proposal5  |position 2(d) |position 3a(self)|Proposal4(2) |Position 4b |1, 2, 3a ,3b, 4b    
-Proposal7(3)   |       g           b                     a    |Proposal6  |position 3a(f)|position G       |Proposal4(2) |Position 4a |1, 2, 3a ,3b, 4a, 4b
+Proposal6(3)   |       f           b                     a    |Proposal4  |position 2(d) |position 3a(self)|Proposal3(2) |Position 4b |1, 2, 3a ,3b, 4b    
+Proposal7(3)   |       g           b                     a    |Proposal6  |position 3a(f)|position G       |Proposal3(2) |Position 4a |1, 2, 3a ,3b, 4a, 4b
 ```
 
 
@@ -618,8 +618,8 @@ On ther other hand, a guy disagree Proposal3 may submit Proposal 6, and another 
 Proposal(Level)|Chain Status                                  |**Against**|Disagree       |Agree            |**Take Over**|Sample Added|Allow Samples       
 ---------------|----------------------------------------------|-----------|---------------|-----------------|-------------|------------|--------------------
                |G======3a==========2====4c===3b====4d====1===>|           |               |                 |             |            |                    
-Proposal6(3)   |                   d         f           c    |Proposal4  |position 1(a,e)|position 3b(self)|Proposal5(2) |Position 4d |1, 2, 3a ,3b, 4d    
-Proposal7(3)   |                   d         g           c    |Proposal6  |position 3b(f) |position 2(d)    |Proposal5(2) |Position 4c |1, 2, 3a ,3b, 4c, 4d
+Proposal6(3)   |                   d         f           c    |Proposal3  |position 1(a,e)|position 3b(self)|Proposal4(2) |Position 4d |1, 2, 3a ,3b, 4d    
+Proposal7(3)   |                   d         g           c    |Proposal6  |position 3b(f) |position 2(d)    |Proposal4(2) |Position 4c |1, 2, 3a ,3b, 4c, 4d
 ```
 
 
@@ -647,22 +647,22 @@ Here is the pseudo code on rpc handler of chain to find out the disagree postion
 Here is the pseudo code for the offchain worker on chain  
 If current block is greater the challenge_time of the largest_level_proposal
 > 
-> if largest_level_proposal conflict the block confirm on chain,
-> &emsp;slash the proposal into treasury
+> if largest_level_proposal conflict the block confirm on chain  
+> &emsp;slash the proposal into treasury  
 > 
 > let correct_proposal = largest_level_proposal 
 > 
 > while correct_proposal:  
-> &emsp;confirm correct_proposal.position
-> &emsp;slash correct_proposal.against as reward
-> &emsp;del correct_proposal.against
-> &emsp;next_proposal = correct_proposal.take_over
-> &emsp;del correct_proposal
+> &emsp;confirm correct_proposal.position  
+> &emsp;slash correct_proposal.against as reward  
+> &emsp;del correct_proposal.against  
+> &emsp;next_proposal = correct_proposal.take_over  
+> &emsp;del correct_proposal  
 
 ### Conclusion of proposal mode
 Base on optimistic condition, there is alwasys a good relayer submit a correct proposal on each round.
 So the proposal mode, provide a `many-to-many` game, it provided a system let honest guys take over each other.
-Besides, the a comfirm block can slash more than one evil proposals provids a better game for honest relayer.
+Besides, one comfirm block can slash more than one evil proposals provids a better game for honest relayer.
 
 
 ## Sample Function
