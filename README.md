@@ -668,8 +668,8 @@ If current block is greater the challenge_time of the largest_level_proposal
 Base on optimistic condition, there is alwasys a good relayer submit a correct proposal on each round.
 So the proposal mode, provide a `many-to-many` game, it provided a system let honest guys take over each other.
 Besides, one comfirm block can slash more than one evil proposals provids a better game for honest relayer.
-In this model, the working affair share to all the relayers. 
-Under optimistic condition, the honest relayers are the majority, so the bond entry barrier is relatively smaller than the evil relayers.
+In this model, the working affair and bond entry barrier share to all the relayers. 
+Under optimistic condition, the honest relayers are the majority, so the working affair and bond entry barrier is relatively smaller than the evil relayers.
 
 
 ## Sample Function
