@@ -175,7 +175,8 @@ Here is the [pseudo code](./pseudo/relayers-only/validating-relayer.md) for the 
 
 Once the `Evil` goes into contradictory. All of the bond from `Evil` will be slashed, and the slash to reward can be distributed with different functions.  
 In the model, no mater there are how many malicious relayers, one honest relayer always response correct information will win the game.  
-For a honest relayer, the bond entry barrier is `log2(first submit block - blocks_from_last_comfirm) * bond` and the max game round is `first submit block - blocks_from_last_comfirm`.
+For a honest relayer, the optimistic bond entry barrier is `log2(first submit block - blocks_from_last_comfirm) * bond` and the max game round is `first submit block - blocks_from_last_comfirm`.
+However, in the worst case, the bond entry barrier may up to `O(n)`, please refer this [issue](https://github.com/darwinia-network/relayer-game/issues/1).
 
 ### relayer-challenger mode
 In relayer-challenger mode, when someone is not accepted the block submitted by other relayer, he just put a challenge on chain to express his opinion.
@@ -276,11 +277,12 @@ Here is the [pseudo code](./pseudo/relayer-challenger/challenger.md) for challen
     - The fake blocks are not easy to pass validation blocks when near by
     - If challenger is not collusion with the evil relayer.
 
-Once the `Evil` goes into contradictory. All of the bond from `Evil` will be slashed, and the game is closed.  
-Please note there is no correct block on position 1 after the game closed, so there may be multiple parallel relayer-challenger games on chain to keep the bridge works.  
-For a honest challenger or relayer, the bond entry barrier is `log2(first submit block - blocks_from_last_comfirm) * bond` and the max game round is `log2(first submit block - blocks_from_last_comfirm)`.  
+Once the `Evil` goes into contradictory. All of the bond from `Evil` will be slashed, and the game is closed. 
+Please note there is no correct block on position 1 after the game closed, so there may be multiple parallel relayer-challenger games on chain to keep the bridge works. 
+For a honest challenger or relayer, the bond entry barrier is `log2(first submit block - blocks_from_last_comfirm) * bond` and the max game round is `log2(first submit block - blocks_from_last_comfirm)`. 
 In this model, there is an assumption that the challenger will be honest to keep the bridge secure, so it is required some legal enforcement or high value staking for challenger, 
-such that it is not truly decentralized for this model.
+such that it is not truly decentralized for this model. 
+In the worst case, the bond entry barrier may up to `O(n)`, please refer this [issue](https://github.com/darwinia-network/relayer-game/issues/1).
 
 ### relayer-challengers mode
 In relayer-challengers mode, when someone is not accepted the block submitted by other relayer, he just put a challenge on chain to express his opinion.
@@ -447,14 +449,15 @@ Here is the [pseudo code](./pseudo/relayer-challengers/challenger.md) for challe
 
 
 #### Conclusion of relayer-challengers mode
-In this model, we are not determine each block in different round is correct or not.  
-We just make sure we have a solution which can always to challenge a evil relayer and let him to provide more information on chain.  
-Once the relayer contradictory itself the relay is slashed and the game is close.  
-On the other hand, the honest relayer can get the corresponding rewards for each block from the corresponding slash of challenge.  
-For a honest relayer, the bond entry barrier is `blocks_from_last_comfirm * bond` and the max game round is `first submit block - blocks_from_last_comfirm`.  
-For a honest challenger, the bond entry barrier is `log2(first submit block - blocks_from_last_comfirm) * bond` and the max game round is `log2(first submit block - blocks_from_last_comfirm)`.  
-The challenging time of block may be extended with `graceful period` for relayer only.
-The `graceful period` will be calculate by `graceful_function` when implementing.
+In this model, we are not determine each block in different round is correct or not. 
+We just make sure we have a solution which can always to challenge a evil relayer and let him to provide more information on chain. 
+Once the relayer contradictory itself the relay is slashed and the game is close. 
+On the other hand, the honest relayer can get the corresponding rewards for each block from the corresponding slash of challenge. 
+For a honest relayer, the bond entry barrier is `blocks_from_last_comfirm * bond` and the max game round is `first submit block - blocks_from_last_comfirm`. 
+For a honest challenger, the bond entry barrier is `log2(first submit block - blocks_from_last_comfirm) * bond` and the max game round is `log2(first submit block - blocks_from_last_comfirm)`. 
+In the worst case, the bond entry barrier may up to `O(n)`, please refer this [issue](https://github.com/darwinia-network/relayer-game/issues/1). 
+The challenging time of block may be extended with `graceful period` for relayer only. 
+The `graceful period` will be calculate by `graceful_function` when implementing. 
 
 ### relayers-take-over mode
 The `relayer-take-over` mode is similar to the `relayer-challengers` mode, and the challenger need to provide header to express the different opinions.
@@ -560,6 +563,8 @@ Challenger4                     -                    -      Return   (take over 
 Case 2  is the worst case for this mode, nothing is confirmed, and not bad block relay on chain.
 However, in optimistic game, there is always a good guy in each round.  
 Such that the good guy will return in position `3a` or `3b` to beat Challenger2 or Challenger4.
+In this model, the working affair for challenging is sharing to more than one challengers.  
+But the affair for the relayer is the same as aformentioned models.
 
 ### Proposal mode
 In the `relayer-take-over` mode, the take over only happened on challengers, but not the initial relayer.
@@ -663,6 +668,8 @@ If current block is greater the challenge_time of the largest_level_proposal
 Base on optimistic condition, there is alwasys a good relayer submit a correct proposal on each round.
 So the proposal mode, provide a `many-to-many` game, it provided a system let honest guys take over each other.
 Besides, one comfirm block can slash more than one evil proposals provids a better game for honest relayer.
+In this model, the working affair and bond entry barrier share to all the relayers. 
+Under optimistic condition, the honest relayers are the majority, so the working affair and bond entry barrier is relatively smaller than the evil relayers.
 
 
 ## Sample Function
