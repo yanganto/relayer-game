@@ -687,8 +687,36 @@ Following listed are the design philosophy.
     - Take proposal mode for example, if same agree position and same disagree position will get the same sample block number as output
 - Sampling the tail at first
   - By nature, the **PoW** consensus mechanism, the branch will occur and not greater than a reasonable length, for example 6.  To accelerate the process of relayer verification game, the sample function will label the *position N-6* to *position N-1* blocks at the second round, such that the nature branch point can be find out as soon as possible.
-- Sampling the blocks near by the confirmed blocks on chain
-  - It is easy to find out the counterfeit block which is near by a confirmed block
+- Confirm blocks affinity
+  - If the sampling block is in the `ConfrimBlockAttractRange` range of confirmed blocks, the sampling blocks will change to the block near by the confirmed blocks
+  - Such that it is easy to find out the counterfeit block which is near by a confirmed block
+
+### Substrate example of sample function
+Here is a [sample pallet](https://github.com/yanganto/substrate-node-template/blob/relayer-game-proposal/pallets/sample/src/lib.rs) shows to sample a block 
+with the features aforementioned.
+And the pseudo code for relay pallet, sample pallet listed here help to know more about what is thing going on chain.
+
+**relay pallet**
+
+The RPC handlers on chain allow anyone to submit headers to challenge blocks still in challenge time, or submit the header according to the sampling function.  
+The offchain worker keeps updating the next sampling block.
+
+> fn `submit`  
+> &emsp;find out the agree position and the disagree position  
+> &emsp;call `gen_sampling_blocks` of sample pallet   
+>
+> fn `offchain_worker`  
+> &emsp;find out the blocks over challenge time  
+> &emsp;store the block as confirmed and call `confirm` of  sample pallet   
+
+
+**sample pallet**
+> fn `confirm`  
+> &emsp;store the block height of confirmed blocks  
+>
+> fn `gen_sampling_blocks`  
+> &emsp;generat the sampling block base on disagree block, agree block,  
+> &emsp;and also consider the concensuse of target chain, confirmed blocks  
 
 ## Stage Two
 In stage two of the relayer verification game, the nature branch will be solved.
