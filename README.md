@@ -841,6 +841,31 @@ The offchain worker keeps updating the next sampling block.
 > &emsp;generat the sampling block base on disagree block, agree block,  
 > &emsp;and also consider the concensuse of target chain, confirmed blocks  
 
+## Protocol
+
+The offchain worker will keep watch the blocks submit on chain. 
+Once the blocks on chain is changed, the offchain worker will fire a web hook as following format.
+
+### POST with application/json payload
+
+```
+{
+  id: 1,
+  jsonrpc: "2.0",
+  method: "shadow_newSubmitBlockChainging_",
+  params: {
+    "eth": [
+      [{height: 1000, hash: "0x1234.."}, {height: 500, hash: "0x3456.."}], 
+      [{height: 1200, hash: "0x2218.."}, {height: 600, hash: "0x9487.."}, {height: 900, hash: "0x3321.."}]
+    ],
+    "eos": [
+      [{height: 888, hash:"0x3333.."}, {height: 444, hash: "0x666.."}], 
+    ]
+  }
+}
+
+```
+
 ## Stage Two
 In stage two of the relayer verification game, the nature branch will be solved.
 When a relayer with dispute on chain but all blocks is correct, the challenger or second relayer can ask to open the stage two of the game.
