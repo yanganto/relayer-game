@@ -793,6 +793,36 @@ If current block is greater the challenge_time of the largest_level_proposal
 > &emsp;next_proposal = correct_proposal.take_over
 > &emsp;del correct_proposal
 
+### Protocol
+
+The offchain worker will keep watch the blocks submit on chain. 
+Once the blocks on chain is changed, the offchain worker will fire a web hook as following format.
+
+**POST with application/json payload**
+```
+{
+  id: 1,
+  jsonrpc: "2.0",
+  method: "shadow_newSubmitProposal",
+  params: {
+    "eth": [
+      [{height: 1000, hash: "0x1234.."}, {height: 500, hash: "0x3456.."}], 
+      [{height: 1200, hash: "0x2218.."}, {height: 600, hash: "0x9487.."}, {height: 900, hash: "0x3321.."}]
+    ],
+    "eos": [
+      [{height: 888, hash:"0x3333.."}, {height: 444, hash: "0x666.."}], 
+    ]
+  }
+}
+```
+The `(block_height, hash)` is just the proposal ID, also for the worker can easily to verify the block with hashes. 
+Take following 
+In propose mode, 
+
+```
+[{height: 1200, hash: "0x2218.."}, {height: 600, hash: "0x9487.."}, {height: 900, hash: "0x3321.."}]
+```
+
 ### Conclusion of proposal mode
 Base on optimistic condition, there is alwasys a good relayer submit a correct proposal on each round.
 So the proposal mode, provide a `many-to-many` game, it provided a system let honest guys take over each other.
@@ -841,30 +871,6 @@ The offchain worker keeps updating the next sampling block.
 > &emsp;generat the sampling block base on disagree block, agree block,  
 > &emsp;and also consider the concensuse of target chain, confirmed blocks  
 
-## Protocol
-
-The offchain worker will keep watch the blocks submit on chain. 
-Once the blocks on chain is changed, the offchain worker will fire a web hook as following format.
-
-### POST with application/json payload
-
-```
-{
-  id: 1,
-  jsonrpc: "2.0",
-  method: "shadow_newSubmitBlockChainging_",
-  params: {
-    "eth": [
-      [{height: 1000, hash: "0x1234.."}, {height: 500, hash: "0x3456.."}], 
-      [{height: 1200, hash: "0x2218.."}, {height: 600, hash: "0x9487.."}, {height: 900, hash: "0x3321.."}]
-    ],
-    "eos": [
-      [{height: 888, hash:"0x3333.."}, {height: 444, hash: "0x666.."}], 
-    ]
-  }
-}
-
-```
 
 ## Stage Two
 In stage two of the relayer verification game, the nature branch will be solved.
