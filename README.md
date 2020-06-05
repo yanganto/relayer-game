@@ -634,6 +634,15 @@ Proposal 7(3)  |                   d         g           c    |Proposal 6 |posit
 
 If the blocks of proposals in the **Allow Samples**, the proposals are in the same game, and one proposal submitting only add one or zero sample.
 
+### Incentive model for proposal mode
+In the proposal mode of relayer game, you can find out there is always **against** proposal for each proposal excluding the initial proposal.
+Once the largest level proposal without different opinion and over the challenge time, the proposal chain base on **take over** will be confirmed.
+These comfirmed proposals have different **against** proposals, so the incentive model is really easy to be calculated based on it's **against** proposal.
+The only one proposal may without against propoal is the initial proposal, the already paid by the requesting demand from the user using the token bridge.
+If you are interesting about the initial proposal, please refer the [backing pallet](https://github.com/darwinia-network/darwinia-common/tree/master/frame/bridge/eth/backing).
+There maybe some incorrect proposals without other proposal to against on it, the bond value of these proposal will be slash and give to treasury.
+
+
 ### Pseudo code of proposal mode
 The [substrate template](https://github.com/yanganto/substrate-node-template/tree/relayer-game-proposal) shows the basic concept of model.
 
