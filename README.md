@@ -678,6 +678,118 @@ In this model, the working affair and bond entry barrier share to all the relaye
 Under optimistic condition, the honest relayers are the majority, so the working affair and bond entry barrier is relatively smaller than the evil relayers.
 
 
+### Proposal mode
+In the `relayer-take-over` mode, the take over only happened on challengers, but not the initial relayer.
+In proposal mode, each submit from relayer is a proposal, anyone can against or take-over each other.
+
+Consider the Case 1 of `relayer-take-over` mode.
+```
+                 G======3a==========2=========3b=========1===>
+Initial Relayer                     b                    a      
+Challenger1                                              c     
+Challenger2                         d                    c    
+Challenger3                                              e   
+```
+
+If the Initial Relayer is not evil, but he run into network issues.
+The take over only allow for Challenger is not fair for the Initial Relayer.
+So the same case in proposal mode it will become following table. 
+
+Note: 
+  - following position is block number, the content in brackets is block info help you understand.
+  - the content in brackets for Proposal is propsing level
+
+```
+Proposal(Level)|Chain Status                                 |**Against**|Disagree       |Agree           |**Take Over**|Sample Added    |Allow Samples
+---------------|---------------------------------------------|-----------|---------------|----------------|-------------|----------------|-------------
+               |G======3a==========2=========3b=========1===>|           |               |                |             |                |             
+Proposal1(1)   |                                        a    |None       |None           |position 1(self)|None         |None            |1            
+Proposal2(1)   |                                        c    |Proposal1  |position 1(a)  |position G      |None         |Position 2      |1, 2         
+Proposal3(1)   |                                        e    |Proposal1  |position 1(a,c)|position G      |None         |reuse Position 2|1, 2, 3a ,3b 
+Proposal4(2)   |                   b                    a    |Proposal2  |position 1(c)  |position 2(self)|Proposal1 (1)|Position 3b     |1, 2, 3b     
+Proposal5(2)   |                   d                    c    |Proposal4  |position 2(b)  |position G      |Proposal2 (1)|Position 3a     |1, 2, 3a, 3b 
+```
+
+When every submit become a proposal, the good guy can take over the honest proposal and again other lie proposals.
+The sample function takes 2 parameters(position 1 and position G) and return the position 2, which is with some random effect.
+When Proposal2 submitting on chain, the position 2 will be calculated.  
+Because there is no consensus on position 1, he can not say he agree on posiion 1.
+There is only one relay block on position 2, so he can say agree on position 2.
+After position 2 is determined, Proposal 5 still get the same positon for position 2.
+When Proposal 3 submiting on chain the position 3a will be calculated.
+Also, when Proposal 4 submiting on chain the position 3a and 3b will be calculate
+
+
+Here in, a guy disagree Proposal4 may submit Proposal 6, and another guy disagree Proposal6 as following
+```
+Proposal(Level)|Chain Status                                  |**Against**|Disagree      |Agree            |**Take Over**|Sample Added|Allow Samples       
+---------------|----------------------------------------------|-----------|--------------|-----------------|-------------|------------|--------------------
+               |G==4a==3a====4b====2=========3b==========1===>|           |              |                 |             |            |                    
+Proposal6(3)   |       f           b                     a    |Proposal5  |position 2(d) |position 3a(self)|Proposal4(2) |Position 4b |1, 2, 3a ,3b, 4b    
+Proposal7(3)   |       g           b                     a    |Proposal6  |position 3a(f)|position G       |Proposal4(2) |Position 4a |1, 2, 3a ,3b, 4a, 4b
+```
+
+
+On ther other hand, a guy disagree Proposal3 may submit Proposal 6, and another guy disagree Proposal6 as following
+```
+Proposal(Level)|Chain Status                                  |**Against**|Disagree       |Agree            |**Take Over**|Sample Added|Allow Samples       
+---------------|----------------------------------------------|-----------|---------------|-----------------|-------------|------------|--------------------
+               |G======3a==========2====4c===3b====4d====1===>|           |               |                 |             |            |                    
+Proposal6(3)   |                   d         f           c    |Proposal4  |position 1(a,e)|position 3b(self)|Proposal5(2) |Position 4d |1, 2, 3a ,3b, 4d    
+Proposal7(3)   |                   d         g           c    |Proposal6  |position 3b(f) |position 2(d)    |Proposal5(2) |Position 4c |1, 2, 3a ,3b, 4c, 4d
+```
+
+
+If the blocks of proposals in the **Allow Samples**, the proposals are in the same game, and one proposal submitting only add one or zero sample.
+
+### Incentive model for proposal mode
+In the proposal mode of relayer game, you can find out there is always **against** proposal for each proposal excluding the initial proposal.
+Once the largest level proposal without different opinion and over the challenge time, the proposal chain base on **take over** will be confirmed.
+These comfirmed proposals have different **against** proposals, so the incentive model is really easy to be calculated based on it's **against** proposal.
+The only one proposal may without against propoal is the initial proposal, the already paid by the requesting demand from the user using the token bridge.
+If you are interesting about the initial proposal, please refer the [backing pallet](https://github.com/darwinia-network/darwinia-common/tree/master/frame/bridge/eth/backing).
+There maybe some incorrect proposals without other proposal to against on it, the bond value of these proposal will be slash and give to treasury.
+
+### Pseudo code of proposal mode
+Here is the basic material for proposing for a initial relayer
+- provide a **block**, not exist on chain and not in allow samples
+
+Here is the basic material to propose for a relayer (not initial) find out a evil proposal
+- provide a **block** in allow samples, **against** proposal,
+- if the level of proposal greater than 1, the proposal (level n) should **take over** the proposal with level (n-1)
+
+Here is the pseudo code on rpc handler of chain to find out the disagree postion and the agree position
+- find out the agree position and the disagree position
+> if self position first on chain  
+> &emsp;agree self.position  
+> &emsp;disagree smallest_and_greater_than_self(recursive on the position of against proposal and its take over proposals)  
+> else  
+> &emsp;agree biggest_and_smaller_than_self(recursive on the position of take over proposal and its take over proposal, and G)  
+> &emsp;disagree against_proposal.position  
+- add a challenge_time for the proposal
+
+
+Here is the pseudo code for the offchain worker on chain  
+If current block is greater the challenge_time of the largest_level_proposal
+> 
+> if largest_level_proposal conflict the block confirm on chain,
+> &emsp;slash the proposal into treasury
+> 
+> let correct_proposal = largest_level_proposal 
+> 
+> while correct_proposal:  
+> &emsp;confirm correct_proposal.position
+> &emsp;slash correct_proposal.against as reward
+> &emsp;del correct_proposal.against
+> &emsp;next_proposal = correct_proposal.take_over
+> &emsp;del correct_proposal
+
+### Conclusion of proposal mode
+Base on optimistic condition, there is alwasys a good relayer submit a correct proposal on each round.
+So the proposal mode, provide a `many-to-many` game, it provided a system let honest guys take over each other.
+Besides, the a comfirm block can slash more than one evil proposals provids a better game for honest relayer.
+
+
 ## Sample Function
 Sample function is an equation to provide the block height numbers, that relayer should submit the blocks at that block height.
 Sample function is the key part to prevent the attacker, and also determine the total consuming time in relayer game.
