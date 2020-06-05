@@ -635,6 +635,8 @@ Proposal 7(3)  |                   d         g           c    |Proposal 6 |posit
 If the blocks of proposals in the **Allow Samples**, the proposals are in the same game, and one proposal submitting only add one or zero sample.
 
 ### Pseudo code of proposal mode
+The [substrate template](https://github.com/yanganto/substrate-node-template/tree/relayer-game-proposal) shows the basic concept of model.
+
 Here is the basic material for proposing for a initial relayer
 - provide a **block**, not exist on chain and not in allow samples
 
