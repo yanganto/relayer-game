@@ -648,7 +648,7 @@ The [substrate template](https://github.com/yanganto/substrate-node-template/tre
 Please note that, the term "take over"(legacy used) in the sample code is just the same meaning for "extend".
 
 Here is the basic material for proposing for a initial relayer
-- provide a **block**, not exist on chain and not in allow samples
+- provide a **block**, not exist on chain and not in list of allow samples
 
 Here is the basic material to propose for a relayer (not initial) find out a evil proposal
 - provide a **block** in allow samples, **against** proposal,
@@ -720,7 +720,7 @@ Base on the assumption, there alway a honest guy submit correct block in each ro
 #### Pseudo code of proposal-only mode
 
 Here is the basic material for proposing for a initial relayer
-- provide a **block**, not exist on chain and not in allow samples
+- provide a **block**, not exist on chain and not in list of samples
 
 Here is the basic material to propose for a relayer (not initial) find out a evil proposal
 - provide a serial **blocks** in samples
