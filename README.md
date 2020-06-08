@@ -17,8 +17,7 @@ All the behavior of relayers, and the parameters are described a in a yaml file.
 You can easily load the scenario file to simulate the result. 
 There are some example scenario files listed in [scenario](./scenario).
 
-There are five different gaming models: `relayers-only`, `relayer-challenger`, `relayer-challengers`, `relayers-take-over`, `proposal`.
-
+There are five different gaming models: `relayers-only`, `relayer-challenger`, `relayer-challengers`, `relayers-extend`, `proposal`.
 
 In `relayers-only` mode, `relayers-take-over` and `proposal`, when someone is not accepted the block submitted by other relayer, he should submit the correct block to express his opinion.
 In `relayer-challenger` mode and `relayer-challengers` mode, when someone is not accepted the block submitted by other relayer, he just put a challenge on chain to express his opinion.
@@ -26,16 +25,16 @@ In `relayer-challenger` mode and `relayer-challengers` mode, when someone is not
 
 Following table shows the main different between these mode.
 
-| Rule \Mode                       | **Relayers-Only**  | **Relayer-Challenger** | **Relayer-Challengers** | **Relayers-Take-Over** | **Proposal**       |
-|----------------------------------|--------------------|------------------------|-------------------------|------------------------|--------------------|
-| Only 1 relay submit blocks       |                    | :heavy_check_mark:     | :heavy_check_mark:      |                        |                    |
-| Allow take over challenger       |                    |                        | :heavy_check_mark:      | :heavy_check_mark:     | :heavy_check_mark: |
-| Allow take over initial relayer  |                    |                        |                         |                        | :heavy_check_mark: |
-| Once in participate all          | :heavy_check_mark: | :heavy_check_mark:     |                         |                        |                    |
-| Estoppel                         | :heavy_check_mark: |                        |                         |                        |                    |
-| Ensure correct 1st block overall | :heavy_check_mark: |                        |                         | :white_check_mark:     | :white_check_mark: |
-| Versus mode                      | 1 vs many          | 1 vs 1                 | 1 vs many               | 1 vs many              | many vs many       |
-| Possible results                 | slash/reward       | slash/reward           | slash/reward/return     | slash/reward/return    | slash/reward       |
+| Rule \Mode                         | **Relayers-Only**    | **Relayer-Challenger**   | **Relayer-Challengers**   | **Relayers-Extend**    | **Proposal/Proposal-Only**  |
+| ---------------------------------- | -------------------- | ------------------------ | ------------------------- | ---------------------- | --------------------------- |
+| Only 1 relay submit blocks         |                      | :heavy_check_mark:       | :heavy_check_mark:        |                        |                             |
+| Allow extend from challenger       |                      |                          | :heavy_check_mark:        | :heavy_check_mark:     | :heavy_check_mark:          |
+| Allow extend from initial relayer  |                      |                          |                           |                        | :heavy_check_mark:          |
+| Once in participate all            | :heavy_check_mark:   | :heavy_check_mark:       |                           |                        |                             |
+| Estoppel                           | :heavy_check_mark:   |                          |                           |                        |                             |
+| Ensure correct 1st block overall   | :heavy_check_mark:   |                          |                           | :white_check_mark:     | :white_check_mark:          |
+| Versus mode                        | 1 vs many            | 1 vs 1                   | 1 vs many                 | 1 vs many              | many vs many                |
+| Possible results                   | slash/reward         | slash/reward             | slash/reward/return       | slash/reward/return    | slash/reward                |
 
 | Label              | Meaning                        |
 |--------------------|--------------------------------|
@@ -463,8 +462,8 @@ In the worst case, the bond entry barrier may up to `O(n)`, please refer this [i
 The challenging time of block may be extended with `graceful period` for relayer only. 
 The `graceful period` will be calculate by `graceful_function` when implementing. 
 
-### relayers-take-over mode
-The `relayer-take-over` mode is similar to the `relayer-challengers` mode, and the challenger need to provide headers to express the different opinions.
+### relayers-extend mode
+The `relayer-extend` mode is similar to the `relayer-challengers` mode, and the challenger need to provide headers to express the different opinions.
 In this mode the challengers should submit header to prevent the evil challengers to mal-response easy and DoS the system.
 However, there is still no the rule `Once in participate all` for `Estoppel`, so there is some rare case without confirm block at all.
 
@@ -475,7 +474,7 @@ that relayers submit the blocks `a` to `e`, and the *Evil* decides to quit the g
               G======3a==========2=========3b=========1===>
 Evil                             b                    a      Slash
 Challenger 1                                          c      Return
-Challenger 2                     d                    c      Return  (take over from Challenger 1)
+Challenger 2                     d                    c      Return  (extend from Challenger 1)
 Challenger 3                     b                    e      Return  
 ```
 The game is closed and `c` is **not** confirmed, because of `e`.
@@ -505,9 +504,9 @@ Challenger 3                     C                    C      Reward
               G======3a==========2=========3b=========1===>
 Evil                             b                    a      Slash
 Challenger 1                                          c      Return
-Challenger 2                     d                    c      Return   (take over from Challenger 1)
+Challenger 2                     d                    c      Return   (extend from Challenger 1)
 Challenger 3                                          e      Return
-Challenger 4                     b                    e      Return   (take over from Challenger 3)
+Challenger 4                     b                    e      Return   (extend from Challenger 3)
 ```
 *Challenger 2* and *Challenger 4* beat *Evil*.
 Without `Once in participate all` and `Estoppel`, the possible blocks in *position 1* are `C`, `E`.
@@ -521,36 +520,36 @@ And let us using Honest(`H`) and Lie(`L`) symbols to show the four possible for 
               G======3a==========2=========3b=========1===>
 Evil                             H                    L      Slash
 Challenger 1                                          H      Return
-Challenger 2                     L                    H      Return   (take over from Challenger 1)
+Challenger 2                     L                    H      Return   (extend from Challenger 1)
 Challenger 3                                          L      Return
-Challenger 4                     H                    L      Return   (take over from Challenger 3)
+Challenger 4                     H                    L      Return   (extend from Challenger 3)
 ```
 **Case 2-2**
 ```
               G======3a==========2=========3b=========1===>
 Evil                             H                    L      Slash
 Challenger 1                                          L      Return
-Challenger 2                     L                    L      Return   (take over from Challenger 1)
+Challenger 2                     L                    L      Return   (extend from Challenger 1)
 Challenger 3                                          H      Return
-Challenger 4                     H                    H      Return   (take over from Challenger 3)
+Challenger 4                     H                    H      Return   (extend from Challenger 3)
 ```
 **Case 2-3**
 ```
               G======3a==========2=========3b=========1===>
 Evil                             L                    L      Slash
 Challenger 1                                          L      Return
-Challenger 2                     H                    L      Return   (take over from Challenger 1)
+Challenger 2                     H                    L      Return   (extend from Challenger 1)
 Challenger 3                                          H      Return
-Challenger 4                     L                    H      Return   (take over from Challenger 3)
+Challenger 4                     L                    H      Return   (extend from Challenger 3)
 ```
 **Case 2-4**
 ```
               G======3a==========2=========3b=========1===>
 Evil                             L                    L      Slash
 Challenger 1                                          H      Return
-Challenger 2                     H                    H      Return   (take over from Challenger 1)
+Challenger 2                     H                    H      Return   (extend from Challenger 1)
 Challenger 3                                          L      Return
-Challenger 4                     L                    L      Return   (take over from Challenger 3)
+Challenger 4                     L                    L      Return   (extend from Challenger 3)
 ```
 
 Therefor, if the game rarely stop as the status show in the **Case 2**, we just slash Evil and return the bond for challengers as following plot.
@@ -558,12 +557,12 @@ Therefor, if the game rarely stop as the status show in the **Case 2**, we just 
               G======3a==========2=========3b=========1===>
 Evil                             -                    -      Slash
 Challenger 1                                          -      Return
-Challenger 2                     -                    -      Return   (take over from Challenger 1)
+Challenger 2                     -                    -      Return   (extend from Challenger 1)
 Challenger 3                                          -      Return
-Challenger 4                     -                    -      Return   (take over from Challenger 3)
+Challenger 4                     -                    -      Return   (extend from Challenger 3)
 ```
 
-#### Conclusion of relayer-take-over mode
+#### Conclusion of relayer-extend mode
 **Case 2** is the worst case for this mode, nothing is confirmed, and the good news is there is not bad block relay on chain.
 However, in optimistic game, there is always a good guy in each round.  
 Such that the good guy will return in *position 3a* or *position 3b* to beat *Challenger 2* or *Challenger 4*.
@@ -571,10 +570,10 @@ In this model, the working affair for challenging is sharing to more than one ch
 But the affair for the relayer is the same as aforementioned models.
 
 ### Proposal mode
-In the `relayer-take-over` mode, the take over only happened on challengers, but not the initial relayer.
+In the `relayer-take-over` mode, the extend only happened on challengers, but not the initial relayer.
 In proposal mode, each submit from relayer is a proposal, anyone can against or take-over each other.
 
-Consider the **Case 1** of `relayer-take-over` mode.
+Consider the **Case 1** of `relayer-extend` mode.
 ```
                   G======3a==========2=========3b=========1===>
 Initial Relayer                      b                    a      
@@ -584,25 +583,26 @@ Challenger 3                                              e
 ```
 
 If the *Initial Relayer* is not evil, but he run into network issues.
-The take over only allow for Challenger is not fair for the *Initial Relayer*.
+The extned feature only allow for Challenger is not fair for the *Initial Relayer*.
 So the same case in proposal mode it will become following table. 
 
 Note: 
   - following position is block number, the content in brackets is block info help you understand.
   - the content in brackets for Proposal is proposing level
+  - level like round before, but in this mode, the Proposal 5 is allowed.  Such that level is more precise for this mode.
 
 ```
-Proposal(Level) |Chain Status                                 |**Against**|Disagree       |Agree           |**Take Over**|Sample Added    |Allow Samples
-----------------|---------------------------------------------|-----------|---------------|----------------|-------------|----------------|-------------
-                |G======3a==========2=========3b=========1===>|           |               |                |             |                |             
-Proposal 1(1)   |                                        a    |None       |None           |position 1(self)|None         |None            |1            
-Proposal 2(1)   |                                        c    |Proposal 1 |position 1(a)  |position G      |None         |Position 2      |1, 2         
-Proposal 3(2)   |                   b                    a    |Proposal 2 |position 1(c)  |position 2(self)|Proposal 1(1)|Position 3b     |1, 2, 3b     
-Proposal 4(2)   |                   d                    c    |Proposal 3 |position 2(b)  |position G      |Proposal 2(1)|Position 3a     |1, 2, 3a, 3b 
-Proposal 5(1)   |                                        e    |Proposal 1 |position 1(a,c)|position G      |None         |reuse Position 2|1, 2, 3a, 3b 
+Proposal(Level) |Chain Status                                 |**Against**|**Extend From**|Disagree       |Agree           |Sample Added    |Allow Samples
+----------------|---------------------------------------------|-----------|---------------|---------------|----------------|----------------|-------------
+                |G======3a==========2=========3b=========1===>|           |               |               |                |                |             
+Proposal 1(1)   |                                        a    |None       |None           |None           |position 1(self)|None            |1            
+Proposal 2(1)   |                                        c    |Proposal 1 |None           |position 1(a)  |position G      |Position 2      |1, 2         
+Proposal 3(2)   |                   b                    a    |Proposal 2 |Proposal 1(1)  |position 1(c)  |position 2(self)|Position 3b     |1, 2, 3b     
+Proposal 4(2)   |                   d                    c    |Proposal 3 |Proposal 2(1)  |position 2(b)  |position G      |Position 3a     |1, 2, 3a, 3b 
+Proposal 5(1)   |                                        e    |Proposal 1 |None           |position 1(a,c)|position G      |reuse Position 2|1, 2, 3a, 3b 
 ```
 
-When every submit become a proposal, the good guy can take over the honest proposal and again other lie proposals.
+When every submit become a proposal, the good guy can extend the honest proposal and again other lie proposals.
 The sample function takes 2 parameters(*position 1* and *position G*) and return the *position 2*, which is with some random effect.
 When *Proposal 2* submitting on chain, the *position 2* will be calculated.  
 Because there is no consensus on *position 1*, he can not say he agree on *position 1*.
@@ -614,21 +614,21 @@ Also, when *Proposal 4* submitting on chain the *position 3a* and *position 3b* 
 
 Here in, a guy disagree *Proposal 4* may submit *Proposal 6*, and another guy disagree *Proposal 6* as following
 ```
-Proposal(Level) |Chain Status                                  |**Against**|Disagree      |Agree            |**Take Over**|Sample Added|Allow Samples       
-----------------|----------------------------------------------|-----------|--------------|-----------------|-------------|------------|--------------------
-                |G==4a==3a====4b====2=========3b==========1===>|           |              |                 |             |            |                    
-Proposal 6(3)   |       f           b                     a    |Proposal 4 |position 2(d) |position 3a(self)|Proposal 3(2)|Position 4b |1, 2, 3a ,3b, 4b    
-Proposal 7(3)   |       g           b                     a    |Proposal 6 |position 3a(f)|position G       |Proposal 3(2)|Position 4a |1, 2, 3a ,3b, 4a, 4b
+Proposal(Level) |Chain Status                                  |**Against**|**Extend From**|Disagree      |Agree            |Sample Added|Allow Samples       
+----------------|----------------------------------------------|-----------|---------------|--------------|-----------------|------------|--------------------
+                |G==4a==3a====4b====2=========3b==========1===>|           |               |              |                 |            |                    
+Proposal 6(3)   |       f           b                     a    |Proposal 4 |Proposal 3(2)  |position 2(d) |position 3a(self)|Position 4b |1, 2, 3a ,3b, 4b    
+Proposal 7(3)   |       g           b                     a    |Proposal 6 |Proposal 3(2)  |position 3a(f)|position G       |Position 4a |1, 2, 3a ,3b, 4a, 4b
 ```
 
 
 On the other hand, a guy disagree *Proposal 3* may submit Proposal 6, and another guy disagree *Proposal 6*  as following
 ```
-Proposal(Level)|Chain Status                                  |**Against**|Disagree       |Agree            |**Take Over**|Sample Added|Allow Samples       
----------------|----------------------------------------------|-----------|---------------|-----------------|-------------|------------|--------------------
-               |G======3a==========2====4c===3b====4d====1===>|           |               |                 |             |            |                    
-Proposal 6(3)  |                   d         f           c    |Proposal 3 |position 1(a,e)|position 3b(self)|Proposal 4(2)|Position 4d |1, 2, 3a ,3b, 4d    
-Proposal 7(3)  |                   d         g           c    |Proposal 6 |position 3b(f) |position 2(d)    |Proposal 4(2)|Position 4c |1, 2, 3a ,3b, 4c, 4d
+Proposal(Level)|Chain Status                                  |**Against**|**Extend From**|Disagree       |Agree            |Sample Added|Allow Samples       
+---------------|----------------------------------------------|-----------|---------------|---------------|-----------------|------------|--------------------
+               |G======3a==========2====4c===3b====4d====1===>|           |               |               |                 |            |                    
+Proposal 6(3)  |                   d         f           c    |Proposal 3 |Proposal 4(2)  |position 1(a,e)|position 3b(self)|Position 4d |1, 2, 3a ,3b, 4d    
+Proposal 7(3)  |                   d         g           c    |Proposal 6 |Proposal 4(2)  |position 3b(f) |position 2(d)    |Position 4c |1, 2, 3a ,3b, 4c, 4d
 ```
 
 
@@ -636,7 +636,7 @@ If the blocks of proposals in the **Allow Samples**, the proposals are in the sa
 
 ### Incentive model for proposal mode
 In the proposal mode of relayer game, you can find out there is always **against** proposal for each proposal excluding the initial proposal.
-Once the largest level proposal without different opinion and over the challenge time, the proposal chain base on **take over** will be confirmed.
+Once the largest level proposal without different opinion and over the challenge time, the proposal chain base on **extend from** will be confirmed.
 These comfirmed proposals have different **against** proposals, so the incentive model is really easy to be calculated based on it's **against** proposal.
 The only one proposal may without against propoal is the initial proposal, the already paid by the requesting demand from the user using the token bridge.
 If you are interesting about the initial proposal, please refer the [backing pallet](https://github.com/darwinia-network/darwinia-common/tree/master/frame/bridge/eth/backing).
@@ -645,21 +645,22 @@ There maybe some incorrect proposals without other proposal to against on it, th
 
 ### Pseudo code of proposal mode
 The [substrate template](https://github.com/yanganto/substrate-node-template/tree/relayer-game-proposal) shows the basic concept of model.
+Please note that, the term "take over"(legacy used) in the sample code is just the same meaning for "extend".
 
 Here is the basic material for proposing for a initial relayer
 - provide a **block**, not exist on chain and not in allow samples
 
 Here is the basic material to propose for a relayer (not initial) find out a evil proposal
 - provide a **block** in allow samples, **against** proposal,
-- if the level of proposal greater than 1, the proposal (level n) should **take over** the proposal with level (n-1)
+- if the level of proposal greater than 1, the proposal (level n) should **extend from** the proposal with level (n-1)
 
 Here is the pseudo code on rpc handler of chain to find out the disagree position and the agree position
 - find out the agree position and the disagree position
 > if self position first on chain  
 > &emsp;agree self.position  
-> &emsp;disagree smallest_and_greater_than_self(recursive on the position of against proposal and its take over proposals)  
+> &emsp;disagree smallest_and_greater_than_self(recursive on the position of against proposal and its extend from proposals)  
 > else  
-> &emsp;agree biggest_and_smaller_than_self(recursive on the position of take over proposal and its take over proposal, and G)  
+> &emsp;agree biggest_and_smaller_than_self(recursive on the position of extend from proposal and its extend from proposal, and G)  
 > &emsp;disagree against_proposal.position  
 - add a challenge_time for the proposal
 
@@ -681,14 +682,14 @@ If current block is greater the challenge_time of the largest_level_proposal
 
 ### Conclusion of proposal mode
 Base on optimistic condition, there is always a good relayer submitting a correct proposal on each round.
-So the proposal mode, provide a `many-to-many` game, it provided a system let honest guys take over each other.
+So the proposal mode, provide a `many-to-many` game, it provided a system let honest guys extend from each other.
 Besides, one confirm block can slash more than one evil proposals provide a better game for honest relayer.
 In this model, the working affair and bond entry barrier share to all the relayers. 
 Under optimistic condition, the honest relayers are the majority, so the working affair and bond entry barrier is relatively smaller than the evil relayers.
 
 
 ### Proposal mode
-In the `relayer-take-over` mode, the take over only happened on challengers, but not the initial relayer.
+In the `relayer-extend` mode, the extend happened on challengers, but not the initial relayer.
 In proposal mode, each submit from relayer is a proposal, anyone can against or take-over each other.
 
 Consider the Case 1 of `relayer-take-over` mode.
@@ -701,7 +702,7 @@ Challenger3                                              e
 ```
 
 If the Initial Relayer is not evil, but he run into network issues.
-The take over only allow for Challenger is not fair for the Initial Relayer.
+The extend feature over only allow for Challenger is not fair for the Initial Relayer.
 So the same case in proposal mode it will become following table. 
 
 Note: 
@@ -709,17 +710,17 @@ Note:
   - the content in brackets for Proposal is propsing level
 
 ```
-Proposal(Level)|Chain Status                                 |**Against**|Disagree       |Agree           |**Take Over**|Sample Added    |Allow Samples
----------------|---------------------------------------------|-----------|---------------|----------------|-------------|----------------|-------------
-               |G======3a==========2=========3b=========1===>|           |               |                |             |                |             
-Proposal1(1)   |                                        a    |None       |None           |position 1(self)|None         |None            |1            
-Proposal2(1)   |                                        c    |Proposal1  |position 1(a)  |position G      |None         |Position 2      |1, 2         
-Proposal3(1)   |                                        e    |Proposal1  |position 1(a,c)|position G      |None         |reuse Position 2|1, 2, 3a ,3b 
-Proposal4(2)   |                   b                    a    |Proposal2  |position 1(c)  |position 2(self)|Proposal1 (1)|Position 3b     |1, 2, 3b     
-Proposal5(2)   |                   d                    c    |Proposal4  |position 2(b)  |position G      |Proposal2 (1)|Position 3a     |1, 2, 3a, 3b 
+Proposal(Level)|Chain Status                                 |**Against**|**Extend From**|Disagree       |Agree           |Sample Added    |Allow Samples
+---------------|---------------------------------------------|-----------|---------------|---------------|----------------|----------------|-------------
+               |G======3a==========2=========3b=========1===>|           |               |               |                |                |             
+Proposal1(1)   |                                        a    |None       |None           |None           |position 1(self)|None            |1            
+Proposal2(1)   |                                        c    |Proposal1  |None           |position 1(a)  |position G      |Position 2      |1, 2         
+Proposal3(1)   |                                        e    |Proposal1  |None           |position 1(a,c)|position G      |reuse Position 2|1, 2, 3a ,3b 
+Proposal4(2)   |                   b                    a    |Proposal2  |Proposal1 (1)  |position 1(c)  |position 2(self)|Position 3b     |1, 2, 3b     
+Proposal5(2)   |                   d                    c    |Proposal4  |Proposal2 (1)  |position 2(b)  |position G      |Position 3a     |1, 2, 3a, 3b 
 ```
 
-When every submit become a proposal, the good guy can take over the honest proposal and again other lie proposals.
+When every submit become a proposal, the good guy can extend the honest proposal and again other lie proposals.
 The sample function takes 2 parameters(position 1 and position G) and return the position 2, which is with some random effect.
 When Proposal2 submitting on chain, the position 2 will be calculated.  
 Because there is no consensus on position 1, he can not say he agree on posiion 1.
@@ -731,21 +732,21 @@ Also, when Proposal 4 submiting on chain the position 3a and 3b will be calculat
 
 Here in, a guy disagree Proposal4 may submit Proposal 6, and another guy disagree Proposal6 as following
 ```
-Proposal(Level)|Chain Status                                  |**Against**|Disagree      |Agree            |**Take Over**|Sample Added|Allow Samples       
----------------|----------------------------------------------|-----------|--------------|-----------------|-------------|------------|--------------------
-               |G==4a==3a====4b====2=========3b==========1===>|           |              |                 |             |            |                    
-Proposal6(3)   |       f           b                     a    |Proposal5  |position 2(d) |position 3a(self)|Proposal4(2) |Position 4b |1, 2, 3a ,3b, 4b    
-Proposal7(3)   |       g           b                     a    |Proposal6  |position 3a(f)|position G       |Proposal4(2) |Position 4a |1, 2, 3a ,3b, 4a, 4b
+Proposal(Level)|Chain Status                                  |**Against**|**Extend From**|Disagree      |Agree            |Sample Added|Allow Samples       
+---------------|----------------------------------------------|-----------|---------------|--------------|-----------------|------------|--------------------
+               |G==4a==3a====4b====2=========3b==========1===>|           |               |              |                 |            |                    
+Proposal6(3)   |       f           b                     a    |Proposal5  |Proposal4(2)   |position 2(d) |position 3a(self)|Position 4b |1, 2, 3a ,3b, 4b    
+Proposal7(3)   |       g           b                     a    |Proposal6  |Proposal4(2)   |position 3a(f)|position G       |Position 4a |1, 2, 3a ,3b, 4a, 4b
 ```
 
 
 On ther other hand, a guy disagree Proposal3 may submit Proposal 6, and another guy disagree Proposal6 as following
 ```
-Proposal(Level)|Chain Status                                  |**Against**|Disagree       |Agree            |**Take Over**|Sample Added|Allow Samples       
----------------|----------------------------------------------|-----------|---------------|-----------------|-------------|------------|--------------------
-               |G======3a==========2====4c===3b====4d====1===>|           |               |                 |             |            |                    
-Proposal6(3)   |                   d         f           c    |Proposal4  |position 1(a,e)|position 3b(self)|Proposal5(2) |Position 4d |1, 2, 3a ,3b, 4d    
-Proposal7(3)   |                   d         g           c    |Proposal6  |position 3b(f) |position 2(d)    |Proposal5(2) |Position 4c |1, 2, 3a ,3b, 4c, 4d
+Proposal(Level)|Chain Status                                  |**Against**|**Extend From**|Disagree       |Agree            |Sample Added|Allow Samples       
+---------------|----------------------------------------------|-----------|---------------|---------------|-----------------|------------|--------------------
+               |G======3a==========2====4c===3b====4d====1===>|           |               |               |                 |            |                    
+Proposal6(3)   |                   d         f           c    |Proposal4  |Proposal5(2)   |position 1(a,e)|position 3b(self)|Position 4d |1, 2, 3a ,3b, 4d    
+Proposal7(3)   |                   d         g           c    |Proposal6  |Proposal5(2)   |position 3b(f) |position 2(d)    |Position 4c |1, 2, 3a ,3b, 4c, 4d
 ```
 
 
@@ -753,7 +754,7 @@ If the blocks of proposals in the **Allow Samples**, the proposals are in the sa
 
 ### Incentive model for proposal mode
 In the proposal mode of relayer game, you can find out there is always **against** proposal for each proposal excluding the initial proposal.
-Once the largest level proposal without different opinion and over the challenge time, the proposal chain base on **take over** will be confirmed.
+Once the largest level proposal without different opinion and over the challenge time, the proposal chain of proposals will be confirmed.
 These comfirmed proposals have different **against** proposals, so the incentive model is really easy to be calculated based on it's **against** proposal.
 The only one proposal may without against propoal is the initial proposal, the already paid by the requesting demand from the user using the token bridge.
 If you are interesting about the initial proposal, please refer the [backing pallet](https://github.com/darwinia-network/darwinia-common/tree/master/frame/bridge/eth/backing).
@@ -765,15 +766,15 @@ Here is the basic material for proposing for a initial relayer
 
 Here is the basic material to propose for a relayer (not initial) find out a evil proposal
 - provide a **block** in allow samples, **against** proposal,
-- if the level of proposal greater than 1, the proposal (level n) should **take over** the proposal with level (n-1)
+- if the level of proposal greater than 1, the proposal (level n) should extend from the proposal with level (n-1)
 
 Here is the pseudo code on rpc handler of chain to find out the disagree postion and the agree position
 - find out the agree position and the disagree position
 > if self position first on chain  
 > &emsp;agree self.position  
-> &emsp;disagree smallest_and_greater_than_self(recursive on the position of against proposal and its take over proposals)  
+> &emsp;disagree smallest_and_greater_than_self(recursive on the position of against proposal and its extend from proposals)  
 > else  
-> &emsp;agree biggest_and_smaller_than_self(recursive on the position of take over proposal and its take over proposal, and G)  
+> &emsp;agree biggest_and_smaller_than_self(recursive on the position of extend from proposal and its extend from proposal, and G)  
 > &emsp;disagree against_proposal.position  
 - add a challenge_time for the proposal
 
@@ -795,7 +796,7 @@ If current block is greater the challenge_time of the largest_level_proposal
 
 ### Conclusion of proposal mode
 Base on optimistic condition, there is alwasys a good relayer submit a correct proposal on each round.
-So the proposal mode, provide a `many-to-many` game, it provided a system let honest guys take over each other.
+So the proposal mode, provide a `many-to-many` game, it provided a system let honest guys extend from each other.
 Besides, the a comfirm block can slash more than one evil proposals provids a better game for honest relayer.
 
 
