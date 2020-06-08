@@ -693,7 +693,7 @@ In the `proposal` mode, the proposal including the against infomation, and the e
 Besides, *Proposal 5* of `proposal` mode is allowed to submit after *Proposal 3* of `proposal` mode.
 
 In the `proposal-only` mode, there are only serial blocks in submission, and the relayer game becomes in rounds as the same as `relayers-only` mode.
-Such that the *Proposal 5 of `proposal` mode *(the *Proposal 3* in `proposal-only` mode) can not submit after Proposal 3 of `proposal` mode (the *Proposal 5* in `proposal-only` mode).
+Such that the *Proposal 5* of `proposal` mode (the *Proposal 3* in `proposal-only` mode) can not submit after Proposal 3 of `proposal` mode (the *Proposal 5* in `proposal-only` mode).
 
 ```
 Proposal(round) |Chain Status                                 |Samples
@@ -727,7 +727,7 @@ Here is the basic material to propose for a relayer (not initial) find out a evi
 - if the blocks in samples greater than 1, the serial **blocks** should cover one of the submission in before round
 
 Here is the pseudo code on rpc handler of chain 
-> if submission greater than 1  
+> if submission round greater than 1  
 > &emsp;check the submisstion cover one of submission in before round  
 >
 > validate blocks  
