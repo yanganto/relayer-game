@@ -17,9 +17,9 @@ All the behavior of relayers, and the parameters are described a in a yaml file.
 You can easily load the scenario file to simulate the result. 
 There are some example scenario files listed in [scenario](./scenario).
 
-There are five different gaming models: `relayers-only`, `relayer-challenger`, `relayer-challengers`, `relayers-extend`, `proposal`.
+There are six different gaming models: `relayers-only`, `relayer-challenger`, `relayer-challengers`, `relayers-extend`, `proposal`, and `proposal-only`.
 
-In `relayers-only` mode, `relayers-take-over` and `proposal`, when someone is not accepted the block submitted by other relayer, he should submit the correct block to express his opinion.
+In `relayers-only` mode, `relayers-extend` and `proposal`, when someone is not accepted the block submitted by other relayer, he should submit the correct block to express his opinion.
 In `relayer-challenger` mode and `relayer-challengers` mode, when someone is not accepted the block submitted by other relayer, he just put a challenge on chain to express his opinion.
 
 
@@ -634,7 +634,7 @@ Proposal 7(3)  |                   d         g           c    |Proposal 6 |Propo
 
 If the blocks of proposals in the **Allow Samples**, the proposals are in the same game, and one proposal submitting only add one or zero sample.
 
-### Incentive model for proposal mode
+#### Incentive model for proposal mode
 In the proposal mode of relayer game, you can find out there is always **against** proposal for each proposal excluding the initial proposal.
 Once the largest level proposal without different opinion and over the challenge time, the proposal chain base on **extend from** will be confirmed.
 These comfirmed proposals have different **against** proposals, so the incentive model is really easy to be calculated based on it's **against** proposal.
@@ -643,7 +643,7 @@ If you are interesting about the initial proposal, please refer the [backing pal
 There maybe some incorrect proposals without other proposal to against on it, the bond value of these proposal will be slash and give to treasury.
 
 
-### Pseudo code of proposal mode
+#### Pseudo code of proposal mode
 The [substrate template](https://github.com/yanganto/substrate-node-template/tree/relayer-game-proposal) shows the basic concept of model.
 Please note that, the term "take over"(legacy used) in the sample code is just the same meaning for "extend".
 
@@ -680,7 +680,7 @@ If current block is greater the challenge_time of the largest_level_proposal
 > &emsp;next_proposal = correct_proposal.take_over  
 > &emsp;del correct_proposal  
 
-### Conclusion of proposal mode
+#### Conclusion of proposal mode
 Base on optimistic condition, there is always a good relayer submitting a correct proposal on each round.
 So the proposal mode, provide a `many-to-many` game, it provided a system let honest guys extend from each other.
 Besides, one confirm block can slash more than one evil proposals provide a better game for honest relayer.
@@ -688,117 +688,68 @@ In this model, the working affair and bond entry barrier share to all the relaye
 Under optimistic condition, the honest relayers are the majority, so the working affair and bond entry barrier is relatively smaller than the evil relayers.
 
 
-### Proposal mode
-In the `relayer-extend` mode, the extend happened on challengers, but not the initial relayer.
-In proposal mode, each submit from relayer is a proposal, anyone can against or take-over each other.
+### Proposal-Only mode
+In the `proposal` mode, the proposal including the against infomation, and the extend from information.
+Besides, *Proposal 5* of `proposal` mode is allowed to submit after *Proposal 3* of `proposal` mode.
 
-Consider the Case 1 of `relayer-take-over` mode.
-```
-                 G======3a==========2=========3b=========1===>
-Initial Relayer                     b                    a      
-Challenger1                                              c     
-Challenger2                         d                    c    
-Challenger3                                              e   
-```
-
-If the Initial Relayer is not evil, but he run into network issues.
-The extend feature over only allow for Challenger is not fair for the Initial Relayer.
-So the same case in proposal mode it will become following table. 
-
-Note: 
-  - following position is block number, the content in brackets is block info help you understand.
-  - the content in brackets for Proposal is propsing level
+In the `proposal-only` mode, there are only serial blocks in submission, and the relayer game becomes in rounds as the same as `relayers-only` mode.
+Such that the *Proposal 5 of `proposal` mode *(the *Proposal 3* in `proposal-only` mode) can not submit after Proposal 3 of `proposal` mode (the *Proposal 5* in `proposal-only` mode).
 
 ```
-Proposal(Level)|Chain Status                                 |**Against**|**Extend From**|Disagree       |Agree           |Sample Added    |Allow Samples
----------------|---------------------------------------------|-----------|---------------|---------------|----------------|----------------|-------------
-               |G======3a==========2=========3b=========1===>|           |               |               |                |                |             
-Proposal1(1)   |                                        a    |None       |None           |None           |position 1(self)|None            |1            
-Proposal2(1)   |                                        c    |Proposal1  |None           |position 1(a)  |position G      |Position 2      |1, 2         
-Proposal3(1)   |                                        e    |Proposal1  |None           |position 1(a,c)|position G      |reuse Position 2|1, 2, 3a ,3b 
-Proposal4(2)   |                   b                    a    |Proposal2  |Proposal1 (1)  |position 1(c)  |position 2(self)|Position 3b     |1, 2, 3b     
-Proposal5(2)   |                   d                    c    |Proposal4  |Proposal2 (1)  |position 2(b)  |position G      |Position 3a     |1, 2, 3a, 3b 
+Proposal(round) |Chain Status                                 |Samples
+----------------|---------------------------------------------|-------------
+                |G==4a==3a====4b====2====4c===3b====4d===1===>|         
+Proposal 1(1)   |                                        a    |1            
+Proposal 2(1)   |                                        c    |1         
+Proposal 3(1)   |                                        e    |1
+                |                                             |1, 2 (challenge time over next round start)
+Proposal 4(2)   |                   b                    a    |1, 2
+Proposal 5(2)   |                   d                    c    |1, 2
+Proposal 6(2)   |                   f                    e    |1, 2
+                |                                             |1, 2, 3a, 3b (challenge time over next round start)
+Proposal 7(3)   |       f           b         g          a    |1, 2, 3a ,3b,
+Proposal 8(3)   |       h           b         i          a    |1, 2, 3a ,3b
+                |                                             |1, 2, 3a, 3b, 4a, 4b, 4c, 4d (challenge time over next round start)
 ```
 
-When every submit become a proposal, the good guy can extend the honest proposal and again other lie proposals.
-The sample function takes 2 parameters(position 1 and position G) and return the position 2, which is with some random effect.
-When Proposal2 submitting on chain, the position 2 will be calculated.  
-Because there is no consensus on position 1, he can not say he agree on posiion 1.
-There is only one relay block on position 2, so he can say agree on position 2.
-After position 2 is determined, Proposal 5 still get the same positon for position 2.
-When Proposal 3 submiting on chain the position 3a will be calculated.
-Also, when Proposal 4 submiting on chain the position 3a and 3b will be calculate
+The samples will be add when each round starts, and the number of samples exponentially increase with game round.
+For an honest relayer, he just relayer more correct blocks he observed, but the affair of creating an incorrect block for an evil relayer becomes an overwhelming burden.
+Base on the assumption, there alway a honest guy submit correct block in each round, so there will be at least *Proposal 9* in round 4.
 
 
-Here in, a guy disagree Proposal4 may submit Proposal 6, and another guy disagree Proposal6 as following
-```
-Proposal(Level)|Chain Status                                  |**Against**|**Extend From**|Disagree      |Agree            |Sample Added|Allow Samples       
----------------|----------------------------------------------|-----------|---------------|--------------|-----------------|------------|--------------------
-               |G==4a==3a====4b====2=========3b==========1===>|           |               |              |                 |            |                    
-Proposal6(3)   |       f           b                     a    |Proposal5  |Proposal4(2)   |position 2(d) |position 3a(self)|Position 4b |1, 2, 3a ,3b, 4b    
-Proposal7(3)   |       g           b                     a    |Proposal6  |Proposal4(2)   |position 3a(f)|position G       |Position 4a |1, 2, 3a ,3b, 4a, 4b
-```
+#### Pseudo code of proposal-only mode
 
-
-On ther other hand, a guy disagree Proposal3 may submit Proposal 6, and another guy disagree Proposal6 as following
-```
-Proposal(Level)|Chain Status                                  |**Against**|**Extend From**|Disagree       |Agree            |Sample Added|Allow Samples       
----------------|----------------------------------------------|-----------|---------------|---------------|-----------------|------------|--------------------
-               |G======3a==========2====4c===3b====4d====1===>|           |               |               |                 |            |                    
-Proposal6(3)   |                   d         f           c    |Proposal4  |Proposal5(2)   |position 1(a,e)|position 3b(self)|Position 4d |1, 2, 3a ,3b, 4d    
-Proposal7(3)   |                   d         g           c    |Proposal6  |Proposal5(2)   |position 3b(f) |position 2(d)    |Position 4c |1, 2, 3a ,3b, 4c, 4d
-```
-
-
-If the blocks of proposals in the **Allow Samples**, the proposals are in the same game, and one proposal submitting only add one or zero sample.
-
-### Incentive model for proposal mode
-In the proposal mode of relayer game, you can find out there is always **against** proposal for each proposal excluding the initial proposal.
-Once the largest level proposal without different opinion and over the challenge time, the proposal chain of proposals will be confirmed.
-These comfirmed proposals have different **against** proposals, so the incentive model is really easy to be calculated based on it's **against** proposal.
-The only one proposal may without against propoal is the initial proposal, the already paid by the requesting demand from the user using the token bridge.
-If you are interesting about the initial proposal, please refer the [backing pallet](https://github.com/darwinia-network/darwinia-common/tree/master/frame/bridge/eth/backing).
-There maybe some incorrect proposals without other proposal to against on it, the bond value of these proposal will be slash and give to treasury.
-
-### Pseudo code of proposal mode
 Here is the basic material for proposing for a initial relayer
 - provide a **block**, not exist on chain and not in allow samples
 
 Here is the basic material to propose for a relayer (not initial) find out a evil proposal
-- provide a **block** in allow samples, **against** proposal,
-- if the level of proposal greater than 1, the proposal (level n) should extend from the proposal with level (n-1)
+- provide a serial **blocks** in samples
+- if the blocks in samples greater than 1, the serial **blocks** should cover one of the submission in before round
 
-Here is the pseudo code on rpc handler of chain to find out the disagree postion and the agree position
-- find out the agree position and the disagree position
-> if self position first on chain  
-> &emsp;agree self.position  
-> &emsp;disagree smallest_and_greater_than_self(recursive on the position of against proposal and its extend from proposals)  
-> else  
-> &emsp;agree biggest_and_smaller_than_self(recursive on the position of extend from proposal and its extend from proposal, and G)  
-> &emsp;disagree against_proposal.position  
-- add a challenge_time for the proposal
-
+Here is the pseudo code on rpc handler of chain 
+> if submission greater than 1  
+> &emsp;check the submisstion cover one of submission in before round  
+>
+> validate blocks  
+>
+> if proposal is the first submission of each round  
+> &emsp;update the challenge time of the round
 
 Here is the pseudo code for the offchain worker on chain  
-If current block is greater the challenge_time of the largest_level_proposal
-> 
-> if largest_level_proposal conflict the block confirm on chain,
-> &emsp;slash the proposal into treasury
-> 
-> let correct_proposal = largest_level_proposal 
-> 
-> while correct_proposal:  
-> &emsp;confirm correct_proposal.position
-> &emsp;slash correct_proposal.against as reward
-> &emsp;del correct_proposal.against
-> &emsp;next_proposal = correct_proposal.take_over
-> &emsp;del correct_proposal
+> if the last round is over challenge time  
+> &emsp;if only one submission in the round  
+> &emsp;&emsp;close game  
+> &emsp;else  
+> &emsp;&emsp;add new samples for the next round  
 
-### Conclusion of proposal mode
-Base on optimistic condition, there is alwasys a good relayer submit a correct proposal on each round.
-So the proposal mode, provide a `many-to-many` game, it provided a system let honest guys extend from each other.
-Besides, the a comfirm block can slash more than one evil proposals provids a better game for honest relayer.
+##### Close Game
+Confirm correct blocks, and there will be a correct relayer in each round. 
+The only correct relayer in each round is winner, others will be slashed.
+The reward method is simple as winner takes all model.
 
+#### Conclusion of proposal-only mode
+In this model, the number of samples exponentially increase with game round, and the confrim time is easiliy to be calculated by rounds.
+The reward method for this model is winner takes all, so it is easy and clear for relayer who participate in.
 
 ## Sample Function
 Sample function is an equation to provide the block height numbers, that relayer should submit the blocks at that block height.
