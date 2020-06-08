@@ -718,6 +718,7 @@ Base on the assumption, there alway a honest guy submit correct block in each ro
 
 
 #### Pseudo code of proposal-only mode
+The [substrate template](https://github.com/yanganto/substrate-node-template/tree/relayer-game-proposal-only) shows the basic concept of model.
 
 Here is the basic material for proposing for a initial relayer
 - provide a **block**, not exist on chain and not in list of samples
