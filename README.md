@@ -18,6 +18,9 @@ You can easily load the scenario file to simulate the result.
 There are some example scenario files listed in [scenario](./scenario).
 
 There are six different gaming models: `relayers-only`, `relayer-challenger`, `relayer-challengers`, `relayers-extend`, `proposal`, and `proposal-only`.
+Currently, the `proposal-only` mode will implement to Darwinia test network, aka Crab network.  
+
+If you are only interesting in the mode used in Darwinia, please go to **Proposal-Only mode** section.
 
 In `relayers-only` mode, `relayers-extend` and `proposal`, when someone is not accepted the block submitted by other relayer, he should submit the correct block to express his opinion.
 In `relayer-challenger` mode and `relayer-challengers` mode, when someone is not accepted the block submitted by other relayer, he just put a challenge on chain to express his opinion.
@@ -35,6 +38,7 @@ Following table shows the main different between these mode.
 | Ensure correct 1st block overall   | :heavy_check_mark:   |                          |                           | :white_check_mark:     | :white_check_mark:          |
 | Versus mode                        | 1 vs many            | 1 vs 1                   | 1 vs many                 | 1 vs many              | many vs many                |
 | Possible results                   | slash/reward         | slash/reward             | slash/reward/return       | slash/reward/return    | slash/reward/return         |
+
 Note: In optimistic condition, return will no happend.
 
 | Label              | Meaning                        |
