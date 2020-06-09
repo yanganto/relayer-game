@@ -731,7 +731,7 @@ Here is the pseudo code on rpc handler of chain
 > if submission round greater than 1  
 > &emsp;check the submisstion follows the samples  
 > &emsp;check the submisstion cover one of submission in before round  
-> else if sample not set
+> else if sample not set  
 > &emsp;set the sample of first round
 >
 > validate blocks  
