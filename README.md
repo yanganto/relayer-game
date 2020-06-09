@@ -3,17 +3,27 @@
 
 ## Overview
 
-Relayers' Optimistic Verification Game (ROVG) is a module of Darwinia ChainRelay, which is a super light client with sub-linear foreign blockchain header stored.  Each block header contains a special pre-calculated field `mmr_root` of previous block head hashes using Merkle Mountain Range algorithm.  Thus, each block head is "history aware", making it possible to verify whether a lower height block belongs to the chain by checking the header hash and merkle proof path to the `mmr_root`.  Darwinia ChainRelay also includes difficulty transtions for PoW consensus and validators set transtions for PoS consensus into `mmr_root`to detect malicious fork.  With these cryptographic enforcement, it's extremely hard and economicly infeasible for one or a group of adversaries to forge a block header on a fork and be accepted by Darwinia ChainRelay without detection.  Please check out Darwinia ChainRelay for more detail.
+Relayers' Optimistic Verification Game (ROVG) is a module of Darwinia ChainRelay, which is a super-light client with a sub-linear foreign blockchain header stored.  Each block header contains a particular pre-calculated field `mmr_root` of previous block header hashes using the Merkle Mountain Range algorithm.  Thus, each block header is "history aware," making it possible to verify whether a lower height block belongs to the chain by checking the header hash and Merkle Proof to the `mmr_root`.  Darwinia ChainRelay also includes difficulty transitions for PoW consensus, and validators set changes for PoS consensus into `mmr_root`to detect malicious fork.  With this cryptographic enforcement, it's sturdy and economically infeasible for one or a group of adversaries to forge a block header on a fork and be accepted by Darwinia ChainRelay without detection.  Please check out Darwinia ChainRelay for more detail.
 
-RROVG is here to provide a mechanism for faster resolution and confirmation of recent block header.  It will reward honest relayer while punish malicious relayer.  False block header submission will be eventually detected via rounds of challenges if neccessary.  The result is deterministic that the adversary will fail and be slashed, therefore the process is optimisic.
+RROVG is here to provide a mechanism for faster resolution and confirmation of recent block header.  It will reward honest relayer while punishing malicious relayer.  False block header submission will be eventually detected via rounds of challenges if necessary.  The result is deterministic that the adversary will fail and be slashed; therefore, the process is optimistic.
 
 ## Prerequisites
 
-There're some important prerequisites and assumptions:
+There're some essential prerequisites and assumptions:
 
-- At least one honest relayer is able to monitor latest state on both chains, detect malicious data submission and react by submitting objectively observed data within reasonable timeframe.
-- There's enough incentive for honest relayer to perform.
-- It is permissionless for anyone to act as relayer and participate in the verification game, there's no entry barrier except some bonding capital.
+- At least one honest relayer can monitor the latest state on both chains, detect malicious data submission, and react by submitting objectively observed data within a reasonable timeframe.
+- There's enough incentive for an honest relayer to perform.
+- It is permissionless for anyone to act as a relayer and participate in the verification game; there's no entry barrier except some bonding capital.
+
+## Theory
+
+Darwinia ChainRelay is a sub-linear light client, which means it does not store every block header of the blockchain it monitors.  When initialized, it contains only one block, which is the genesis block.  When a relayer submits a new block header, it might be the block header of height 10,000 or even higher.  There are huge blanks in-between.  If another relayer does not agree and submits a different block header claiming that's the block header data at the height of 10,000.  How does ChainRelay resolve this conflict, and who is going to be the judge?
+
+ROVG is a commit-reveal process.  Once a block header is submitted, it provides block header hash and its `mmr_root` of all previous block header hashes till genesis block.  Therefore, if a block header submission is in question, ChainRelay will challenge the relayer for a prior block header data or more specified by a `sampling function`.  That block header hashes must be a leaf or leaves of previously submitted `mmr_root`.  In this way, if an adversary tries to fool ChainRelay, he must prepare the whole chain, while each block must comply with consensus rule.  The attack difficulty equals attacking the original blockchain network.
+
+To reduce spam and faster resolution, each data submission shall include some pledge specified by `bond_function`, which takes challenging rounds as a parameter and may be variable.  If data is honest and taken as confirmed, the pledge is returned in full, and the relayer is entitled to additional rewards coming from verification fees.  If failed in the challenge, the pledge is confiscated and goes to those who challenge and win.  This incentive model greatly discourages malicious relayers and encourages honest relayers to actively participate and guard the ChainRelay.
+
+In the chapters below, we discuss the different game modes and how we choose the one we believe to be most efficient.
 
 ## Tools
 
@@ -21,50 +31,45 @@ There are several tools in this project, and also a lot of thought of relayer ve
 It is very helpful to know there are more possibilities to do relayer games through this document.
 
 - `refit` is a **re**layer **f**ee **i**nference **t**ool to simulate and optimized the game for relayers in Darwinia Network.  
-In order to ban the replay who lies, and also we want to help make thing finalize as soon as possible, 
-this tool can easily to change three important equations and load from different scenario to simulate the relayer game.  
-Such that you can easily to tune the parameters. If you are only interesting in this part, please go to [Refit section](#refit---a-relayer-fee-inference-tool)
 
-- The `chain`, `relayer`, `challenger` in `/scenario/<model>`folder can read the scenario file and simulate with more detail.
+  Parameters are organized in scenario config files.  You can fine-tune three important equations and load these scenario config files to simulate the verification game.  You can evaluate the efficiency of the parameter setting.  If you are only interesting in this part, please go to [Refit section](#refit---a-relayer-fee-inference-tool)
+
+- The `chain`, `relayer`, `challenger` in `/scenario/<model>` folder can read the scenario file and simulate with more detail.
 
 ## Scenario with Different Mode
 In this tool we assume the target chain is Ethereum, however you can simulate different chain by changing parameters.
-All the behavior of relayers, and the parameters are described a in a yaml file. 
-You can easily load the scenario file to simulate the result. 
-There are some example scenario files listed in [scenario](./scenario).
+All the behavior of relayers, and the parameters are described a in a yaml file.   You can easily load the scenario file to simulate the result.  There are some example scenario files listed in [scenario](./scenario).
 
-There are six different gaming mode: `relayers-only`, `relayer-challenger`, `relayer-challengers`, `relayers-extend`, `proposal`, and `proposal-only`.
-Currently, the `proposal-only` mode will implement to Darwinia test network, aka Crab network.  
+There are six different game mode: `relayers-only`, `relayer-challenger`, `relayer-challengers`, `relayers-extend`, `proposal`, and `proposal-only`.  We have analysized each mode, their pros and cons.  The winning mode is `proposal-only` which will be implemented in Darwinia ChainRelay and deployed to Darwinia testnet, aka Crab Network first.
 
-If you are only interesting in the mode used in Darwinia, please go to [**Proposal-Only mode**](#proposal-only-mode) section.
+You can quickly jump to [**Proposal-Only mode**](#proposal-only-mode) section for conclusion otherwise you can read on and see how the solution evolves along the way.
 
-In `relayers-only` mode, `relayers-extend` and `proposal`, when someone is not accepted the block submitted by other relayer, he should submit the correct block to express his opinion.
-In `relayer-challenger` mode and `relayer-challengers` mode, when someone is not accepted the block submitted by other relayer, he just put a challenge on chain to express his opinion.
+In `relayers-only`, `relayers-extend` and `proposal` mode, when someone doesn't agree with the block submitted by other relayer, he should submit the correct block to express his opinion, while in `relayer-challenger` mode and `relayer-challengers` mode,  he signals simply by send a `yes` or `no` flag.
 
 
 Following table shows the main different between these mode.
 
-| Rule \Mode                         | **Relayers-Only**    | **Relayer-Challenger**   | **Relayer-Challengers**   | **Relayers-Extend**    | **Proposal/Proposal-Only**  |
-| ---------------------------------- | -------------------- | ------------------------ | ------------------------- | ---------------------- | --------------------------- |
-| Only 1 relay submit blocks         |                      | :heavy_check_mark:       | :heavy_check_mark:        |                        |                             |
-| Allow extend from challenger       |                      |                          | :heavy_check_mark:        | :heavy_check_mark:     | :heavy_check_mark:          |
-| Allow extend from initial relayer  |                      |                          |                           |                        | :heavy_check_mark:          |
-| Once in participate all            | :heavy_check_mark:   | :heavy_check_mark:       |                           |                        |                             |
-| Once lie drop all                  | :heavy_check_mark:   |                          |                           |                        |                             |
-| Ensure correct 1st block overall   | :heavy_check_mark:   |                          |                           | :white_check_mark:     | :white_check_mark:          |
-| Versus mode                        | 1 vs many            | 1 vs 1                   | 1 vs many                 | 1 vs many              | many vs many                |
-| Possible results                   | slash/reward         | slash/reward             | slash/reward/return       | slash/reward/return    | slash/reward/return         |
+| Rule \Mode                        | **Relayers-Only**  | **Relayer-Challenger** | **Relayer-Challengers** | **Relayers-Extend** | **Proposal/Proposal-Only** |
+| --------------------------------- | ------------------ | ---------------------- | ----------------------- | ------------------- | -------------------------- |
+| Only 1 relayer submit blocks      |                    | :heavy_check_mark:     | :heavy_check_mark:      |                     |                            |
+| Allow extend from challenger      |                    |                        | :heavy_check_mark:      | :heavy_check_mark:  | :heavy_check_mark:         |
+| Allow extend from initial relayer |                    |                        |                         |                     | :heavy_check_mark:         |
+| Once in participate all           | :heavy_check_mark: | :heavy_check_mark:     |                         |                     |                            |
+| Once lie drop all                 | :heavy_check_mark: |                        |                         |                     |                            |
+| Ensure correct 1st block overall  | :heavy_check_mark: |                        |                         | :white_check_mark:  | :white_check_mark:         |
+| Versus mode                       | 1 vs many          | 1 vs 1                 | 1 vs many               | 1 vs many           | many vs many               |
+| Possible results                  | slash/reward       | slash/reward           | slash/reward/return     | slash/reward/return | slash/reward/return        |
 
-Note: In optimistic condition, return will no happend.
+Note: In most cases, return will no happend.
 
 | Label              | Meaning                        |
 |--------------------|--------------------------------|
 | :heavy_check_mark: | in any condition               |
 | :white_check_mark: | in most condition (Optimistic) |
 
-In all mode, the `sample function` will point out the next one or many blocks, the relayer(s) should submit on it.  
-The `sample function` is subtle, and should different when the target chain using different consensus mechanism.  
-There is a discussion [**Sample function**](#sample-function) section, but we will explain these modes with a general `half` sampling equation.
+In all mode, the `sampling function` will point out the next one or many blocks, the relayer(s) should submit on it.  
+The `sampling function` is subtle, and should different when the target chain using different consensus mechanism.  
+There is a discussion [**sampling function**](#sampling-function) section, but we will explain these modes with a general `half` sampling equation.
 
 There is still a little possibility that the initial submit in from a valid branch chain,
 so there is a stage two in the game, after that the blocks from the initial relayer are verified on chain.
@@ -83,8 +88,8 @@ There are 3 rules in relayers-only mode.
 2. Confirmed or open a round of game
     - if there is only one block (or same blocks) over the challenge time, this block is confirmed.  (2-1)
     - else (there are different blocks in the same block height) the game is starts
-      - everyone in the game should submit the block based on the `sample function` until closed (2-2-1)
-        - Once the a block according sample function submit the next round of gamae is started, and become recursive in 2
+      - everyone in the game should submit the block based on the `sampling function` until closed (2-2-1)
+        - Once the a block according sampling function submit the next round of gamae is started, and become recursive in 2
     - anyone can get in the game in any round but need to participate until the game closed
 3. Close game
     - In following two condition, that all of the submission in the game from a relayer are ignored. (3-1)
@@ -106,7 +111,7 @@ so the game starts.  In the meanwhile, the chain can not determine which block i
 Evil                                            L
 Honest                                          H
 ```
-Based on `sample function`, the *Evil* and *Honest* should submit the header on the *position 2* (adopted rule 2-2-1.).
+Based on `sampling function`, the *Evil* and *Honest* should submit the header on the *position 2* (adopted rule 2-2-1.).
 ```
          G==================2===================1===>
 Evil                                            L
@@ -142,8 +147,9 @@ Honest                      H                   H
 
 And waiting the challenge time over, 
 the blocks (the same) in submit round 2 are all confirmed. (adopted rule 2-1)
-And *Evil* and `Honest` are still in the game and base on `sample_function`, 
+And *Evil* and `Honest` are still in the game and base on `sampling_function`, 
 they should submit headers on *position 3*(adopted rule 2-2-1.).
+
 ```
          G==================2=========3=========1===>
 Evil                        C                   L
@@ -158,7 +164,8 @@ Evil                        L                   L
 Honest                      H                   H
 ```
 And there is nothing confirmed without different opinions, 
-so base on the `sample_function` the *position 3* should be submit by *Evil* and *Honest*.
+so base on the `sampling_function` the *position 3* should be submit by *Evil* and *Honest*.
+
 ```
          G=======3==========2===================1===>
 Evil                        L                   L
@@ -207,7 +214,7 @@ However, there is still a bond for the challenger to challenge.
 1. Any relayer can relay a ethereum header on the darwinia chain
 2. Any challenger can challenge the relayer and open the game
     - challenger needs to bond some value for each challenge before the half challenge time over
-    - relayer needs to submit the next specified block by `sample function`
+    - relayer needs to submit the next specified block by `sampling function`
 3. Close game
     1. The challenger stops challenging, the relayer wins and challenger will be slashed
     2. The relayer can not provided the next sampling block block pass the validation before the next half challenge time over
@@ -227,7 +234,7 @@ Evil                                                L
 Challenger                                          0
 ```
 
-Based on `sample function`, the *Evil* should submit the block on position 2.
+Based on `sampling function`, the *Evil* should submit the block on position 2.
 ```
              G=================2====================1===>
 Evil                                                L
@@ -249,7 +256,7 @@ If `Evil` submit a correct block in *position 2*, the challenger will challenge 
 Evil                           H                    L
 Challenger                     1                    0
 ```
-Such that, based on `sample function`, the next sampling block will be between the *position 1* and *position 2*.
+Such that, based on `sampling function`, the next sampling block will be between the *position 1* and *position 2*.
 ```
              G=================2==========3=========1===>
 Evil                           H                    L
@@ -262,7 +269,7 @@ If *Evil* submit a correct block in *position 2*, the challenger will challenge 
 Evil                           L                    L
 Challenger                     0                    0
 ```
-Such that, based on `sample function`, the next sampling block will be between the genesis and *position 2*.
+Such that, based on `sampling function`, the next sampling block will be between the genesis and *position 2*.
 ```
              G=======3=========2====================1===>
 Evil                           L                    L
@@ -314,7 +321,7 @@ With multiple challengers, the challengers can take over the challenge jobs, and
 1. Any relayer can relay a ethereum header on the darwinia chain
 2. Any challenger can challenge the relayer with the challenge info non-exsist
     - challenger needs to bond some value for each challenge before the half challenge time over
-    - relayer needs to submit the sampling headers based on the challenge and the `sample function`
+    - relayer needs to submit the sampling headers based on the challenge and the `sampling function`
 3. Close game
     1. The challengers stop challenging, the relayer wins and all challengers will be slashed
     2. The relayer can not provided the next sampling block block pass the validation before the next half challenge time over
@@ -335,7 +342,7 @@ Challenger 1                                        0
 ```
 Here in *Challenger 1* submit a challenge `0`, that the length of challenge is 1, and the game is opened.
 
-Based on `sample function`, the *Evil* should submit the block on *position 2*.
+Based on `sampling function`, the *Evil* should submit the block on *position 2*.
 ```
              G=================2====================1===>
 Evil                                                B
@@ -624,7 +631,7 @@ Proposal 5(1)   |                                        e    |Proposal 1 |None 
 ```
 
 When every submit become a proposal, the good guy can extend the honest proposal and again other lie proposals.
-The sample function takes 2 parameters(*position 1* and *position G*) and return the *position 2*, which is with some random effect.
+The sampling function takes 2 parameters(*position 1* and *position G*) and return the *position 2*, which is with some random effect.
 When *Proposal 2* submitting on chain, the *position 2* will be calculated.  
 Because there is no consensus on *position 1*, he can not say he agree on *position 1*.
 There is only one relay block on *position 2*, so he can say agree on *position 2*.
@@ -789,22 +796,23 @@ The reward method is simple as winner takes all model.
 In this model, the number of samples exponentially increase with game round, and the confrim time is easiliy to be calculated by rounds.
 The reward method for this model is winner takes all, so it is easy and clear for relayer who participate in.
 
-## Sample Function
-Sample function is an equation to provide the block height numbers, that relayer should submit the blocks at that block height.
-Sample function is the key part to prevent the attacker, and also determine the total consuming time in relayer game.
+## Sampling Function
+Sampling function is an equation to provide the block height numbers, that relayer should submit the blocks at that block height.
+Sampling function is the key part to prevent the attacker, and also determine the total consuming time in relayer game.
 And it is reasonable for using different sample equation for different target chain with different consensus algorithm.
 Following listed are the design philosophy.  
+
 - Transparent and with ambiguous part
   - The sample equation should be clear and transparent for people, and there will be also some ambiguous part provided by random number, such that the attacker need much affair to making fake headers.  
   - Once the sample calculated, it will reuse at all.  
     - Take proposal mode for example, if same agree position and same disagree position will get the same sample block number as output
 - Sampling the tail at first
-  - By nature, the **PoW** consensus mechanism, the branch will occur and not greater than a reasonable length, for example 6.  To accelerate the process of relayer verification game, the sample function will label the *position N-6* to *position N-1* blocks at the second round, such that the nature branch point can be find out as soon as possible.
+  - By nature, the **PoW** consensus mechanism, the branch will occur and not greater than a reasonable length, for example 6.  To accelerate the process of relayer verification game, the sampling function will label the *position N-6* to *position N-1* blocks at the second round, such that the nature branch point can be find out as soon as possible.
 - Confirm blocks affinity
   - If the sampling block is in the `ConfrimBlockAttractRange` range of confirmed blocks, the sampling blocks will change to the block near by the confirmed blocks
   - Such that it is easy to find out the counterfeit block which is near by a confirmed block
 
-### Substrate example of sample function
+### Substrate example of sampling function
 Here is a [sample pallet](https://github.com/yanganto/substrate-node-template/blob/relayer-game-proposal/pallets/sample/src/lib.rs) shows to sample a block 
 with the features aforementioned.
 And the pseudo code for relay pallet, sample pallet listed here help to know more about what is thing going on chain.
