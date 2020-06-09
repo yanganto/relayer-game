@@ -746,6 +746,19 @@ Here is the pseudo code for the offchain worker on chain
 > &emsp;else  
 > &emsp;&emsp;add new samples for the next round  
 
+Here is the pseudo code for the client, this is a POC level client, watching the event and submitting headers.  
+In production, the offchain worker push samples chaning event will be more efficence.
+
+> loop  
+> &emsp;watch and get info from `SubmitHeaders`  
+> &emsp;if first block heigh unseen  
+> &emsp;&emsp;add into the current games  
+> &emsp;for game in current games  
+> &emsp;&emsp;if the samples of game changed and not none  
+> &emsp;&emsp;&emsp;submit headers based on samples  
+> &emsp;&emsp;else if the samples of game is none  
+> &emsp;&emsp;&emsp;remove this game from current game  
+
 ##### Close Game
 Confirm correct blocks, and there will be a correct relayer in each round. 
 The only correct relayer in each round is winner, others will be slashed.
