@@ -693,7 +693,7 @@ In the `proposal` mode, the proposal including the against infomation, and the e
 Besides, *Proposal 5* of `proposal` mode is allowed to submit after *Proposal 3* of `proposal` mode.
 
 In the `proposal-only` mode, there are only serial blocks in submission, and the relayer game becomes in rounds as the same as `relayers-only` mode.
-Such that the *Proposal 5 of `proposal` mode *(the *Proposal 3* in `proposal-only` mode) can not submit after Proposal 3 of `proposal` mode (the *Proposal 5* in `proposal-only` mode).
+Such that the *Proposal 5* of `proposal` mode (the *Proposal 3* in `proposal-only` mode) can not submit after Proposal 3 of `proposal` mode (the *Proposal 5* in `proposal-only` mode).
 
 ```
 Proposal(round) |Chain Status                                 |Samples
@@ -718,6 +718,7 @@ Base on the assumption, there alway a honest guy submit correct block in each ro
 
 
 #### Pseudo code of proposal-only mode
+The [substrate template](https://github.com/yanganto/substrate-node-template/tree/relayer-game-proposal-only) shows the basic concept of model.
 
 Here is the basic material for proposing for a initial relayer
 - provide a **block**, not exist on chain and not in list of samples

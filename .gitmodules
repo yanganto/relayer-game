@@ -6,3 +6,7 @@
 	path = simulation/proposal/chain
 	url = git@github.com:yanganto/substrate-node-template.git
 	branch = relayer-game-proposal
+[submodule "simulation/proposal-only/chain"]
+	path = simulation/proposal-only/chain
+	url = git@github.com:yanganto/substrate-node-template.git
+	branch = relayer-game-proposal-only
