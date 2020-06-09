@@ -1,23 +1,26 @@
-# Relayer Game
-[![Build Status](https://travis-ci.com/yanganto/s3handler.svg?branch=master)](https://travis-ci.com/yanganto/relayer-game)
+# Relayer Game [![Build Status](https://travis-ci.com/yanganto/s3handler.svg?branch=master)](https://travis-ci.com/yanganto/relayer-game)
 
-This project have several tools.  Read this document to know there are more possible to do a relayer game,
-and there are the tools help you to know more about this.
+
+There are several tools in this project, and also a lot of thought of relayer verification game as different mode.  
+It is very helpful to know there are more possibilities to do relayer games through this document.
 
 - `refit` is a **re**layer **f**ee **i**nference **t**ool to simulate and optimized the game for relayers in Darwinia Network.  
 In order to ban the replay who lies, and also we want to help make thing finalize as soon as possible, 
 this tool can easily to change three important equations and load from different scenario to simulate the relayer game.  
-Such that you can easily to tune the parameters.
+Such that you can easily to tune the parameters. If you are only interesting in this part, please go to [Refit section](#refit---a-relayer-fee-inference-tool)
 
 - The `chain`, `relayer`, `challenger` in `/scenario/<model>`folder can read the scenario file and simulate with more detail.
 
-## Scenario
+## Scenario with Different Mode
 In this tool we assume the target chain is Ethereum, however you can simulate different chain by changing parameters.
 All the behavior of relayers, and the parameters are described a in a yaml file. 
 You can easily load the scenario file to simulate the result. 
 There are some example scenario files listed in [scenario](./scenario).
 
-There are six different gaming models: `relayers-only`, `relayer-challenger`, `relayer-challengers`, `relayers-extend`, `proposal`, and `proposal-only`.
+There are six different gaming mode: `relayers-only`, `relayer-challenger`, `relayer-challengers`, `relayers-extend`, `proposal`, and `proposal-only`.
+Currently, the `proposal-only` mode will implement to Darwinia test network, aka Crab network.  
+
+If you are only interesting in the mode used in Darwinia, please go to [**Proposal-Only mode**](#proposal-only-mode) section.
 
 In `relayers-only` mode, `relayers-extend` and `proposal`, when someone is not accepted the block submitted by other relayer, he should submit the correct block to express his opinion.
 In `relayer-challenger` mode and `relayer-challengers` mode, when someone is not accepted the block submitted by other relayer, he just put a challenge on chain to express his opinion.
@@ -35,6 +38,7 @@ Following table shows the main different between these mode.
 | Ensure correct 1st block overall   | :heavy_check_mark:   |                          |                           | :white_check_mark:     | :white_check_mark:          |
 | Versus mode                        | 1 vs many            | 1 vs 1                   | 1 vs many                 | 1 vs many              | many vs many                |
 | Possible results                   | slash/reward         | slash/reward             | slash/reward/return       | slash/reward/return    | slash/reward/return         |
+
 Note: In optimistic condition, return will no happend.
 
 | Label              | Meaning                        |
@@ -44,11 +48,11 @@ Note: In optimistic condition, return will no happend.
 
 In all mode, the `sample function` will point out the next one or many blocks, the relayer(s) should submit on it.  
 The `sample function` is subtle, and should different when the target chain using different consensus mechanism.  
-There is a discussion **Sample function** section, but we will explain the mode with a general `half` sampling equation.
+There is a discussion [**Sample function**](#sample-function) section, but we will explain these modes with a general `half` sampling equation.
 
 There is still a little possibility that the initial submit in from a valid branch chain,
 so there is a stage two in the game, after that the blocks from the initial relayer are verified on chain.
-There is a discussion in **Stage two** section.
+There is a discussion in [**Stage two**](#stage-two) section.
 
 If there is only one `[[challengers]]` in scenario file, the scenario will run in relayer-challenger mode.
 The `scenario/challenger.yml` is a scenario for one relayer and one challenger, you may run it with `-v` option to know more about this.
@@ -844,14 +848,15 @@ If *Relayer 2* can still challenge by providing more headers, and so on.
 The stage two of game should be rare, because all relayers should submit a block already finalized. 
 However, Stage Two is designed to solve the branch issue just in case.
 
-## General Parameters
+## Refit - a relayer fee inference tool
+### General Parameters
 - `title ` (optional)
   - The title for this scenario will print on the console
 - `F` (optional)
   - The block producing factor for Darwinia / Ethereum
   - For example: 2.0, that means that Darwinia produce 2 blocks and Ethereum produce 1 block.
 
-## Specify Functions Type
+### Specify Functions Type
 - `challenge_function`
   - Once a relayer submit a header and challenge the time in blocks after the calculated value from challenge function, 
     Darwinia network will deem this header is valided and become a best header.  
@@ -877,14 +882,14 @@ However, Stage Two is designed to solve the branch issue just in case.
   - And also it may be that the treasury part is only for the last submit rounds, if the slash never split to the next round
     - the treasury part is from the fee of redeem action, but it will be a debt without limitation in simulation
 
-## Initialize Status of Darwinia and Ethereum
+### Initialize Status of Darwinia and Ethereum
 suffix `d`: block difference between last block number relayed on Darwinia, suffix `e`: block difference between last related block number of Ethereum
 - `Dd`(optional)
   - the block difference between last block number relayed on Darwinia, 
 - `De`(optional)
   - the block difference between last related block number of Ethereum
 
-## Relayers' Chose
+### Relayers' Chose
 Relays will not always be honest, s/he may some times cheat or not response.  
 The following parameters are used for relayers
 - `[[relayers]]` 
@@ -898,7 +903,7 @@ We assume there always is a good guy to relay the correct headers, and the guy w
 and this relayer will be automatic add into the scenario when load from configure file, 
 so please avoid to use this name for the relayer.
 
-## Challengers' Chose
+### Challengers' Chose
 The following parameters are used for challenger
 - `[[challengers]]` 
   - `name` (optional)
@@ -908,7 +913,7 @@ The following parameters are used for challenger
       - `1`(agree with relayer, this means relayer is honest at this round)
       - `0`(disagree with relayer, this means relayer lies at this round)
 
-## Parameters of Equation
+### Parameters of Equation
 The three function can use different equations, base on the function setting, following parameters of function should be filled.
 - `[challenge_linear]`
   - the linear equation for challenge function
@@ -937,7 +942,7 @@ The three function can use different equations, base on the function setting, fo
   - The treasury will reward the relayers in the last submit round, because there is no attacker(lie relayers) in the last round.
   - C is the constant of the reward from treasury
 
-## Build & Run
+### Build & Run
 This executable is written in Rust, it can be easily to build and run with cargo command.  
 ```
 cargo build --release
@@ -969,7 +974,7 @@ If you want to use this tool without plot with a smaller binary, please use `--n
 cargo build --release --no-default-features
 ```
 
-## Develop and Document
+### Develop and Document
 This project has document, you can use this command to show the document on browser.
 `cargo doc --no-deps --open`
 If you want to add more equation for different function, you can take a look the trait in [bond](./src/bond/mod.rs), [challenge](./src/challenge/mod.rs), [sample](./src/sample/mod.rs).
