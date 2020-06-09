@@ -34,7 +34,8 @@ Following table shows the main different between these mode.
 | Once lie drop all                  | :heavy_check_mark:   |                          |                           |                        |                             |
 | Ensure correct 1st block overall   | :heavy_check_mark:   |                          |                           | :white_check_mark:     | :white_check_mark:          |
 | Versus mode                        | 1 vs many            | 1 vs 1                   | 1 vs many                 | 1 vs many              | many vs many                |
-| Possible results                   | slash/reward         | slash/reward             | slash/reward/return       | slash/reward/return    | slash/reward                |
+| Possible results                   | slash/reward         | slash/reward             | slash/reward/return       | slash/reward/return    | slash/reward/return         |
+Note: In optimistic condition, return will no happend.
 
 | Label              | Meaning                        |
 |--------------------|--------------------------------|
