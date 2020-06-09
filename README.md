@@ -727,12 +727,14 @@ Here is the basic material to propose for a relayer (not initial) find out a evi
 - if the blocks in samples greater than 1, the serial **blocks** should cover one of the submission in before round
 
 Here is the pseudo code on rpc handler of chain 
-> if submission greater than 1  
+> if submission round greater than 1  
+> &emsp;check the submisstion follows the samples  
 > &emsp;check the submisstion cover one of submission in before round  
 >
 > validate blocks  
 >
 > if proposal is the first submission of each round  
+> &emsp;set the samples
 > &emsp;update the challenge time of the round
 
 Here is the pseudo code for the offchain worker on chain  
