@@ -20,7 +20,7 @@ There are some example scenario files listed in [scenario](./scenario).
 There are six different gaming models: `relayers-only`, `relayer-challenger`, `relayer-challengers`, `relayers-extend`, `proposal`, and `proposal-only`.
 Currently, the `proposal-only` mode will implement to Darwinia test network, aka Crab network.  
 
-If you are only interesting in the mode used in Darwinia, please go to **Proposal-Only mode** section.
+If you are only interesting in the mode used in Darwinia, please go to [**Proposal-Only mode**](#proposal-only-mode) section.
 
 In `relayers-only` mode, `relayers-extend` and `proposal`, when someone is not accepted the block submitted by other relayer, he should submit the correct block to express his opinion.
 In `relayer-challenger` mode and `relayer-challengers` mode, when someone is not accepted the block submitted by other relayer, he just put a challenge on chain to express his opinion.
@@ -48,11 +48,11 @@ Note: In optimistic condition, return will no happend.
 
 In all mode, the `sample function` will point out the next one or many blocks, the relayer(s) should submit on it.  
 The `sample function` is subtle, and should different when the target chain using different consensus mechanism.  
-There is a discussion **Sample function** section, but we will explain the mode with a general `half` sampling equation.
+There is a discussion [**Sample function**](#sample-function) section, but we will explain the mode with a general `half` sampling equation.
 
 There is still a little possibility that the initial submit in from a valid branch chain,
 so there is a stage two in the game, after that the blocks from the initial relayer are verified on chain.
-There is a discussion in **Stage two** section.
+There is a discussion in [**Stage two**](#stage-two) section.
 
 If there is only one `[[challengers]]` in scenario file, the scenario will run in relayer-challenger mode.
 The `scenario/challenger.yml` is a scenario for one relayer and one challenger, you may run it with `-v` option to know more about this.
