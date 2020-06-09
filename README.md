@@ -1,5 +1,21 @@
-# Relayer Game [![Build Status](https://travis-ci.com/yanganto/s3handler.svg?branch=master)](https://travis-ci.com/yanganto/relayer-game)
+# Relayers' Optimistic Verification Game
+[![Build Status](https://travis-ci.com/yanganto/s3handler.svg?branch=master)](https://travis-ci.com/yanganto/relayer-game)
 
+## Overview
+
+Relayers' Optimistic Verification Game (ROVG) is a module of Darwinia ChainRelay, which is a super light client with sub-linear foreign blockchain header stored.  Each block header contains a special pre-calculated field `mmr_root` of previous block head hashes using Merkle Mountain Range algorithm.  Thus, each block head is "history aware", making it possible to verify whether a lower height block belongs to the chain by checking the header hash and merkle proof path to the `mmr_root`.  Darwinia ChainRelay also includes difficulty transtions for PoW consensus and validators set transtions for PoS consensus into `mmr_root`to detect malicious fork.  With these cryptographic enforcement, it's extremely hard and economicly infeasible for one or a group of adversaries to forge a block header on a fork and be accepted by Darwinia ChainRelay without detection.  Please check out Darwinia ChainRelay for more detail.
+
+RROVG is here to provide a mechanism for faster resolution and confirmation of recent block header.  It will reward honest relayer while punish malicious relayer.  False block header submission will be eventually detected via rounds of challenges if neccessary.  The result is deterministic that the adversary will fail and be slashed, therefore the process is optimisic.
+
+## Prerequisites
+
+There're some important prerequisites and assumptions:
+
+- At least one honest relayer is able to monitor latest state on both chains, detect malicious data submission and react by submitting objectively observed data within reasonable timeframe.
+- There's enough incentive for honest relayer to perform.
+- It is permissionless for anyone to act as relayer and participate in the verification game, there's no entry barrier except some bonding capital.
+
+## Tools
 
 There are several tools in this project, and also a lot of thought of relayer verification game as different mode.  
 It is very helpful to know there are more possibilities to do relayer games through this document.
