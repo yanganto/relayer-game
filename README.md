@@ -31,7 +31,7 @@ Following table shows the main different between these mode.
 | Allow extend from challenger       |                      |                          | :heavy_check_mark:        | :heavy_check_mark:     | :heavy_check_mark:          |
 | Allow extend from initial relayer  |                      |                          |                           |                        | :heavy_check_mark:          |
 | Once in participate all            | :heavy_check_mark:   | :heavy_check_mark:       |                           |                        |                             |
-| Estoppel                           | :heavy_check_mark:   |                          |                           |                        |                             |
+| Once lie drop all                  | :heavy_check_mark:   |                          |                           |                        |                             |
 | Ensure correct 1st block overall   | :heavy_check_mark:   |                          |                           | :white_check_mark:     | :white_check_mark:          |
 | Versus mode                        | 1 vs many            | 1 vs 1                   | 1 vs many                 | 1 vs many              | many vs many                |
 | Possible results                   | slash/reward         | slash/reward             | slash/reward/return       | slash/reward/return    | slash/reward                |
@@ -465,7 +465,7 @@ The `graceful period` will be calculate by `graceful_function` when implementing
 ### relayers-extend mode
 The `relayer-extend` mode is similar to the `relayer-challengers` mode, and the challenger need to provide headers to express the different opinions.
 In this mode the challengers should submit header to prevent the evil challengers to mal-response easy and DoS the system.
-However, there is still no the rule `Once in participate all` for `Estoppel`, so there is some rare case without confirm block at all.
+However, there is still no the rule `Once in participate all` for `Once lie drop all`, so there is some rare case without confirm block at all.
 
 Here in, the plots are converted from the second scenario (*Evil* submit block on *position 2*) in `relayer-challengers` mode, 
 that relayers submit the blocks `a` to `e`, and the *Evil* decides to quit the game without response on *position 3a* and *position 3b*.
@@ -509,7 +509,7 @@ Challenger 3                                          e      Return
 Challenger 4                     b                    e      Return   (extend from Challenger 3)
 ```
 *Challenger 2* and *Challenger 4* beat *Evil*.
-Without `Once in participate all` and `Estoppel`, the possible blocks in *position 1* are `C`, `E`.
+Without `Once in participate all` and `Once lie drop all`, the possible blocks in *position 1* are `C`, `E`.
 `A` is eliminated, because the initial relayer having responsibility to keep relaying the sampling blocks.
 There is no rule to eliminate blocks `C` or `E`, so there is no confirm block.
 
