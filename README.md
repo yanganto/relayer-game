@@ -622,6 +622,12 @@ Here in, a guy disagree *Proposal 4* may submit *Proposal 6*, and another guy di
 ```
 Proposal(Level) |Chain Status                                  |**Against**|**Extend From**|Disagree      |Agree            |Sample Added|Allow Samples       
 ----------------|----------------------------------------------|-----------|---------------|--------------|-----------------|------------|--------------------
+                |G======3a====4b====2=========3b==========1===>|           |               |              |                 |            |                    
+Proposal 6(3)   |       f           b                     a    |Proposal 4 |Proposal 3(2)  |position 2(d) |position 3a(self)|Position 4b |1, 2, 3a ,3b, 4b    
+```
+```
+Proposal(Level) |Chain Status                                  |**Against**|**Extend From**|Disagree      |Agree            |Sample Added|Allow Samples       
+----------------|----------------------------------------------|-----------|---------------|--------------|-----------------|------------|--------------------
                 |G==4a==3a====4b====2=========3b==========1===>|           |               |              |                 |            |                    
 Proposal 6(3)   |       f           b                     a    |Proposal 4 |Proposal 3(2)  |position 2(d) |position 3a(self)|Position 4b |1, 2, 3a ,3b, 4b    
 Proposal 7(3)   |       g           b                     a    |Proposal 6 |Proposal 3(2)  |position 3a(f)|position G       |Position 4a |1, 2, 3a ,3b, 4a, 4b
@@ -629,6 +635,12 @@ Proposal 7(3)   |       g           b                     a    |Proposal 6 |Prop
 
 
 On the other hand, a guy disagree *Proposal 3* may submit Proposal 6, and another guy disagree *Proposal 6*  as following
+```
+Proposal(Level)|Chain Status                                  |**Against**|**Extend From**|Disagree       |Agree            |Sample Added|Allow Samples       
+---------------|----------------------------------------------|-----------|---------------|---------------|-----------------|------------|--------------------
+               |G======3a==========2=========3b====4d====1===>|           |               |               |                 |            |                    
+Proposal 6(3)  |                   d         f           c    |Proposal 3 |Proposal 4(2)  |position 1(a,e)|position 3b(self)|Position 4d |1, 2, 3a ,3b, 4d    
+```
 ```
 Proposal(Level)|Chain Status                                  |**Against**|**Extend From**|Disagree       |Agree            |Sample Added|Allow Samples       
 ---------------|----------------------------------------------|-----------|---------------|---------------|-----------------|------------|--------------------
@@ -664,9 +676,9 @@ Here is the pseudo code on rpc handler of chain to find out the disagree positio
 - find out the agree position and the disagree position
 > if self position first on chain  
 > &emsp;agree self.position  
-> &emsp;disagree smallest_and_greater_than_self(recursive on the position of against proposal and its extend from proposals)  
+> &emsp;disagree smallest_and_greater_than_self(recursive on positions of against proposal and its extend from proposals)  
 > else  
-> &emsp;agree biggest_and_smaller_than_self(recursive on the position of extend from proposal and its extend from proposal, and G)  
+> &emsp;agree biggest_and_smaller_than_self(recursive on positions of extend from proposal and its extend from proposal and G)  
 > &emsp;disagree against_proposal.position  
 - add a challenge_time for the proposal
 
