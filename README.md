@@ -471,6 +471,7 @@ The `graceful period` will be calculate by `graceful_function` when implementing
 The `relayer-extend` mode is similar to the `relayer-challengers` mode, and the challenger need to provide headers to express the different opinions.
 In this mode the challengers should submit header to prevent the evil challengers to mal-response easy and DoS the system.
 However, there is still no the rule `Once in participate all` for `Once lie drop all`, so there is some rare case without confirm block at all.
+The simulation of fee and challegne times of this mode are similar to `relayer-challengers` mode.
 
 Here in, the plots are converted from the second scenario (*Evil* submit block on *position 2*) in `relayer-challengers` mode, 
 that relayers submit the blocks `a` to `e`, and the *Evil* decides to quit the game without response on *position 3a* and *position 3b*.
@@ -697,8 +698,9 @@ Under optimistic condition, the honest relayers are the majority, so the working
 In the `proposal` mode, the proposal including the against infomation, and the extend from information.
 Besides, *Proposal 5* of `proposal` mode is allowed to submit after *Proposal 3* of `proposal` mode.
 
-In the `proposal-only` mode, there are only serial blocks in submission, and the relayer game becomes in rounds as the same as `relayers-only` mode.
-Such that the *Proposal 5* of `proposal` mode (the *Proposal 3* in `proposal-only` mode) can not submit after Proposal 3 of `proposal` mode (the *Proposal 5* in `proposal-only` mode).
+In the `proposal-only` mode, there are only serial blocks in submission, and the relayer game becomes in rounds as the same as `relayers-only` mode. 
+Such that the *Proposal 5* of `proposal` mode (the *Proposal 3* in `proposal-only` mode) can not submit after Proposal 3 of `proposal` mode (the *Proposal 5* in `proposal-only` mode). 
+Besides, the simulation of fee and challegne time of `proposal-only` mode are also can use refit with two relayer in `relayers-only` mode.
 
 ```
 Proposal(round) |Chain Status                                 |Samples
