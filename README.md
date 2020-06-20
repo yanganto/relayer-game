@@ -1017,3 +1017,10 @@ This project has document, you can use this command to show the document on brow
 `cargo doc --no-deps --open`
 If you want to add more equation for different function, you can take a look the trait in [bond](./src/bond/mod.rs), [challenge](./src/challenge/mod.rs), [sample](./src/sample/mod.rs).
 The `Equation` trait and `ConfigValidate` will guild you to add you customized equation. 
+
+## Reference
+
+| Item               | Material                                           |
+|--------------------|----------------------------------------------------|
+| EMeetup 2020/06/23 | [Slides](https://slides.com/yanganto/relayer-game) |
+
